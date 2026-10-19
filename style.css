@@ -151,3 +151,11 @@ table.led td{padding:8px 4px;border-bottom:1px dashed var(--line);font-variant-n
 .newdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--pole-red);margin-left:4px;vertical-align:middle}
 .who{display:flex;align-items:center;gap:10px}
 .who img{width:32px;height:32px;border-radius:50%}
+/* reminders + version banner */
+.rembox{position:fixed;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:30;max-width:520px;margin:0 auto;background:var(--ink);color:var(--ink-fg);border:2px solid var(--gold);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.rembox .label{color:var(--gold)}
+.rembox .btn:not(.saffron){background:transparent;color:var(--ink-fg);border-color:#4A443E}
+.verbox{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);z-index:40;background:var(--gold);color:var(--ink);display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));font-weight:600}
+.verbox .btn{background:var(--ink);color:var(--gold);border-color:var(--ink)}
+.betabar{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:7;text-align:center;font-size:11px;font-weight:700;letter-spacing:.1em;background:var(--pole-red);color:#fff;padding:3px 0;pointer-events:none}
+.bcard .pill{margin-top:2px}
