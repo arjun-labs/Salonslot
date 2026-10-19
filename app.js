@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.19-7";
+const APP_VERSION = "2026.10.19-8";
 const IS_BETA = /\/beta\//.test(location.pathname);
 
 const fb = initializeApp(firebaseConfig);
@@ -85,8 +85,8 @@ const T = {
   adm_salons:"Salons", adm_live:"Live", adm_pending:"Payments to check", adm_collected:"Collected",
   adm_none:"No salons yet.", approve:"Approve", reject:"Reject", turn_off:"Switch off", turn_on:"Switch on", extend7:"+7 days trial",
   adm_paid:"Paid {plan} · UTR {utr}", adm_off:"Off", adm_check:"Check this UTR in your GPay before approving.",
-  download:"Download all data", download_p:"Saves every salon and booking as a file on this device. Do this once a week.",
-  adj_days:"Change days", days:"days", adj_done:"Now ends on {date}", approved:"Approved", rejected:"Payment request removed", switched:"Updated",
+  download:"Full backup (technical file)", download_p:"Saves every salon and booking as a file on this device. Do this once a week.",
+  adj_days:"Change days", days:"days", adj_done:"Now ends on {date}", csv_h:"Salon list (Excel / Google Sheets)", csv_p:"Name, owner, WhatsApp, email, address, Maps link, plan and end date for every salon, in one sheet. Opens in Excel, Google Sheets or Numbers.", csv_btn:"Download salon list", csv_done:"{n} salons saved", approved:"Approved", rejected:"Payment request removed", switched:"Updated",
   dw:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], mon:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
   sugg:[["Haircut",200,30],["Beard trim",100,30],["Shave",80,30],["Hair colour",600,60],["Facial",800,60],["Head massage",250,30],["Hair spa",900,60],["Kids haircut",150,30],["Threading",50,10],["Upper lip",30,10],["Eyebrow shaping",80,20],["Clean-up",400,45]]
  },
@@ -148,8 +148,8 @@ const T = {
   adm_salons:"सैलून", adm_live:"चालू", adm_pending:"Check करने वाले payments", adm_collected:"कुल मिले",
   adm_none:"अभी कोई सैलून नहीं है।", approve:"Approve", reject:"Reject", turn_off:"OFF करें", turn_on:"ON करें", extend7:"+7 दिन trial",
   adm_paid:"{plan} का payment · UTR {utr}", adm_off:"OFF", adm_check:"Approve करने से पहले ये UTR अपने GPay में check करें।",
-  download:"सारा data download करें", download_p:"सारे सैलून और bookings इस device में file बनकर save हो जाएंगे। हफ़्ते में एक बार करें।",
-  adj_days:"दिन बदलें", days:"दिन", adj_done:"अब {date} को ख़त्म होगा", approved:"Approve हो गया", rejected:"Payment request हटा दी", switched:"Update हो गया",
+  download:"पूरा backup (technical file)", download_p:"सारे सैलून और bookings इस device में file बनकर save हो जाएंगे। हफ़्ते में एक बार करें।",
+  adj_days:"दिन बदलें", days:"दिन", adj_done:"अब {date} को ख़त्म होगा", csv_h:"सैलून की list (Excel / Google Sheets)", csv_p:"हर सैलून का नाम, मालिक, WhatsApp, email, पता, Maps link, plan और ख़त्म होने की तारीख़, एक ही sheet में। Excel, Google Sheets या Numbers में खुलेगी।", csv_btn:"सैलून की list download करें", csv_done:"{n} सैलून save हो गए", approved:"Approve हो गया", rejected:"Payment request हटा दी", switched:"Update हो गया",
   dw:["रवि","सोम","मंगल","बुध","गुरु","शुक्र","शनि"], mon:["जन","फ़र","मार्च","अप्रै","मई","जून","जुला","अग","सितं","अक्टू","नवं","दिसं"],
   sugg:[["Haircut",200,30],["Beard trim",100,30],["Shave",80,30],["Hair colour",600,60],["Facial",800,60],["Head massage",250,30],["Hair spa",900,60],["Kids haircut",150,30],["Threading",50,10],["Upper lip",30,10],["Eyebrow shaping",80,20],["Clean-up",400,45]]
  }
@@ -557,6 +557,7 @@ function viewAdmin(){
         <span class="row" style="gap:4px" role="group" aria-label="${t("adj_days")}">${[-7,-1,1,7].map(d=>`<button class="btn sm ${d<0?"ghost":""}" data-a="admAdjust" data-v="${x.id}|${d}" aria-label="${d>0?"+":""}${d} ${t("days")}">${d>0?"+":"−"}${Math.abs(d)} ${t("days")}</button>`).join("")}</span>
         ${x.phone?`<a class="btn sm" href="${waLink(x.phone,"")}" target="_blank" rel="noopener">${t("whatsapp")}</a>`:""}
         <a class="btn sm ghost" href="${esc(linkFor(x.id))}" target="_blank" rel="noopener">${t("open_link")}</a></div></div>`; }).join(""):`<p class="muted">${t("adm_none")}</p>`}</div>
+  <div class="card"><h3>📋 ${t("csv_h")}</h3><p class="small muted">${t("csv_p")}</p><button class="btn primary" data-a="admCsv" ${UI.busy?"disabled":""}>${t("csv_btn")}</button></div>
   <div class="card"><h3>${t("download")}</h3><p class="small muted">${t("download_p")}</p><button class="btn" data-a="admDownload" ${UI.busy?"disabled":""}>${t("download")}</button></div>`;
 }
 function watchAdmin(){
@@ -694,6 +695,17 @@ const A = {
     const cur = (x.sub||{}).expires||0; const base = d>0 ? Math.max(Date.now(), cur) : cur;
     const next = Math.max(0, base + d*DAY);
     try{ await updateDoc(doc(db,"salons",id),{ "sub.expires": next }); toast(t("adj_done",{date:longDate(next)})); }catch(e){ toast(t("save_fail")); } },
+  admCsv: ()=>{
+    const cell = v => { const x = String(v==null?"":v).replace(/\r?\n/g," ").trim(); return /[",;]/.test(x) ? '"'+x.replace(/"/g,'""')+'"' : x; };
+    const head = ["Salon name","Owner","WhatsApp","Email","Address","Area / city","Google Maps link","Status","Plan","Plan ends","Joined","Total paid (Rs)","Barbers","Booking link"];
+    const rows = (S.allSalons||[]).slice().sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)).map(x=>{ const i = subInfo(x);
+      return [x.name, x.owner, x.phone, x.ownerEmail, x.address, x.area, x.mapLink,
+        !i.on?"OFF":i.active?"Active":"Ended", (x.sub&&x.sub.plan)||"Trial",
+        i.expires?new Date(i.expires).toISOString().slice(0,10):"", x.createdAt?new Date(x.createdAt).toISOString().slice(0,10):"",
+        (x.payments||[]).reduce((a,p)=>a+(Number(p.amt)||0),0), (x.barbers||[]).length, linkFor(x.id)].map(cell).join(","); });
+    const blob = new Blob(["\ufeff"+[head.join(",")].concat(rows).join("\r\n")], {type:"text/csv;charset=utf-8"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "salonslot-salons-"+ymd(new Date())+".csv"; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000);
+    toast(t("csv_done",{n:rows.length})); },
   admDownload: async ()=>{ UI.busy=true; render();
     try{ const out = [];
       for (const x of S.allSalons){ const bs = await getDocs(collection(db,"salons",x.id,"bookings")); out.push({...x, bookings: bs.docs.map(d=>({id:d.id,...d.data()}))}); }
