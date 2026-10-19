@@ -38,6 +38,10 @@ service cloud.firestore {
         );
       }
 
+      match /private/{docId} {
+        allow read, write: if isOwner(sid) || isAdmin();
+      }
+
       match /days/{date} {
         allow read: if true;
         allow write: if isOwner(sid) || isAdmin();
