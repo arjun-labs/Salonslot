@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.19-6";
+const APP_VERSION = "2026.10.19-7";
 const IS_BETA = /\/beta\//.test(location.pathname);
 
 const fb = initializeApp(firebaseConfig);
@@ -86,7 +86,7 @@ const T = {
   adm_none:"No salons yet.", approve:"Approve", reject:"Reject", turn_off:"Switch off", turn_on:"Switch on", extend7:"+7 days trial",
   adm_paid:"Paid {plan} · UTR {utr}", adm_off:"Off", adm_check:"Check this UTR in your GPay before approving.",
   download:"Download all data", download_p:"Saves every salon and booking as a file on this device. Do this once a week.",
-  approved:"Approved", rejected:"Payment request removed", switched:"Updated",
+  adj_days:"Change days", days:"days", adj_done:"Now ends on {date}", approved:"Approved", rejected:"Payment request removed", switched:"Updated",
   dw:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], mon:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
   sugg:[["Haircut",200,30],["Beard trim",100,30],["Shave",80,30],["Hair colour",600,60],["Facial",800,60],["Head massage",250,30],["Hair spa",900,60],["Kids haircut",150,30],["Threading",50,10],["Upper lip",30,10],["Eyebrow shaping",80,20],["Clean-up",400,45]]
  },
@@ -149,7 +149,7 @@ const T = {
   adm_none:"अभी कोई सैलून नहीं है।", approve:"Approve", reject:"Reject", turn_off:"OFF करें", turn_on:"ON करें", extend7:"+7 दिन trial",
   adm_paid:"{plan} का payment · UTR {utr}", adm_off:"OFF", adm_check:"Approve करने से पहले ये UTR अपने GPay में check करें।",
   download:"सारा data download करें", download_p:"सारे सैलून और bookings इस device में file बनकर save हो जाएंगे। हफ़्ते में एक बार करें।",
-  approved:"Approve हो गया", rejected:"Payment request हटा दी", switched:"Update हो गया",
+  adj_days:"दिन बदलें", days:"दिन", adj_done:"अब {date} को ख़त्म होगा", approved:"Approve हो गया", rejected:"Payment request हटा दी", switched:"Update हो गया",
   dw:["रवि","सोम","मंगल","बुध","गुरु","शुक्र","शनि"], mon:["जन","फ़र","मार्च","अप्रै","मई","जून","जुला","अग","सितं","अक्टू","नवं","दिसं"],
   sugg:[["Haircut",200,30],["Beard trim",100,30],["Shave",80,30],["Hair colour",600,60],["Facial",800,60],["Head massage",250,30],["Hair spa",900,60],["Kids haircut",150,30],["Threading",50,10],["Upper lip",30,10],["Eyebrow shaping",80,20],["Clean-up",400,45]]
  }
@@ -554,7 +554,7 @@ function viewAdmin(){
       ${x.payReq?`<div class="banner warn" style="flex-direction:column;align-items:flex-start"><span>${t("adm_paid",{plan:t(x.payReq.plan)+" ₹"+PLANS[x.payReq.plan].price,utr:esc(x.payReq.utr)})}</span><span class="small muted">${t("adm_check")}</span>
         <div class="row"><button class="btn sm primary" data-a="admApprove" data-v="${x.id}">${t("approve")}</button><button class="btn sm ghost" data-a="admReject" data-v="${x.id}">${t("reject")}</button></div></div>`:""}
       <div class="row" style="gap:6px">${i.on?`<button class="btn sm danger" data-a="admToggle" data-v="${x.id}">${t("turn_off")}</button>`:`<button class="btn sm primary" data-a="admToggle" data-v="${x.id}">${t("turn_on")}</button>`}
-        <button class="btn sm" data-a="admExtend" data-v="${x.id}">${t("extend7")}</button>
+        <span class="row" style="gap:4px" role="group" aria-label="${t("adj_days")}">${[-7,-1,1,7].map(d=>`<button class="btn sm ${d<0?"ghost":""}" data-a="admAdjust" data-v="${x.id}|${d}" aria-label="${d>0?"+":""}${d} ${t("days")}">${d>0?"+":"−"}${Math.abs(d)} ${t("days")}</button>`).join("")}</span>
         ${x.phone?`<a class="btn sm" href="${waLink(x.phone,"")}" target="_blank" rel="noopener">${t("whatsapp")}</a>`:""}
         <a class="btn sm ghost" href="${esc(linkFor(x.id))}" target="_blank" rel="noopener">${t("open_link")}</a></div></div>`; }).join(""):`<p class="muted">${t("adm_none")}</p>`}</div>
   <div class="card"><h3>${t("download")}</h3><p class="small muted">${t("download_p")}</p><button class="btn" data-a="admDownload" ${UI.busy?"disabled":""}>${t("download")}</button></div>`;
@@ -690,8 +690,10 @@ const A = {
     try{ await updateDoc(doc(db,"salons",id),{ "sub.plan":x.payReq.plan, "sub.expires":till, active:true, payReq:deleteField(), payments:arrayUnion({plan:x.payReq.plan, amt:pl.price, utr:x.payReq.utr, at:Date.now(), till}) }); toast(t("approved")); }catch(e){ console.error(e); toast(t("save_fail")); } },
   admReject: async id=>{ try{ await updateDoc(doc(db,"salons",id),{ payReq:deleteField() }); toast(t("rejected")); }catch(e){ toast(t("save_fail")); } },
   admToggle: async id=>{ const x = S.allSalons.find(s=>s.id===id); try{ await updateDoc(doc(db,"salons",id),{ active: x.active===false }); toast(t("switched")); }catch(e){ toast(t("save_fail")); } },
-  admExtend: async id=>{ const x = S.allSalons.find(s=>s.id===id); const base = Math.max(Date.now(), (x.sub||{}).expires||0);
-    try{ await updateDoc(doc(db,"salons",id),{ "sub.expires": base+7*DAY }); toast(t("switched")); }catch(e){ toast(t("save_fail")); } },
+  admAdjust: async v=>{ const [id, ds] = v.split("|"); const d = Number(ds); const x = S.allSalons.find(s=>s.id===id); if (!x) return;
+    const cur = (x.sub||{}).expires||0; const base = d>0 ? Math.max(Date.now(), cur) : cur;
+    const next = Math.max(0, base + d*DAY);
+    try{ await updateDoc(doc(db,"salons",id),{ "sub.expires": next }); toast(t("adj_done",{date:longDate(next)})); }catch(e){ toast(t("save_fail")); } },
   admDownload: async ()=>{ UI.busy=true; render();
     try{ const out = [];
       for (const x of S.allSalons){ const bs = await getDocs(collection(db,"salons",x.id,"bookings")); out.push({...x, bookings: bs.docs.map(d=>({id:d.id,...d.data()}))}); }
