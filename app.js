@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.19-5";
+const APP_VERSION = "2026.10.19-6";
 const IS_BETA = /\/beta\//.test(location.pathname);
 
 const fb = initializeApp(firebaseConfig);
@@ -374,7 +374,7 @@ function viewSetup(){
   return `${isAdmin()?`<button class="btn primary block" data-a="adminOnly">🛡️ ${t("nav_admin")}</button>`:""}<div class="stack"><p class="label">${t("step")} ${n} ${t("of")} ${total}</p><div class="steps">${Array.from({length:total},(_,i)=>`<i class="${i<n?"on":""}"></i>`).join("")}</div></div>
   <div class="card">${body}</div>
   ${UI.err?`<div class="banner bad" role="alert">${UI.err}</div>`:""}
-  <div class="row"><button class="btn grow" data-a="prev" ${n===1?"disabled":""}>${t("back")}</button><button class="btn primary grow" data-a="nextStep" ${UI.busy?"disabled":""}>${n===total?t("finish"):t("next")}</button></div>`;
+  <div class="row">${n===1?`<button class="btn grow" data-a="logout">${t("logout")}</button>`:`<button class="btn grow" data-a="prev">${t("back")}</button>`}<button class="btn primary grow" data-a="nextStep" ${UI.busy?"disabled":""}>${n===total?t("finish"):t("next")}</button></div>`;
 }
 function validate(o, n){
   if (n===1 && (!o.name.trim() || digits(o.phone).length!==10)) return t("need_name");
@@ -615,6 +615,12 @@ async function saveSalon(){
     toast(t("saved")); }catch(e){ console.error(e); toast(t("save_fail")); }
 }
 
+/* ================= back button ================= */
+const NAV = [];
+function pushNav(){ NAV.push({view:UI.view, tab:UI.tab, step:UI.step, barberId:UI.barberId, bookedData:UI.bookedData}); try{ history.pushState({n:NAV.length}, ""); }catch(e){} }
+window.addEventListener("popstate", () => { const st = NAV.pop(); if (!st) return; Object.assign(UI, st); UI.err=""; if (UI.view==="adminOnly"||UI.tab==="admin") watchAdmin(); render(); window.scrollTo(0,0); });
+const goBack = fallback => { if (NAV.length) history.back(); else { fallback(); render(); } };
+
 /* ================= actions ================= */
 const go = fn => { const r = fn(); render(); return r; };
 const A = {
@@ -625,13 +631,13 @@ const A = {
       if (e && e.code!=="auth/popup-closed-by-user") UI.err = t("signin_fail"); }
     UI.busy=false; render(); },
   logout: async ()=>{ await signOut(auth); },
-  adminOnly:()=>go(()=>{ UI.view="adminOnly"; watchAdmin(); window.scrollTo(0,0); }),
-  adminBack:()=>go(()=>{ UI.view="setup"; }),
-  tab:v=>go(()=>{ UI.tab=v; UI.err=""; if (v!=="book") UI.bookedData=null; if (v==="admin") watchAdmin(); window.scrollTo(0,0); }),
-  walkin:()=>go(()=>{ UI.tab="book"; UI.bookedData=null; UI.book={}; window.scrollTo(0,0); }),
-  prev:()=>go(()=>{ UI.err=""; if (UI.step>1) UI.step--; }),
+  adminOnly:()=>go(()=>{ pushNav(); UI.view="adminOnly"; watchAdmin(); window.scrollTo(0,0); }),
+  adminBack:()=>goBack(()=>{ UI.view="setup"; }),
+  tab:v=>go(()=>{ if (v!==UI.tab) pushNav(); UI.tab=v; UI.err=""; if (v!=="book") UI.bookedData=null; if (v==="admin") watchAdmin(); window.scrollTo(0,0); }),
+  walkin:()=>go(()=>{ pushNav(); UI.tab="book"; UI.bookedData=null; UI.book={}; window.scrollTo(0,0); }),
+  prev:()=>{ UI.err=""; goBack(()=>{ if (UI.step>1) UI.step--; }); },
   nextStep: async ()=>{ const e = validate(D, UI.step); UI.err = e; if (e){ render(); return; }
-    if (UI.step<5){ UI.step++; if (UI.step===4 && !D.barbers.length) D.barbers.push({id:uid(),name:"",spec:"",photo:""}); if (UI.step===5) cleanList(D); render(); window.scrollTo(0,0); return; }
+    if (UI.step<5){ pushNav(); UI.step++; if (UI.step===4 && !D.barbers.length) D.barbers.push({id:uid(),name:"",spec:"",photo:""}); if (UI.step===5) cleanList(D); render(); window.scrollTo(0,0); return; }
     UI.busy=true; render(); cleanList(D); const now = Date.now();
     const data = { ...D, ownerUid:S.user.uid, ownerEmail:S.user.email||"", active:true, createdAt:now, sub:{ plan:null, trialStart:now, expires: now+TRIAL_DAYS*DAY } };
     const contacts = cleanContacts(D); delete data.contacts;
@@ -669,7 +675,7 @@ const A = {
   sendDay:v=>{ const td = ymd(new Date()); let sd = {date:td, ids:[]}; try{ const x = JSON.parse(localStorage.getItem("ss_sent")||"null"); if (x && x.date===td) sd = x; }catch(e){}
     if (UI.sentDay && UI.sentDay.date===td) sd = UI.sentDay; if (!sd.ids.includes(v)) sd.ids.push(v); UI.sentDay = sd; try{ localStorage.setItem("ss_sent", JSON.stringify(sd)); }catch(e){} setTimeout(render, 400); },
   resetSent:()=>go(()=>{ UI.sentDay = {date:ymd(new Date()), ids:[]}; try{ localStorage.removeItem("ss_sent"); }catch(e){} }),
-  openBarber:v=>go(()=>{ UI.barberId=v; UI.tab="barber"; window.scrollTo(0,0); }),
+  openBarber:v=>go(()=>{ pushNav(); UI.barberId=v; UI.tab="barber"; window.scrollTo(0,0); }),
   remSent:v=>{ markReminded(v); updateDoc(doc(db,"salons",S.sid,"bookings",v),{reminded:true}).catch(()=>{}); setTimeout(checkReminders,300); },
   remLater:v=>{ markReminded(v); checkReminders(); },
   reload:()=>{ location.reload(); },
