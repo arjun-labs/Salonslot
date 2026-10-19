@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, onSnapshot, runTransaction, deleteField, getDocs, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, onSnapshot, runTransaction, deleteField, getDocs, arrayUnion, writeBatch, collectionGroup, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ================= config ================= */
 const firebaseConfig = {
@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.19-12";
+const APP_VERSION = "2026.10.20-1";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version
@@ -34,7 +34,7 @@ const T = {
   tagline:"Salon booking, made simple",
   welcome_h:"Run your salon's bookings from one phone",
   welcome_p:"Customers open your link, pick a barber, a service and a time. You see every booking the moment it comes in.",
-  signin:"Sign in with Google", signin_note:"Open this page in Chrome to sign in. Sign-in doesn't work inside WhatsApp or Instagram.", free_trial:"7-day free trial. No card needed.",
+  signin:"Sign in with Google", signin_note:"Open this page in Chrome to sign in. Sign-in doesn't work inside WhatsApp or Instagram.", free_trial:"Welcome offer: 10 days free. No card needed.",
   signin_fail:"Sign-in didn't finish. Open the link in Chrome and try again.",
   step:"Step", of:"of", next:"Next", back:"Back", finish:"Start my salon",
   s1_h:"Your salon", salon_name:"Salon name", owner_name:"Owner name", phone:"WhatsApp number", area:"Area / city", optional:"optional",
@@ -42,7 +42,17 @@ const T = {
   s3_h:"Services and prices", s3_p:"Tap a suggestion to add it, or type your own.", svc_name:"Service", price:"Price ₹", mins:"Minutes", add_service:"Add service",
   s4_h:"Your barbers", s4_p:"Add a photo, name and speciality for each barber. Customers see these when they book.", how_many:"How many barbers?",
   barber_name:"Name", speciality:"Speciality", spec_ph:"e.g. Beard expert, Hair colour", add_barber:"Add barber", tap_photo:"Tap the circle to add a photo",
-  s5_h:"You're ready", s5_p:"Your 7-day free trial starts now. Share your booking link and start taking bookings.",
+  s5_h:"You're ready", s5_p:"Your free trial starts now, and a welcome gift is waiting for you in Rewards. Share your booking link and start taking bookings.",
+  nav_rewards:"Rewards", rw_h:"Rewards", rw_p:"Scratch cards and offers for your salon.", rw_new:"New for you", rw_scratch:"Scratch here", rw_scratch_hint:"Rub with your finger",
+  rw_tap:"Tap to open", rw_mine:"Your rewards", rw_added:"{n} days added to your plan", rw_open:"Open offer", rw_none:"No new cards right now. New offers will show up here.",
+  rw_home:"A scratch card is waiting for you", rw_home_n:"{n} scratch cards are waiting for you", rw_open_btn:"Open", rw_ends:"Till {date}", rw_fail:"Couldn't open the card. Check the internet and try again.",
+  rw_got:"Got on {date}", rw_gift:"Your gift", rw_partner:"Partner offers", rw_code:"Code", rw_free:"FREE", rw_preview:"Preview", rw_preview_p:"Only you see this. Nothing is added to any salon.",
+  adm_rw_h:"Rewards and offers", adm_rw_p:"Scratch cards that salons see in their Rewards tab. A free-days card adds days to their plan by itself. A partner offer shows a brand's code and link.",
+  adm_rw_new:"New offer", of_kind:"Type", of_days_k:"Free days (scratch card)", of_deal_k:"Partner / brand offer", of_title:"Title (on the card)", of_desc:"Short line",
+  of_days:"Days to add", of_reveal:"Big text after scratch", of_note:"Line after scratch", of_brand:"Brand name", of_code:"Coupon code", of_link:"Offer link",
+  of_ends:"Last day", of_newonly:"Only salons that join from now on", of_save:"Create offer", of_need:"Add a title. A free-days card needs 1 to 30 days. A link must start with https://",
+  of_claims:"{n} opened", of_clicks:"{n} clicked", of_del:"Delete", of_del_sure:"Yes, delete", of_new_pill:"New salons only", of_all_pill:"All salons",
+  of_make_all:"Show to all salons", of_make_new:"Only new salons", of_created:"Offer created", of_none:"No offers yet.",
   need_name:"Enter the salon name and a 10-digit WhatsApp number to continue.", need_svc:"Add at least one service with a price.", need_barber:"Add at least one barber with a name.",
   nav_home:"Today", nav_book:"Book", nav_barber:"Barbers", nav_plan:"Plan", nav_settings:"Settings", nav_admin:"Admin",
   hello:"Good to see you", today_bk:"Today's bookings", earned:"Earned today", upcoming:"Coming up",
@@ -97,7 +107,7 @@ const T = {
   tagline:"सैलून बुकिंग, आसान",
   welcome_h:"अपने सैलून की सारी बुकिंग एक फ़ोन से चलाइए",
   welcome_p:"ग्राहक आपका link खोलकर barber, service और time चुनता है। Booking आते ही आपको दिख जाती है।",
-  signin:"Google से login करें", signin_note:"Login के लिए ये page Chrome में खोलें। WhatsApp या Instagram के अंदर login नहीं होता।", free_trial:"7 दिन का free trial. कोई card नहीं चाहिए।",
+  signin:"Google से login करें", signin_note:"Login के लिए ये page Chrome में खोलें। WhatsApp या Instagram के अंदर login नहीं होता।", free_trial:"Welcome offer: 10 दिन FREE. कोई card नहीं चाहिए।",
   signin_fail:"Login पूरा नहीं हुआ। Link को Chrome में खोलकर फिर कोशिश करें।",
   step:"Step", of:"/", next:"आगे", back:"पीछे", finish:"सैलून चालू करो",
   s1_h:"आपका सैलून", salon_name:"सैलून का नाम", owner_name:"मालिक का नाम", phone:"WhatsApp नंबर", area:"एरिया / शहर", optional:"ज़रूरी नहीं",
@@ -105,7 +115,17 @@ const T = {
   s3_h:"Services और दाम", s3_p:"Suggestion पर tap करके जोड़ें, या खुद लिखें।", svc_name:"Service", price:"दाम ₹", mins:"मिनट", add_service:"Service जोड़ें",
   s4_h:"आपके barbers", s4_p:"हर barber की photo, नाम और speciality डालें। Booking करते वक़्त ग्राहक को ये दिखेगा।", how_many:"कितने barbers हैं?",
   barber_name:"नाम", speciality:"Speciality", spec_ph:"जैसे Beard expert, Hair colour", add_barber:"Barber जोड़ें", tap_photo:"Photo लगाने के लिए गोले पर tap करें",
-  s5_h:"सब तैयार है", s5_p:"आपका 7 दिन का free trial अभी शुरू हो गया। Booking link share करें और bookings लेना शुरू करें।",
+  s5_h:"सब तैयार है", s5_p:"आपका free trial अभी शुरू हो गया, और Rewards में आपके लिए एक Welcome Gift रखा है। Booking link share करें और bookings लेना शुरू करें।",
+  nav_rewards:"Rewards", rw_h:"Rewards", rw_p:"आपके सैलून के लिए scratch cards और offers।", rw_new:"आपके लिए नया", rw_scratch:"यहाँ scratch करें", rw_scratch_hint:"उँगली से घिसें",
+  rw_tap:"Tap करके खोलें", rw_mine:"आपको मिले rewards", rw_added:"आपके plan में {n} दिन जुड़ गए", rw_open:"Offer खोलें", rw_none:"अभी कोई नया card नहीं है। नए offers यहीं दिखेंगे।",
+  rw_home:"आपके लिए एक scratch card है", rw_home_n:"आपके लिए {n} scratch cards हैं", rw_open_btn:"खोलें", rw_ends:"{date} तक", rw_fail:"Card नहीं खुला। Internet check करके फिर कोशिश करें।",
+  rw_got:"{date} को मिला", rw_gift:"आपका gift", rw_partner:"Partner offers", rw_code:"Code", rw_free:"FREE", rw_preview:"Preview", rw_preview_p:"ये सिर्फ़ आपको दिख रहा है। किसी सैलून में कुछ नहीं जुड़ेगा।",
+  adm_rw_h:"Rewards और offers", adm_rw_p:"सैलून के Rewards tab में दिखने वाले scratch cards। Free-days वाले card से plan में दिन अपने आप जुड़ जाते हैं। Partner offer में brand का code और link दिखता है।",
+  adm_rw_new:"नया offer", of_kind:"Type", of_days_k:"Free दिन (scratch card)", of_deal_k:"Partner / brand offer", of_title:"Title (card पर)", of_desc:"छोटी line",
+  of_days:"कितने दिन जुड़ें", of_reveal:"Scratch के बाद बड़ा text", of_note:"Scratch के बाद की line", of_brand:"Brand का नाम", of_code:"Coupon code", of_link:"Offer link",
+  of_ends:"आख़िरी दिन", of_newonly:"सिर्फ़ अब से जुड़ने वाले सैलून", of_save:"Offer बनाएं", of_need:"Title डालें। Free-days card में 1 से 30 दिन डालें। Link https:// से शुरू होना चाहिए।",
+  of_claims:"{n} ने खोला", of_clicks:"{n} ने click किया", of_del:"Delete", of_del_sure:"हाँ, delete करें", of_new_pill:"सिर्फ़ नए सैलून", of_all_pill:"सारे सैलून",
+  of_make_all:"सारे सैलून को दिखाएं", of_make_new:"सिर्फ़ नए सैलून", of_created:"Offer बन गया", of_none:"अभी कोई offer नहीं है।",
   need_name:"आगे बढ़ने के लिए सैलून का नाम और 10 अंकों का WhatsApp नंबर डालें।", need_svc:"कम से कम एक service दाम के साथ डालें।", need_barber:"कम से कम एक barber का नाम डालें।",
   nav_home:"आज", nav_book:"Booking", nav_barber:"Barbers", nav_plan:"Plan", nav_settings:"Settings", nav_admin:"Admin",
   hello:"नमस्ते", today_bk:"आज की bookings", earned:"आज की कमाई", upcoming:"आगे की",
@@ -187,9 +207,12 @@ const params = new URLSearchParams(location.search);
 const CUSTOMER_SID = params.get("s");
 const app = document.getElementById("app");
 
-const S = { user:null, salon:null, sid:null, bookings:[], loaded:false, unsub:[], firstSnap:true, allSalons:null };
+const S = { user:null, salon:null, sid:null, bookings:[], loaded:false, unsub:[], firstSnap:true, allSalons:null, offers:null, claims:{}, allClaims:null };
 let SENT0 = null; try{ SENT0 = JSON.parse(localStorage.getItem("ss_sent")||"null"); }catch(e){}
-const UI = { sentDay: SENT0, view:"loading", step:1, tab:"home", book:{}, bookedId:null, bookedData:null, barberId:null, planPick:"monthly", err:"", busy:false, day:{} };
+const UI = { sentDay: SENT0, view:"loading", step:1, tab:"home", book:{}, bookedId:null, bookedData:null, barberId:null, planPick:"monthly", err:"", busy:false, day:{},
+  scratching:null, pendingRender:false, justGot:null, prevDone:{}, ofPreview:null, ofDelAsk:null, ofErr:"", of:null };
+const OF0 = () => ({ kind:"days", title:"", desc:"", days:"3", reveal:"", note:"", brand:"", code:"", link:"", ends:"", newOnly:false });
+UI.of = OF0();
 let D = null; // setup draft
 
 const isAdmin = () => !!(S.user && S.user.email === ADMIN_EMAIL);
@@ -280,6 +303,7 @@ function topBar(name, sub){
   <div class="lang" role="group" aria-label="Language"><button data-a="lang" data-v="hi" class="${LANG==="hi"?"on":""}">हिंदी</button><button data-a="lang" data-v="en" class="${LANG==="en"?"on":""}">EN</button></div></div></header>`;
 }
 function render(){
+  if (UI.scratching){ UI.pendingRender = true; return; } // don't wipe a card while someone is scratching it
   const y = window.scrollY; let html = "";
   if (CUSTOMER_SID){ html = renderCustomer(); }
   else {
@@ -289,25 +313,27 @@ function render(){
     else if (UI.view==="login") html += viewLogin();
     else if (UI.view==="setup") html += viewSetup();
     else if (UI.view==="adminOnly") html += `<button class="btn sm" data-a="adminBack">← ${t("back")}</button>` + viewAdmin();
-    else html += ({home:viewHome, book:viewBook, barber:viewBarber, plan:viewPlan, settings:viewSettings, admin:viewAdmin}[UI.tab]||viewHome)();
+    else html += ({home:viewHome, book:viewBook, barber:viewBarber, rewards:viewRewards, plan:viewPlan, settings:viewSettings, admin:viewAdmin}[UI.tab]||viewHome)();
     html += "</main>";
     if (UI.view==="main") html += navBar();
   }
   app.innerHTML = html; window.scrollTo(0,y);
-  drawQRs();
+  drawQRs(); initScratch();
 }
 function navBar(){
   const ic = {
     home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
     book:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/>',
     barber:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.5c2.4.2 4 1.8 4.6 4.5"/>',
+    rewards:'<rect x="3" y="8.5" width="18" height="12.5" rx="1.5"/><path d="M3 12.5h18M12 8.5V21M12 8.5C10.6 5.3 7.2 4.4 6.8 6.4 6.4 8.4 9.8 8.5 12 8.5zm0 0c1.4-3.2 4.8-4.1 5.2-2.1.4 2-3 2.1-5.2 2.1z"/>',
     plan:'<rect x="2.5" y="5.5" width="19" height="13" rx="2"/><path d="M2.5 10h19M6.5 15h4"/>',
     settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
     admin:'<path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>'
   };
-  const tabs = ["home","book","barber","plan","settings"].concat(isAdmin()?["admin"]:[]);
-  return `<nav class="nav ${tabs.length>5?"six":""}" aria-label="Main"><div>${tabs.map(k=>
-    `<button data-a="tab" data-v="${k}" class="${UI.tab===k?"on":""}" aria-current="${UI.tab===k?"page":"false"}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic[k]}</svg>${t("nav_"+k)}</button>`).join("")}</div></nav>`;
+  const tabs = ["home","book","barber","rewards","plan","settings"].concat(isAdmin()?["admin"]:[]);
+  const fresh = freshOffers().length;
+  return `<nav class="nav ${tabs.length>6?"seven":tabs.length>5?"six":""}" aria-label="Main"><div>${tabs.map(k=>
+    `<button data-a="tab" data-v="${k}" class="${UI.tab===k?"on":""}" aria-current="${UI.tab===k?"page":"false"}"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic[k]}</svg>${k==="rewards"&&fresh?`<i class="dot" aria-label="${fresh}"></i>`:""}</span>${t("nav_"+k)}</button>`).join("")}</div></nav>`;
 }
 
 const brandFoot = () => `<p class="brandfoot">${t("booked_by")} <a href="https://www.instagram.com/salon.slot/" target="_blank" rel="noopener"><b>SalonSlot</b> · @salon.slot</a><br><span>Powered by <a href="https://www.instagram.com/visualzonefilms/" target="_blank" rel="noopener">Visual Zone Films</a></span></p>`;
@@ -449,7 +475,9 @@ function viewHome(){
   const up = today.filter(k=>k.status==="booked" && k.time>=nowHM).length;
   const later = S.bookings.filter(k=>k.date>td && k.status==="booked").sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).slice(0,8);
   let last = "";
+  const fresh = freshOffers().length;
   return `${subBanner()}
+  ${fresh?`<button class="giftbar" data-a="tab" data-v="rewards"><span class="gi" aria-hidden="true">🎁</span><span class="grow">${fresh===1?t("rw_home"):t("rw_home_n",{n:fresh})}</span><b>${t("rw_open_btn")} →</b></button>`:""}
   ${!String(S.salon.address||"").trim()?`<div class="banner warn"><span style="flex:1">${t("addr_missing")}</span><button class="btn sm saffron" data-a="tab" data-v="settings">${t("nav_settings")}</button></div>`:""}
   <div><p class="muted">${t("hello")}${S.salon.owner?", "+esc(S.salon.owner):""}</p><h1>${dayLabel(td)}</h1></div>
   <div class="stats"><div class="stat"><b>${today.filter(k=>k.status!=="cancelled").length}</b><span>${t("today_bk")}</span></div>
@@ -546,6 +574,124 @@ function viewSettings(){
     <button class="btn" data-a="logout">${t("logout")}</button></div>`;
 }
 
+/* ================= rewards ================= */
+// offers/{id}: kind "days" (scratch card that adds free days) or "deal" (partner/brand code + link)
+function offerLive(o){ return !!o && o.active===true && (!o.endsAt || o.endsAt > Date.now()); }
+function offerFor(o, s){ return offerLive(o) && (!o.newSince || ((s&&s.createdAt)||0) >= o.newSince); }
+const byOrder = (a,b) => (a.order||0)-(b.order||0) || (a.createdAt||0)-(b.createdAt||0);
+function freshOffers(){ if (!S.salon || !S.offers) return []; return S.offers.filter(o=>offerFor(o,S.salon) && !(S.claims||{})[o.id]).sort(byOrder); }
+function revealBig(o){ return o.reveal || (o.kind==="deal" ? (o.code||"") : "+"+(Number(o.days)||0)+" "+t("days")+" "+t("rw_free")); }
+function revealNote(o){ return o.note || (o.kind==="days" ? t("rw_added",{n:Number(o.days)||0}) : ""); }
+function cardHead(o){
+  return `<div class="shead"><span class="label">${esc(o.kind==="deal" ? (o.brand||t("rw_partner")) : "SalonSlot")}</span><b>${esc(o.title||"")}</b>
+    ${o.desc?`<span class="small">${esc(o.desc)}</span>`:""}${o.endsAt?`<span class="small soft">${t("rw_ends",{date:longDate(o.endsAt)})}</span>`:""}</div>`;
+}
+function scratchCard(o, preview){
+  return `<div class="scard ${o.kind==="deal"?"deal":""}">${cardHead(o)}
+    <div class="sarea"><div class="sreveal"><span class="label">${t("rw_gift")}</span><b class="sbig">${esc(revealBig(o))}</b>${revealNote(o)?`<span class="small">${esc(revealNote(o))}</span>`:""}</div>
+      <canvas data-scratch="${o.id}" ${preview?'data-preview="1"':""} aria-hidden="true"></canvas></div>
+    <button class="btn sm ghost stap" data-a="${preview?"rwPrevOpen":"rwReveal"}" data-v="${o.id}">${t("rw_tap")}</button></div>`;
+}
+function rewardDone(o, c){
+  const deal = o.kind==="deal";
+  return `<div class="scard open ${deal?"deal":""} ${UI.justGot===o.id?"pop":""}">${cardHead(o)}
+    <div class="sarea"><div class="sreveal"><span class="label">${t("rw_gift")}</span><b class="sbig">${esc(revealBig(o))}</b>${revealNote(o)?`<span class="small">${esc(revealNote(o))}</span>`:""}</div></div>
+    ${deal && o.code?`<div class="copy"><span class="small muted">${t("rw_code")}</span><code>${esc(o.code)}</code><button class="btn sm" data-a="copy" data-v="${esc(o.code)}">${t("copy")}</button></div>`:""}
+    ${deal && o.link?`<a class="btn primary block" data-a="rwClick" data-v="${o.id}" href="${esc(o.link)}" target="_blank" rel="noopener">${t("rw_open")} →</a>`:""}
+    ${c && c.at?`<span class="small muted">${t("rw_got",{date:longDate(c.at)})}</span>`:""}</div>`;
+}
+function viewRewards(){
+  const fresh = freshOffers(), cl = S.claims||{};
+  const mine = (S.offers||[]).filter(o=>cl[o.id]).sort((a,b)=>(cl[b.id].at||0)-(cl[a.id].at||0));
+  const freshDays = fresh.filter(o=>o.kind!=="deal"), freshDeals = fresh.filter(o=>o.kind==="deal");
+  return `<div><h1>${t("rw_h")}</h1><p class="small muted" style="margin-top:4px">${t("rw_p")}</p></div>
+  ${S.offers===null?`<div class="center"><div class="spin"></div></div>`:""}
+  ${freshDays.length?`<p class="label">${t("rw_new")}</p><div class="sgrid">${freshDays.map(o=>scratchCard(o)).join("")}</div>`:""}
+  ${freshDeals.length?`<p class="label">${t("rw_partner")}</p><div class="sgrid">${freshDeals.map(o=>scratchCard(o)).join("")}</div>`:""}
+  ${S.offers!==null && !fresh.length?`<div class="card lock"><div class="big" aria-hidden="true">🎁</div><p class="muted">${t("rw_none")}</p></div>`:""}
+  ${mine.length?`<p class="label">${t("rw_mine")}</p><div class="sgrid">${mine.map(o=>rewardDone(o, cl[o.id])).join("")}</div>`:""}`;
+}
+async function claimOffer(o){
+  const cref = doc(db,"salons",S.sid,"claims",o.id);
+  const days = o.kind==="deal" ? 0 : (Number(o.days)||0);
+  const data = { oid:o.id, days, at:Date.now() };
+  if (days>0){
+    const cur = (S.salon.sub||{}).expires||0, now = Date.now();
+    const next = (cur>now ? cur : now) + days*DAY;
+    const b = writeBatch(db);
+    b.set(cref, data);
+    b.update(doc(db,"salons",S.sid), { "sub.expires": next, lastClaim: o.id });
+    await b.commit();
+  } else await setDoc(cref, data);
+}
+
+/* scratch: silver layer on a canvas, rubbed away with a finger or mouse */
+function initScratch(){
+  document.querySelectorAll("canvas[data-scratch]").forEach(cv=>{
+    if (cv.dataset.init) return; cv.dataset.init = "1";
+    const box = cv.parentElement, w = box.clientWidth, h = box.clientHeight, r = window.devicePixelRatio||1;
+    if (!w || !h) return;
+    cv.width = Math.round(w*r); cv.height = Math.round(h*r);
+    const g = cv.getContext("2d", {willReadFrequently:true}); g.scale(r,r);
+    g.fillStyle = "#C8C4BC"; g.fillRect(0,0,w,h);
+    g.strokeStyle = "rgba(255,255,255,.32)"; g.lineWidth = 5;
+    for (let x=-h; x<w; x+=14){ g.beginPath(); g.moveTo(x,h); g.lineTo(x+h,0); g.stroke(); }
+    g.fillStyle = "#24211F"; g.textAlign = "center"; g.textBaseline = "middle";
+    g.font = "700 20px Hind, system-ui, sans-serif"; g.fillText(t("rw_scratch"), w/2, h/2-10);
+    g.font = "500 14px Hind, system-ui, sans-serif"; g.fillText(t("rw_scratch_hint"), w/2, h/2+14);
+    g.globalCompositeOperation = "destination-out"; g.strokeStyle = "#000"; g.fillStyle = "#000"; g.lineCap = "round"; g.lineJoin = "round"; g.lineWidth = 40;
+    const id = cv.dataset.scratch, preview = !!cv.dataset.preview;
+    let down = false, last = null, moves = 0, fin = false;
+    const pos = e => { const b = cv.getBoundingClientRect(); return [e.clientX-b.left, e.clientY-b.top]; };
+    const cleared = () => { const d = g.getImageData(0,0,cv.width,cv.height).data; let c=0, n=0; for (let i=3; i<d.length; i+=4*37){ n++; if (d[i]===0) c++; } return n ? c/n : 0; };
+    const finish = () => { if (fin) return; fin = true; down = false; cv.style.transition = "opacity .45s"; cv.style.opacity = "0";
+      setTimeout(()=>{ UI.scratching = null; UI.pendingRender = false; preview ? A.rwPrevOpen(id) : A.rwReveal(id); }, 460); };
+    cv.addEventListener("pointerdown", e => { if (fin) return; down = true; UI.scratching = id; try{ cv.setPointerCapture(e.pointerId); }catch(x){}
+      last = pos(e); g.beginPath(); g.arc(last[0], last[1], 20, 0, 7); g.fill(); e.preventDefault(); });
+    cv.addEventListener("pointermove", e => { if (!down) return; const p = pos(e); g.beginPath(); g.moveTo(last[0],last[1]); g.lineTo(p[0],p[1]); g.stroke(); last = p;
+      if (++moves % 6 === 0 && cleared() > 0.45) finish(); });
+    const up = () => { if (!down) return; down = false; if (cleared() > 0.45) finish();
+      else { UI.scratching = null; if (UI.pendingRender){ UI.pendingRender = false; render(); } } };
+    cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up); cv.addEventListener("pointerleave", up);
+  });
+}
+
+function adminRewards(){
+  const offers = (S.offers||[]).slice().sort(byOrder), o = UI.of;
+  const cnt = {}, clk = {}; (S.allClaims||[]).forEach(c=>{ cnt[c.oid] = (cnt[c.oid]||0)+1; if (c.clicked) clk[c.oid] = (clk[c.oid]||0)+1; });
+  const f = (k, label, type, ph) => `<label class="field"><span class="small">${label}</span><input type="${type||"text"}" id="of_${k}" data-of="${k}" value="${esc(o[k])}" ${ph?`placeholder="${esc(ph)}"`:""} ${type==="number"?'inputmode="numeric" min="1" max="30"':""}></label>`;
+  return `<div class="card"><h2>🎁 ${t("adm_rw_h")}</h2><p class="small muted">${t("adm_rw_p")}</p>
+    ${offers.length?offers.map(x=>{ const live = offerLive(x);
+      return `<div class="srow"><div class="row" style="gap:8px"><b class="grow">${esc(x.title||"—")}</b>${live?`<span class="pill ok">${t("active")}</span>`:`<span class="pill bad">${t("adm_off")}</span>`}</div>
+        <span class="small muted">${x.kind==="deal"?esc((x.brand||"")+" · "+(x.code||"")):"+"+esc(x.days)+" "+t("days")} · ${x.newSince?t("of_new_pill"):t("of_all_pill")}${x.endsAt?" · "+t("rw_ends",{date:longDate(x.endsAt)}):""}</span>
+        <span class="small"><b>${t("of_claims",{n:cnt[x.id]||0})}</b>${x.kind==="deal"?" · "+t("of_clicks",{n:clk[x.id]||0}):""}</span>
+        <div class="row" style="gap:6px">
+          <button class="btn sm ${x.active?"danger":"primary"}" data-a="ofToggle" data-v="${x.id}">${x.active?t("turn_off"):t("turn_on")}</button>
+          <button class="btn sm" data-a="ofAudience" data-v="${x.id}">${x.newSince?t("of_make_all"):t("of_make_new")}</button>
+          <button class="btn sm" data-a="ofPreview" data-v="${x.id}">${t("rw_preview")}</button>
+          ${UI.ofDelAsk===x.id?`<button class="btn sm danger" data-a="ofDel" data-v="${x.id}">${t("of_del_sure")}</button>`:`<button class="btn sm ghost" data-a="ofDelAsk" data-v="${x.id}">${t("of_del")}</button>`}</div>
+        ${UI.ofPreview===x.id?`<p class="small muted">${t("rw_preview_p")}</p>${UI.prevDone[x.id]?rewardDone(x,null):scratchCard(x,true)}`:""}</div>`; }).join(""):`<p class="muted">${t("of_none")}</p>`}
+    <hr><h3>${t("adm_rw_new")}</h3>
+    <div class="field"><span class="small">${t("of_kind")}</span><div class="chips">
+      <button class="chip ${o.kind==="days"?"on":""}" data-a="ofKind" data-v="days" aria-pressed="${o.kind==="days"}">${t("of_days_k")}</button>
+      <button class="chip ${o.kind==="deal"?"on":""}" data-a="ofKind" data-v="deal" aria-pressed="${o.kind==="deal"}">${t("of_deal_k")}</button></div></div>
+    ${o.kind==="deal"?f("brand",t("of_brand"),"text","Brand"):""}
+    ${f("title",t("of_title"),"text",o.kind==="deal"?"20% off on hair colour":"Diwali Bonus")}
+    ${f("desc",t("of_desc")+" ("+t("optional")+")")}
+    ${o.kind==="days"?f("days",t("of_days"),"number"):f("code",t("of_code"),"text","SALON20")+f("link",t("of_link")+" ("+t("optional")+")","url","https://")}
+    ${f("reveal",t("of_reveal")+" ("+t("optional")+")","text",o.kind==="days"?"+"+(o.days||3)+" "+t("days")+" FREE":(o.code||"SALON20"))}
+    ${f("note",t("of_note")+" ("+t("optional")+")")}
+    ${f("ends",t("of_ends")+" ("+t("optional")+")","date")}
+    <label class="row small" style="gap:8px"><input type="checkbox" id="of_newOnly" data-of="newOnly" ${o.newOnly?"checked":""} style="width:20px;height:20px">${t("of_newonly")}</label>
+    ${UI.ofErr?`<div class="banner bad" role="alert">${UI.ofErr}</div>`:""}
+    <button class="btn primary" data-a="ofSave" ${UI.busy?"disabled":""}>${t("of_save")}</button></div>`;
+}
+const WELCOME = () => ({ kind:"days", days:3, title:"Welcome Gift", desc:"SalonSlot परिवार में स्वागत है!", reveal:"10 दिन FREE",
+  note:"आपके free trial में 3 दिन और जुड़ गए। अब पूरे 10 दिन आराम से चलाइए।", active:true, newSince:Date.now(), endsAt:0, order:0, createdAt:Date.now() });
+let welcomeTried = false;
+function seedWelcome(){ if (!isAdmin() || !S.offers || welcomeTried || S.offers.some(o=>o.id==="welcome")) return; welcomeTried = true;
+  setDoc(doc(db,"offers","welcome"), WELCOME()).catch(e=>console.error("welcome offer", e)); }
+
 /* ================= admin ================= */
 function viewAdmin(){
   if (!isAdmin()) return "";
@@ -569,6 +715,7 @@ function viewAdmin(){
         <span class="row" style="gap:4px" role="group" aria-label="${t("adj_days")}">${[-7,-1,1,7].map(d=>`<button class="btn sm ${d<0?"ghost":""}" data-a="admAdjust" data-v="${x.id}|${d}" aria-label="${d>0?"+":""}${d} ${t("days")}">${d>0?"+":"−"}${Math.abs(d)} ${t("days")}</button>`).join("")}</span>
         ${x.phone?`<a class="btn sm" href="${waLink(x.phone,"")}" target="_blank" rel="noopener">${t("whatsapp")}</a>`:""}
         <a class="btn sm ghost" href="${esc(linkFor(x.id))}" target="_blank" rel="noopener">${t("open_link")}</a></div></div>`; }).join(""):`<p class="muted">${t("adm_none")}</p>`}</div>
+  ${adminRewards()}
   <div class="card"><h3>📋 ${t("csv_h")}</h3><p class="small muted">${t("csv_p")}</p><button class="btn primary" data-a="admCsv" ${UI.busy?"disabled":""}>${t("csv_btn")}</button></div>
   <div class="card"><h3>${t("download")}</h3><p class="small muted">${t("download_p")}</p><button class="btn" data-a="admDownload" ${UI.busy?"disabled":""}>${t("download")}</button></div>`;
 }
@@ -577,6 +724,16 @@ function watchAdmin(){
   if (!isAdmin() || S.adminUnsub) return;
   S.adminUnsub = onSnapshot(collection(db,"salons"), snap => { S.allSalons = snap.docs.map(d=>({id:d.id,...d.data()})); if (UI.tab==="admin" || UI.view==="adminOnly") render(); },
     err => { console.error(err); S.allSalons = []; render(); });
+  S.adminClaimsUnsub = onSnapshot(collectionGroup(db,"claims"), snap => { S.allClaims = snap.docs.map(d=>({sid:d.ref.parent.parent.id, ...d.data()})); if ((UI.tab==="admin" || UI.view==="adminOnly") && !typing()) render(); },
+    err => { console.error(err); S.allClaims = []; });
+  watchOffers();
+}
+const typing = () => !!(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select,textarea"));
+function watchOffers(){
+  if (S.offersUnsub || !S.user) return;
+  S.offersUnsub = onSnapshot(collection(db,"offers"), snap => { S.offers = snap.docs.map(d=>({id:d.id,...d.data()})); seedWelcome();
+    if ((UI.view==="main" || UI.view==="adminOnly") && !typing()) render(); },
+    err => { console.error(err); S.offers = []; });
 }
 
 /* ================= customer page ================= */
@@ -705,6 +862,28 @@ const A = {
   admApprove: async id=>{ const x = S.allSalons.find(s=>s.id===id); if (!x||!x.payReq) return; const pl = PLANS[x.payReq.plan];
     const base = Math.max(Date.now(), (x.sub||{}).expires||0), till = base + pl.days*DAY;
     try{ await updateDoc(doc(db,"salons",id),{ "sub.plan":x.payReq.plan, "sub.expires":till, active:true, payReq:deleteField(), payments:arrayUnion({plan:x.payReq.plan, amt:pl.price, utr:x.payReq.utr, at:Date.now(), till}) }); toast(t("approved")); }catch(e){ console.error(e); toast(t("save_fail")); } },
+  rwReveal: async id=>{ const o = (S.offers||[]).find(x=>x.id===id); if (!o || UI.claiming || (S.claims||{})[id]) { render(); return; }
+    UI.claiming = true; UI.scratching = null;
+    try{ await claimOffer(o); UI.justGot = id; beep(); try{ navigator.vibrate && navigator.vibrate(120); }catch(e){} setTimeout(()=>{ UI.justGot = null; }, 2500); }
+    catch(e){ console.error(e); toast(t("rw_fail")); }
+    UI.claiming = false; render(); },
+  rwClick: id=>{ const c = (S.claims||{})[id]; if (c && !c.clicked) updateDoc(doc(db,"salons",S.sid,"claims",id),{clicked:true}).catch(()=>{}); },
+  rwPrevOpen: id=>go(()=>{ UI.scratching = null; UI.prevDone[id] = true; }),
+  ofKind: v=>go(()=>{ UI.of.kind = v; UI.ofErr = ""; }),
+  ofPreview: id=>go(()=>{ UI.ofPreview = UI.ofPreview===id ? null : id; UI.prevDone[id] = false; }),
+  ofToggle: async id=>{ const x = (S.offers||[]).find(o=>o.id===id); if (!x) return; try{ await updateDoc(doc(db,"offers",id),{ active: !x.active }); toast(t("switched")); }catch(e){ console.error(e); toast(t("save_fail")); } },
+  ofAudience: async id=>{ const x = (S.offers||[]).find(o=>o.id===id); if (!x) return; try{ await updateDoc(doc(db,"offers",id),{ newSince: x.newSince ? 0 : Date.now() }); toast(t("switched")); }catch(e){ console.error(e); toast(t("save_fail")); } },
+  ofDelAsk: id=>go(()=>{ UI.ofDelAsk = id; }),
+  ofDel: async id=>{ UI.ofDelAsk = null; try{ await deleteDoc(doc(db,"offers",id)); toast(t("switched")); }catch(e){ console.error(e); toast(t("save_fail")); } render(); },
+  ofSave: async ()=>{ const o = UI.of; const days = Math.round(Number(o.days)||0), link = String(o.link||"").trim();
+    if (!String(o.title).trim() || (o.kind==="days" && (days<1 || days>30)) || (o.kind==="deal" && !String(o.code).trim() && !link) || (link && !/^https:\/\/\S+$/i.test(link))){ UI.ofErr = t("of_need"); render(); return; }
+    const now = Date.now();
+    const data = { kind:o.kind, title:String(o.title).trim().slice(0,60), desc:String(o.desc||"").trim().slice(0,120), reveal:String(o.reveal||"").trim().slice(0,40), note:String(o.note||"").trim().slice(0,140),
+      active:true, order:now, createdAt:now, newSince: o.newOnly ? now : 0, endsAt: o.ends ? new Date(o.ends+"T23:59:59").getTime() : 0, days: o.kind==="days" ? days : 0 };
+    if (o.kind==="deal"){ data.brand = String(o.brand||"").trim().slice(0,40); data.code = String(o.code||"").trim().slice(0,30); data.link = link; }
+    UI.busy = true; UI.ofErr = ""; render();
+    try{ await setDoc(doc(collection(db,"offers")), data); UI.of = OF0(); toast(t("of_created")); }catch(e){ console.error(e); UI.ofErr = t("save_fail"); }
+    UI.busy = false; render(); },
   admReject: async id=>{ try{ await updateDoc(doc(db,"salons",id),{ payReq:deleteField() }); toast(t("rejected")); }catch(e){ toast(t("save_fail")); } },
   admToggle: async id=>{ const x = S.allSalons.find(s=>s.id===id); try{ await updateDoc(doc(db,"salons",id),{ active: x.active===false }); toast(t("switched")); }catch(e){ toast(t("save_fail")); } },
   admAdjust: async v=>{ const [id, ds] = v.split("|"); const d = Number(ds); const x = S.allSalons.find(s=>s.id===id); if (!x) return;
@@ -738,6 +917,7 @@ app.addEventListener("input", e => { const el = e.target, d = el.dataset; const 
   else if (d.bar && o){ const b = o.barbers.find(x=>x.id===d.bar); if (b){ b[d.k] = el.value; if (o===S.salon) queueSave(); } }
   else if (d.bc){ const c = contactsOf(); c[d.bc] = {...(c[d.bc]||{}), [d.k]: el.value}; if (UI.view==="main") queueSave(); }
   else if (d.book){ UI.book[d.book] = el.value; }
+  else if (d.of){ UI.of[d.of] = el.type==="checkbox" ? el.checked : el.value; }
   else if (d.ui){ UI[d.ui] = el.value; }
 });
 app.addEventListener("change", e => { const el = e.target; const o = editTarget();
@@ -750,7 +930,9 @@ app.addEventListener("change", e => { const el = e.target; const o = editTarget(
 });
 
 /* ================= owner boot ================= */
-function stopOwner(){ S.unsub.forEach(f=>{try{f()}catch(e){}}); S.unsub=[]; if (S.adminUnsub){ S.adminUnsub(); S.adminUnsub=null; } S.salon=null; S.bookings=[]; S.allSalons=null; S.contacts={}; }
+function stopOwner(){ S.unsub.forEach(f=>{try{f()}catch(e){}}); S.unsub=[]; if (S.adminUnsub){ S.adminUnsub(); S.adminUnsub=null; }
+  ["adminClaimsUnsub","offersUnsub"].forEach(k=>{ if (S[k]){ try{ S[k](); }catch(e){} S[k]=null; } });
+  S.salon=null; S.bookings=[]; S.allSalons=null; S.contacts={}; S.offers=null; S.claims={}; S.allClaims=null; }
 function startOwner(sid){
   S.sid = sid; S.firstSnap = true;
   S.unsub.push(onSnapshot(doc(db,"salons",sid), d => {
@@ -766,6 +948,11 @@ function startOwner(sid){
   S.unsub.push(onSnapshot(doc(db,"salons",sid,"private","contacts"), d => {
     if (saveTimer) return; S.contacts = d.exists() ? (d.data().barbers||{}) : {};
     if (UI.view==="main" && !(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select,textarea"))) render();
+  }, err => console.error(err)));
+  watchOffers();
+  S.unsub.push(onSnapshot(collection(db,"salons",sid,"claims"), snap => {
+    S.claims = {}; snap.docs.forEach(d=>{ S.claims[d.id] = d.data(); });
+    if (UI.view==="main" && !typing()) render();
   }, err => console.error(err)));
   const since = ymd(new Date(Date.now()-DAY));
   S.unsub.push(onSnapshot(query(collection(db,"salons",sid,"bookings"), where("date",">=",since)), snap => {

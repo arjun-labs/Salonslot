@@ -12,6 +12,45 @@ service cloud.firestore {
       let s = get(/databases/$(database)/documents/salons/$(sid)).data;
       return s.active == true && s.sub.expires > request.time.toMillis();
     }
+    function offerOf(oid) { return get(/databases/$(database)/documents/offers/$(oid)).data; }
+    function offerLive(o) {
+      return o.active == true && (o.get('endsAt', 0) == 0 || o.endsAt > request.time.toMillis());
+    }
+    // owner opens a free-days scratch card: only sub.expires moves, by exactly the card's days, once per card
+    function claimUpdate(sid) {
+      let oid = request.resource.data.lastClaim;
+      let o = offerOf(oid);
+      let add = o.days * 86400000;
+      let oldE = resource.data.sub.expires;
+      let newE = request.resource.data.sub.expires;
+      let nowMs = request.time.toMillis();
+      return isOwner(sid)
+        && resource.data.active == true
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sub', 'lastClaim'])
+        && request.resource.data.sub.diff(resource.data.sub).affectedKeys().hasOnly(['expires'])
+        && offerLive(o) && o.kind == 'days' && o.days > 0 && o.days <= 30
+        && !exists(/databases/$(database)/documents/salons/$(sid)/claims/$(oid))
+        && existsAfter(/databases/$(database)/documents/salons/$(sid)/claims/$(oid))
+        && (newE == oldE + add || (oldE < nowMs && newE >= nowMs + add - 600000 && newE <= nowMs + add + 600000));
+    }
+    function claimDocOk(sid, oid) {
+      let o = offerOf(oid);
+      let days = o.get('days', 0);
+      return offerLive(o)
+        && (o.get('newSince', 0) == 0 || get(/databases/$(database)/documents/salons/$(sid)).data.get('createdAt', 0) >= o.newSince)
+        && request.resource.data.keys().hasOnly(['oid', 'days', 'at'])
+        && request.resource.data.oid == oid
+        && request.resource.data.days == days
+        && (days == 0 || getAfter(/databases/$(database)/documents/salons/$(sid)).data.get('lastClaim', '') == oid);
+    }
+
+    match /offers/{oid} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+    match /{path=**}/claims/{cid} {
+      allow read: if isAdmin();
+    }
 
     match /salons/{sid} {
       allow get: if true;
@@ -22,7 +61,8 @@ service cloud.firestore {
         && request.resource.data.sub.plan == null
         && request.resource.data.sub.expires <= request.time.toMillis() + 8 * 86400000;
       allow update: if isAdmin()
-        || (isOwner(sid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['sub', 'active', 'ownerUid', 'payments']));
+        || (isOwner(sid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['sub', 'active', 'ownerUid', 'payments', 'lastClaim', 'createdAt']))
+        || claimUpdate(sid);
       allow delete: if isAdmin();
 
       match /bookings/{bid} {
@@ -36,6 +76,15 @@ service cloud.firestore {
           && request.resource.data.phone is string && request.resource.data.phone.size() <= 15
           && (!('email' in request.resource.data) || (request.resource.data.email is string && request.resource.data.email.size() <= 100))
         );
+      }
+
+      match /claims/{oid} {
+        allow read: if isOwner(sid) || isAdmin();
+        allow create: if isOwner(sid) && claimDocOk(sid, oid);
+        allow update: if isOwner(sid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clicked'])
+          && request.resource.data.clicked == true;
+        allow delete: if isAdmin();
       }
 
       match /private/{docId} {
