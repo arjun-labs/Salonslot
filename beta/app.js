@@ -18,8 +18,11 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.19-8";
+const APP_VERSION = "2026.10.19-9";
 const IS_BETA = /\/beta\//.test(location.pathname);
+const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
+// customers never use the test version
+if (IS_BETA && new URLSearchParams(location.search).get("s")) location.replace(MAIN_URL());
 
 const fb = initializeApp(firebaseConfig);
 const auth = getAuth(fb);
@@ -190,7 +193,7 @@ const UI = { sentDay: SENT0, view:"loading", step:1, tab:"home", book:{}, booked
 let D = null; // setup draft
 
 const isAdmin = () => !!(S.user && S.user.email === ADMIN_EMAIL);
-const linkFor = sid => location.origin + location.pathname.replace(/index\.html$/,"") + "?s=" + sid;
+const linkFor = sid => location.origin + location.pathname.replace(/index\.html$/,"").replace(/\/beta\/$/,"/") + "?s=" + sid;
 function subInfo(s){ s = s || S.salon; if (!s) return {active:false,days:0,kind:"none"};
   const exp = (s.sub&&s.sub.expires)||0, left = exp-Date.now();
   return { on: s.active!==false, active: s.active!==false && left>0, days: Math.max(0,Math.ceil(left/DAY)), kind: s.sub&&s.sub.plan ? "paid":"trial", expires:exp }; }
@@ -792,14 +795,16 @@ async function checkVersion(){
 setInterval(checkVersion, 5*60*1000);
 document.addEventListener("visibilitychange", ()=>{ if (document.visibilityState==="visible"){ checkVersion(); checkReminders(); } });
 setTimeout(checkVersion, 8000);
-if (IS_BETA) overlay.insertAdjacentHTML("afterbegin", `<div class="betabar">${t("beta")}</div>`);
+// only the admin stays on the test version; everyone else is sent to the main link
+function betaGate(){ if (!IS_BETA) return; if (S.user && !isAdmin()) { location.replace(MAIN_URL()); return; }
+  if (isAdmin() && !document.querySelector(".betabar")) overlay.insertAdjacentHTML("afterbegin", `<div class="betabar">${t("beta")}</div>`); }
 
 /* ================= start ================= */
 if (CUSTOMER_SID){ render(); initCustomer().then(()=>loadDay(ymd(new Date()))); }
 else {
   render();
   getRedirectResult(auth).catch(()=>{ UI.err = t("signin_fail"); });
-  onAuthStateChanged(auth, u => { stopOwner(); S.user = u;
+  onAuthStateChanged(auth, u => { stopOwner(); S.user = u; betaGate();
     if (!u){ UI.view="login"; UI.busy=false; render(); return; }
     UI.view="loading"; render(); startOwner(u.uid); if (isAdmin()) watchAdmin(); });
 }
