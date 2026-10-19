@@ -161,3 +161,14 @@ table.led td{padding:8px 4px;border-bottom:1px dashed var(--line);font-variant-n
 .bcard .pill{margin-top:2px}
 .card.flash{box-shadow:0 0 0 3px var(--gold);transition:box-shadow .2s}
 #svcCard,#timeCard{scroll-margin-top:96px}
+/* service list (booking) */
+.svclist{display:flex;flex-direction:column;gap:8px}
+.svcopt{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:start;text-align:left;width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px}
+.svcopt .tick{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:13px;font-weight:700;margin-top:1px}
+.svcopt.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold);background:#FFFBF2}
+.svcopt.on .tick{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.svcopt .nm{display:flex;flex-direction:column;gap:2px;min-width:0}
+.svcopt .nm small{color:var(--muted);font-size:12.5px}
+.svcopt .ds{color:var(--muted);font-size:13.5px;line-height:1.35}
+.svcopt .pr{font-family:var(--display);font-weight:600;font-size:19px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.svcbox{border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}

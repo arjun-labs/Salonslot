@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.19-10";
+const APP_VERSION = "2026.10.19-11";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version
@@ -58,7 +58,7 @@ const T = {
   pick_date:"3. Choose a day", pick_time:"4. Choose a time", your_details:"5. Your details", cust_name:"Name", cust_phone:"Mobile number", cust_email:"Email (for Google Calendar reminder)", bad_email:"That email doesn't look right. Check it or leave it empty.", barber_email:"Gmail (for Google Calendar)", barber_phone:"WhatsApp number", private_note:"Only you see this. Customers never see barber numbers.", no_phone:"No WhatsApp number saved. Add it in Settings → Barbers.", send_each:"Send each barber their day", send_all_p:"Each barber gets all of today's bookings in one message on their own WhatsApp. Tap the big button, send, come back, and the next barber is ready.",
   send:"Send", sent:"Sent", send_all:"Start: send to {name}", send_next:"Next: send to {name}", all_sent:"All barbers have today's schedule.", send_again:"Send again from the start",
   cal_note:"Customer and barber emails are already added as guests. Tap Save in Google Calendar, then Send, so they get the invite.", cal_note_c:"The salon is already added as a guest. Tap Save in Google Calendar, then Send.",
-  confirm_bk:"Confirm booking", closed_day:"The salon is closed this day.", no_slots:"No free times left this day. Try another day.", pick_svc_first:"Choose a service first (step 1)", no_services:"This salon hasn't added services yet. Please call or WhatsApp the salon.",
+  confirm_bk:"Confirm booking", closed_day:"The salon is closed this day.", no_slots:"No free times left this day. Try another day.", pick_svc_first:"Choose a service first (step 1)", svc_desc:"Short description", svc_desc_ph:"e.g. Includes wash, massage and blow-dry", move_up:"Move up", move_down:"Move down", min:"min", no_services:"This salon hasn't added services yet. Please call or WhatsApp the salon.",
   need_details:"Enter a name and a 10-digit mobile number.", taken:"Someone just booked that time. Please pick another.",
   booked_h:"Booking confirmed", booked_p:"{svc} with {barber} on {date} at {time}.", book_another:"Make another booking",
   tell_salon:"Send booking to salon on WhatsApp", tell_salon_p:"Tap to let the salon know on WhatsApp too.",
@@ -121,7 +121,7 @@ const T = {
   pick_date:"3. दिन चुनें", pick_time:"4. समय चुनें", your_details:"5. आपकी जानकारी", cust_name:"नाम", cust_phone:"मोबाइल नंबर", cust_email:"Email (Google Calendar reminder के लिए)", bad_email:"Email सही नहीं लग रहा। Check करें या खाली छोड़ दें।", barber_email:"Gmail (Google Calendar के लिए)", barber_phone:"WhatsApp नंबर", private_note:"ये सिर्फ़ आपको दिखेगा। Customers को barber का नंबर कभी नहीं दिखता।", no_phone:"WhatsApp नंबर save नहीं है। Settings → Barbers में डालें।", send_each:"हर barber को उसका दिन भेजें", send_all_p:"हर barber को आज की सारी bookings एक ही message में उसके अपने WhatsApp पर जाती हैं। बड़ा button दबाएं, Send करें, वापस आएं, अगला barber तैयार मिलेगा।",
   send:"भेजें", sent:"भेजा", send_all:"शुरू करें: {name} को भेजें", send_next:"अगला: {name} को भेजें", all_sent:"सारे barbers को आज का schedule मिल गया।", send_again:"फिर से शुरू से भेजें",
   cal_note:"Customer और barber के email पहले से guest में जुड़ जाते हैं। Google Calendar में Save दबाएं, फिर Send, ताकि उन्हें invite मिले।", cal_note_c:"सैलून पहले से guest में जुड़ा है। Google Calendar में Save दबाएं, फिर Send।",
-  confirm_bk:"Booking पक्की करें", closed_day:"इस दिन सैलून बंद है।", no_slots:"इस दिन कोई समय खाली नहीं है। दूसरा दिन चुनें।", pick_svc_first:"पहले service चुनें (step 1)", no_services:"इस सैलून ने अभी services नहीं डालीं। सैलून को call या WhatsApp करें।",
+  confirm_bk:"Booking पक्की करें", closed_day:"इस दिन सैलून बंद है।", no_slots:"इस दिन कोई समय खाली नहीं है। दूसरा दिन चुनें।", pick_svc_first:"पहले service चुनें (step 1)", svc_desc:"छोटा description", svc_desc_ph:"जैसे: Wash, massage और blow-dry शामिल", move_up:"ऊपर करें", move_down:"नीचे करें", min:"मिनट", no_services:"इस सैलून ने अभी services नहीं डालीं। सैलून को call या WhatsApp करें।",
   need_details:"नाम और 10 अंकों का मोबाइल नंबर डालें।", taken:"ये समय अभी किसी और ने book कर लिया। दूसरा समय चुनें।",
   booked_h:"Booking पक्की हो गई", booked_p:"{date} को {time} बजे, {barber} के साथ {svc}।", book_another:"एक और booking करें",
   tell_salon:"सैलून को WhatsApp पर booking भेजें", tell_salon_p:"सैलून को WhatsApp पर भी बताने के लिए tap करें।",
@@ -326,11 +326,14 @@ function viewLogin(){
 function servicesEditor(o){
   const have = new Set(o.services.map(s=>s.name.toLowerCase()));
   return `<div class="chips">${t("sugg").filter(g=>!have.has(g[0].toLowerCase())).map(g=>`<button class="chip" data-a="sugg" data-v="${esc(g[0])}|${g[1]}|${g[2]}">+ ${esc(g[0])}</button>`).join("")}</div>
-  <div class="stack">${o.services.map(s=>`<div class="svc">
+  <div class="stack">${o.services.map((s,i)=>`<div class="svcbox"><div class="row" style="justify-content:space-between"><span class="label">${i+1}. ${esc(s.name||t("svc_name"))}</span>
+    <span class="row" style="gap:4px"><button class="btn sm ghost" data-a="svcUp" data-v="${s.id}" ${i===0?"disabled":""} aria-label="${t("move_up")}">↑</button><button class="btn sm ghost" data-a="svcDown" data-v="${s.id}" ${i===o.services.length-1?"disabled":""} aria-label="${t("move_down")}">↓</button></span></div>
+    <div class="svc">
     <label class="field"><span class="small">${t("svc_name")}</span><input type="text" id="sn_${s.id}" data-svc="${s.id}" data-k="name" value="${esc(s.name)}"></label>
     <label class="field"><span class="small">${t("price")}</span><input type="number" inputmode="numeric" id="sp_${s.id}" data-svc="${s.id}" data-k="price" value="${esc(s.price)}"></label>
     <label class="field"><span class="small">${t("mins")}</span><select id="sd_${s.id}" data-svc="${s.id}" data-k="dur">${[10,15,20,30,45,60,90,120].map(m=>`<option value="${m}" ${Number(s.dur)===m?"selected":""}>${m}</option>`).join("")}</select></label>
-    <button class="x" data-a="delSvc" data-v="${s.id}" aria-label="${t("remove")}">×</button></div>`).join("")}</div>
+    <button class="x" data-a="delSvc" data-v="${s.id}" aria-label="${t("remove")}">×</button></div>
+    <label class="field"><span class="small">${t("svc_desc")} <em>(${t("optional")})</em></span><input type="text" maxlength="120" id="sx_${s.id}" data-svc="${s.id}" data-k="desc" value="${esc(s.desc||"")}" placeholder="${t("svc_desc_ph")}"></label></div>`).join("")}</div>
   <button class="btn" data-a="addSvc">+ ${t("add_service")}</button>`;
 }
 function barbersEditor(o){
@@ -387,7 +390,7 @@ function validate(o, n){
   if (n===4 && !o.barbers.some(b=>b.name.trim())) return t("need_barber");
   return "";
 }
-const cleanList = o => { o.services = o.services.filter(s=>s.name.trim()).map(s=>({id:s.id,name:s.name.trim(),price:Number(s.price)||0,dur:Number(s.dur)||30}));
+const cleanList = o => { o.services = o.services.filter(s=>s.name.trim()).map(s=>({id:s.id,name:s.name.trim(),price:Number(s.price)||0,dur:Number(s.dur)||30,desc:String(s.desc||"").trim().slice(0,120)}));
   o.barbers = o.barbers.filter(b=>b.name.trim()).map(b=>({id:b.id,name:b.name.trim(),spec:(b.spec||"").trim(),photo:b.photo||""})); };
 function cleanContacts(o){ const out = {}; (o.barbers||[]).forEach(b=>{ const c = (o===D ? D.contacts : S.contacts)||{}; const x = c[b.id]||{}; const em = String(x.email||b.email||"").trim().toLowerCase();
   out[b.id] = { phone: digits(x.phone).length===10 ? digits(x.phone) : "", email: isEmail(em) ? em : "" }; }); return out; }
@@ -468,7 +471,10 @@ function bookingForm(salon, slotsFor, ownerMode){
   if (map===undefined && CUSTOMER_SID) setTimeout(()=>loadDay(B.date),0);
   const slots = B.svc ? (map===undefined ? undefined : freeSlots(salon, B.date, B.svc, B.barber||"any", map)) : [];
   return `
-  <div class="card ${UI.flashSvc?"flash":""}" id="svcCard"><h3>${t("pick_svc")}</h3>${!salon.services.length?`<p class="muted">${t("no_services")}</p>`:""}<div class="chips">${salon.services.map(s=>`<button class="chip ${B.svc===s.id?"on":""}" data-a="bSvc" data-v="${s.id}">${esc(s.name)} · ₹${esc(s.price)}</button>`).join("")}</div></div>
+  <div class="card ${UI.flashSvc?"flash":""}" id="svcCard"><h3>${t("pick_svc")}</h3>${!salon.services.length?`<p class="muted">${t("no_services")}</p>`:""}<div class="svclist" role="radiogroup">${salon.services.map(s=>`<button class="svcopt ${B.svc===s.id?"on":""}" role="radio" aria-checked="${B.svc===s.id}" data-a="bSvc" data-v="${s.id}">
+      <span class="tick" aria-hidden="true">${B.svc===s.id?"✓":""}</span>
+      <span class="nm"><b>${esc(s.name)}</b><small>⏱ ${esc(s.dur)} ${t("min")}</small>${s.desc?`<span class="ds">${esc(s.desc)}</span>`:""}</span>
+      <span class="pr">₹${esc(s.price)}</span></button>`).join("")}</div></div>
   <div class="card"><h3>${t("pick_barber")}</h3><div class="barbers">
     <button class="bcard ${(!B.barber||B.barber==="any")?"on":""}" data-a="bBarber" data-v="any"><span class="av lg" style="background:var(--surface2);color:var(--muted)" aria-hidden="true">✂</span><b>${t("any_barber")}</b><small>${t("any_sub")}</small></button>
     ${salon.barbers.map(b=>`<button class="bcard ${B.barber===b.id?"on":""}" data-a="bBarber" data-v="${b.id}">${avatar(b,"lg")}<b>${esc(b.name)}</b>${b.spec?`<small>${esc(b.spec)}</small>`:""}</button>`).join("")}</div></div>
@@ -651,6 +657,8 @@ const A = {
   day:v=>{ const o = editTarget(); const d=Number(v), i=o.days.indexOf(d); if (i>=0) o.days.splice(i,1); else o.days.push(d); render(); if (o===S.salon) queueSave(); },
   sugg:v=>{ const o = editTarget(); const [n,p,d]=v.split("|"); o.services.push({id:uid(),name:n,price:Number(p),dur:Number(d)}); UI.err=""; render(); if (o===S.salon) queueSave(); },
   addSvc:()=>{ const o = editTarget(); o.services.push({id:uid(),name:"",price:"",dur:30}); render(); },
+  svcUp:v=>{ const o = editTarget(); const i = o.services.findIndex(s=>s.id===v); if (i>0){ [o.services[i-1],o.services[i]]=[o.services[i],o.services[i-1]]; render(); if (o===S.salon) queueSave(); } },
+  svcDown:v=>{ const o = editTarget(); const i = o.services.findIndex(s=>s.id===v); if (i>=0 && i<o.services.length-1){ [o.services[i+1],o.services[i]]=[o.services[i],o.services[i+1]]; render(); if (o===S.salon) queueSave(); } },
   delSvc:v=>{ const o = editTarget(); o.services=o.services.filter(s=>s.id!==v); render(); if (o===S.salon) queueSave(); },
   count:v=>{ const o = editTarget(); const n=Number(v); while(o.barbers.length<n) o.barbers.push({id:uid(),name:"",spec:"",photo:""}); if (o.barbers.length>n) o.barbers=o.barbers.slice(0,n); render(); if (o===S.salon) queueSave(); },
   addBarber:()=>{ const o = editTarget(); o.barbers.push({id:uid(),name:"",spec:"",photo:""}); render(); },
