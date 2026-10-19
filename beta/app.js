@@ -285,6 +285,7 @@ function render(){
     if (UI.view==="loading") html += `<div class="center"><div class="spin" aria-label="${t("loading")}"></div></div>`;
     else if (UI.view==="login") html += viewLogin();
     else if (UI.view==="setup") html += viewSetup();
+    else if (UI.view==="adminOnly") html += `<button class="btn sm" data-a="adminBack">← ${t("back")}</button>` + viewAdmin();
     else html += ({home:viewHome, book:viewBook, barber:viewBarber, plan:viewPlan, settings:viewSettings, admin:viewAdmin}[UI.tab]||viewHome)();
     html += "</main>";
     if (UI.view==="main") html += navBar();
@@ -370,7 +371,7 @@ function viewSetup(){
   if (n===4) body = `<h2>${t("s4_h")}</h2><p class="muted small">${t("s4_p")}</p>${barbersEditor(D)}`;
   if (n===5) body = `<div class="lock stack"><div class="big" aria-hidden="true">✂️</div><h2>${t("s5_h")}</h2><p class="muted">${t("s5_p")}</p></div>
     <div class="barbers">${D.barbers.map(b=>`<div class="bcard">${avatar(b,"lg")}<b>${esc(b.name)}</b>${b.spec?`<small>${esc(b.spec)}</small>`:""}</div>`).join("")}</div>`;
-  return `<div class="stack"><p class="label">${t("step")} ${n} ${t("of")} ${total}</p><div class="steps">${Array.from({length:total},(_,i)=>`<i class="${i<n?"on":""}"></i>`).join("")}</div></div>
+  return `${isAdmin()?`<button class="btn primary block" data-a="adminOnly">🛡️ ${t("nav_admin")}</button>`:""}<div class="stack"><p class="label">${t("step")} ${n} ${t("of")} ${total}</p><div class="steps">${Array.from({length:total},(_,i)=>`<i class="${i<n?"on":""}"></i>`).join("")}</div></div>
   <div class="card">${body}</div>
   ${UI.err?`<div class="banner bad" role="alert">${UI.err}</div>`:""}
   <div class="row"><button class="btn grow" data-a="prev" ${n===1?"disabled":""}>${t("back")}</button><button class="btn primary grow" data-a="nextStep" ${UI.busy?"disabled":""}>${n===total?t("finish"):t("next")}</button></div>`;
@@ -559,8 +560,9 @@ function viewAdmin(){
   <div class="card"><h3>${t("download")}</h3><p class="small muted">${t("download_p")}</p><button class="btn" data-a="admDownload" ${UI.busy?"disabled":""}>${t("download")}</button></div>`;
 }
 function watchAdmin(){
+  if (UI.view==="adminOnly") setTimeout(()=>{ if (UI.view==="adminOnly") render(); }, 1500);
   if (!isAdmin() || S.adminUnsub) return;
-  S.adminUnsub = onSnapshot(collection(db,"salons"), snap => { S.allSalons = snap.docs.map(d=>({id:d.id,...d.data()})); if (UI.tab==="admin") render(); },
+  S.adminUnsub = onSnapshot(collection(db,"salons"), snap => { S.allSalons = snap.docs.map(d=>({id:d.id,...d.data()})); if (UI.tab==="admin" || UI.view==="adminOnly") render(); },
     err => { console.error(err); S.allSalons = []; render(); });
 }
 
@@ -623,6 +625,8 @@ const A = {
       if (e && e.code!=="auth/popup-closed-by-user") UI.err = t("signin_fail"); }
     UI.busy=false; render(); },
   logout: async ()=>{ await signOut(auth); },
+  adminOnly:()=>go(()=>{ UI.view="adminOnly"; watchAdmin(); window.scrollTo(0,0); }),
+  adminBack:()=>go(()=>{ UI.view="setup"; }),
   tab:v=>go(()=>{ UI.tab=v; UI.err=""; if (v!=="book") UI.bookedData=null; if (v==="admin") watchAdmin(); window.scrollTo(0,0); }),
   walkin:()=>go(()=>{ UI.tab="book"; UI.bookedData=null; UI.book={}; window.scrollTo(0,0); }),
   prev:()=>go(()=>{ UI.err=""; if (UI.step>1) UI.step--; }),
@@ -714,7 +718,7 @@ function stopOwner(){ S.unsub.forEach(f=>{try{f()}catch(e){}}); S.unsub=[]; if (
 function startOwner(sid){
   S.sid = sid; S.firstSnap = true;
   S.unsub.push(onSnapshot(doc(db,"salons",sid), d => {
-    if (!d.exists()){ if (UI.view!=="setup"){ D = { name:"", owner:S.user.displayName||"", phone:"", address:"", mapLink:"", area:"", open:"10:00", close:"21:00", days:[0,1,2,3,4,5,6], services:[], barbers:[] }; UI.view="setup"; UI.step=1; render(); } return; }
+    if (!d.exists()){ if (UI.view!=="setup" && UI.view!=="adminOnly"){ D = { name:"", owner:S.user.displayName||"", phone:"", address:"", mapLink:"", area:"", open:"10:00", close:"21:00", days:[0,1,2,3,4,5,6], services:[], barbers:[] }; UI.view="setup"; UI.step=1; render(); } return; }
     const fresh = {id:d.id, ...d.data()};
     if (S.salon && (saveTimer || document.activeElement && document.activeElement.closest && document.activeElement.closest("[data-salon],[data-svc],[data-bar]"))){
       // keep local edits, take server-owned fields
