@@ -29,11 +29,12 @@ service cloud.firestore {
         allow read, update, delete: if isOwner(sid) || isAdmin();
         allow create: if isOwner(sid) || isAdmin() || (
           salonOpen(sid)
-          && request.resource.data.keys().hasOnly(['date', 'time', 'serviceId', 'barberId', 'cust', 'phone', 'status', 'created', 'src'])
+          && request.resource.data.keys().hasOnly(['date', 'time', 'serviceId', 'barberId', 'cust', 'phone', 'email', 'status', 'created', 'src'])
           && request.resource.data.status == 'booked'
           && request.resource.data.src == 'online'
           && request.resource.data.cust is string && request.resource.data.cust.size() > 0 && request.resource.data.cust.size() <= 60
           && request.resource.data.phone is string && request.resource.data.phone.size() <= 15
+          && (!('email' in request.resource.data) || (request.resource.data.email is string && request.resource.data.email.size() <= 100))
         );
       }
 

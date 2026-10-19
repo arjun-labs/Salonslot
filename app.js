@@ -50,7 +50,8 @@ const T = {
   share_msg:"Book your appointment at {salon} online: {link}",
   book_h:"Book an appointment", book_owner:"Add a booking for a walk-in or phone customer.",
   pick_svc:"1. Choose a service", pick_barber:"2. Choose a barber", any_barber:"Any barber", any_sub:"First one free",
-  pick_date:"3. Choose a day", pick_time:"4. Choose a time", your_details:"5. Your details", cust_name:"Name", cust_phone:"Mobile number",
+  pick_date:"3. Choose a day", pick_time:"4. Choose a time", your_details:"5. Your details", cust_name:"Name", cust_phone:"Mobile number", cust_email:"Email (for Google Calendar reminder)", bad_email:"That email doesn't look right. Check it or leave it empty.", barber_email:"Gmail (for Google Calendar)",
+  cal_note:"Customer and barber emails are already added as guests. Tap Save in Google Calendar, then Send, so they get the invite.", cal_note_c:"The salon is already added as a guest. Tap Save in Google Calendar, then Send.",
   confirm_bk:"Confirm booking", closed_day:"The salon is closed this day.", no_slots:"No free times left this day. Try another day.", pick_svc_first:"Choose a service first.",
   need_details:"Enter a name and a 10-digit mobile number.", taken:"Someone just booked that time. Please pick another.",
   booked_h:"Booking confirmed", booked_p:"{svc} with {barber} on {date} at {time}.", book_another:"Make another booking",
@@ -104,7 +105,8 @@ const T = {
   share_msg:"{salon} में अपनी appointment online book करें: {link}",
   book_h:"Appointment बुक करें", book_owner:"Walk-in या फ़ोन वाले ग्राहक की booking जोड़ें।",
   pick_svc:"1. Service चुनें", pick_barber:"2. Barber चुनें", any_barber:"कोई भी barber", any_sub:"जो पहले free हो",
-  pick_date:"3. दिन चुनें", pick_time:"4. समय चुनें", your_details:"5. आपकी जानकारी", cust_name:"नाम", cust_phone:"मोबाइल नंबर",
+  pick_date:"3. दिन चुनें", pick_time:"4. समय चुनें", your_details:"5. आपकी जानकारी", cust_name:"नाम", cust_phone:"मोबाइल नंबर", cust_email:"Email (Google Calendar reminder के लिए)", bad_email:"Email सही नहीं लग रहा। Check करें या खाली छोड़ दें।", barber_email:"Gmail (Google Calendar के लिए)",
+  cal_note:"Customer और barber के email पहले से guest में जुड़ जाते हैं। Google Calendar में Save दबाएं, फिर Send, ताकि उन्हें invite मिले।", cal_note_c:"सैलून पहले से guest में जुड़ा है। Google Calendar में Save दबाएं, फिर Send।",
   confirm_bk:"Booking पक्की करें", closed_day:"इस दिन सैलून बंद है।", no_slots:"इस दिन कोई समय खाली नहीं है। दूसरा दिन चुनें।", pick_svc_first:"पहले service चुनें।",
   need_details:"नाम और 10 अंकों का मोबाइल नंबर डालें।", taken:"ये समय अभी किसी और ने book कर लिया। दूसरा समय चुनें।",
   booked_h:"Booking पक्की हो गई", booked_p:"{date} को {time} बजे, {barber} के साथ {svc}।", book_another:"एक और booking करें",
@@ -213,13 +215,17 @@ function msgs(salon, k){
     barber: `${b.name}, ${hi?"आपकी नई booking":"new booking for you"}: ${k.cust}\n${svc.name} · ${when}`
   };
 }
-function calLink(salon, k){
+const isEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e||"").trim());
+function calLink(salon, k, guests){
   const svc = svcOf(salon,k.serviceId)||{name:"",dur:30}, b = barberOf(salon,k.barberId)||{name:""};
   const s = k.date.replace(/-/g,"")+"T"+k.time.replace(":","")+"00";
   const e = k.date.replace(/-/g,"")+"T"+toHM(toMin(k.time)+(Number(svc.dur)||30)).replace(":","")+"00";
   return "https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(svc.name+" – "+(k.cust||salon.name))+
-    "&dates="+s+"/"+e+"&ctz=Asia/Kolkata&details="+encodeURIComponent(b.name+(k.phone?" · "+k.phone:""))+"&location="+encodeURIComponent(salon.name+(salon.area?", "+salon.area:""));
+    "&dates="+s+"/"+e+"&ctz=Asia/Kolkata&details="+encodeURIComponent(b.name+(k.phone?" · "+k.phone:""))+"&location="+encodeURIComponent(salon.name+(salon.area?", "+salon.area:""))+
+    ((guests=[...new Set((guests||[]).map(g=>String(g||"").trim().toLowerCase()).filter(isEmail))]).length?"&add="+encodeURIComponent(guests.join(",")):"");
 }
+const ownerGuests = (s,k) => [k.email, (barberOf(s,k.barberId)||{}).email];
+const custGuests = (s,k) => [s.ownerEmail, (barberOf(s,k.barberId)||{}).email];
 
 /* ================= shell ================= */
 function topBar(name, sub){
@@ -288,6 +294,7 @@ function barbersEditor(o){
     <div class="stack">
       <label class="field"><span class="small">${t("barber_name")} ${i+1}</span><input type="text" id="bn_${b.id}" data-bar="${b.id}" data-k="name" value="${esc(b.name)}"></label>
       <label class="field"><span class="small">${t("speciality")} <em>(${t("optional")})</em></span><input type="text" id="bs_${b.id}" data-bar="${b.id}" data-k="spec" value="${esc(b.spec)}" placeholder="${t("spec_ph")}"></label>
+      <label class="field"><span class="small">${t("barber_email")} <em>(${t("optional")})</em></span><input type="email" inputmode="email" id="be_${b.id}" data-bar="${b.id}" data-k="email" value="${esc(b.email||"")}" placeholder="barber@gmail.com"></label>
       <button class="btn ghost sm" style="align-self:flex-start" data-a="delBarber" data-v="${b.id}">${t("remove")}</button>
     </div></div>`).join("")}</div>
   <button class="btn" data-a="addBarber">+ ${t("add_barber")}</button>`;
@@ -326,7 +333,7 @@ function validate(o, n){
   return "";
 }
 const cleanList = o => { o.services = o.services.filter(s=>s.name.trim()).map(s=>({id:s.id,name:s.name.trim(),price:Number(s.price)||0,dur:Number(s.dur)||30}));
-  o.barbers = o.barbers.filter(b=>b.name.trim()).map(b=>({id:b.id,name:b.name.trim(),spec:(b.spec||"").trim(),photo:b.photo||""})); };
+  o.barbers = o.barbers.filter(b=>b.name.trim()).map(b=>({id:b.id,name:b.name.trim(),spec:(b.spec||"").trim(),email:isEmail(b.email)?String(b.email).trim().toLowerCase():"",photo:b.photo||""})); };
 
 /* ================= owner views ================= */
 function subBanner(){
@@ -341,12 +348,12 @@ function bookingRow(k, o){
   const pill = k.status==="done"?`<span class="pill ok">${t("st_done")}</span>`:k.status==="cancelled"?`<span class="pill bad">${t("st_cancelled")}</span>`:`<span class="pill warn">${t("st_booked")}</span>`;
   return `<div class="bk"><div class="t">${nice(k.time).replace(" ","<small>")}</small></div><div class="body">
     <div class="row" style="gap:8px"><b class="grow">${esc(k.cust)}</b>${k.src==="online"?`<span class="pill">${t("online")}</span>`:""}${pill}</div>
-    <div class="row small muted" style="gap:6px">${avatar(b,"sm")}<span>${esc(b.name)} · ${esc(svc.name)} · ₹${esc(svc.price)} · ${esc(k.phone)}</span></div>
+    <div class="row small muted" style="gap:6px">${avatar(b,"sm")}<span>${esc(b.name)} · ${esc(svc.name)} · ₹${esc(svc.price)} · ${esc(k.phone)}${k.email?" · "+esc(k.email):""}</span></div>
     ${k.status==="booked"?`<div class="row" style="gap:6px">
       <button class="btn sm primary" data-a="done" data-v="${k.id}">${t("mark_done")}</button>
       <a class="btn sm" href="${waLink(k.phone, o.remind?m.remind:m.cust)}" target="_blank" rel="noopener">${o.remind?t("remind"):t("whatsapp")}</a>
       ${o.barber?`<a class="btn sm" href="${b.phone?waLink(b.phone,m.barber):"https://wa.me/?text="+encodeURIComponent(m.barber)}" target="_blank" rel="noopener">${t("send_barber")}</a>`:""}
-      <a class="btn sm" href="${calLink(s,k)}" target="_blank" rel="noopener">${t("calendar")}</a>
+      <a class="btn sm" href="${calLink(s,k,ownerGuests(s,k))}" target="_blank" rel="noopener">${t("calendar")}</a>
       ${o.cancel?`<button class="btn sm ghost" data-a="cancelBk" data-v="${k.id}">${t("cancel")}</button>`:""}</div>`:""}
   </div></div>`;
 }
@@ -392,6 +399,7 @@ function bookingForm(salon, slotsFor, ownerMode){
   <div class="card"><h3>${t("your_details")}</h3>
     <label class="field"><span>${t("cust_name")}</span><input type="text" id="c_name" autocomplete="name" data-book="name" value="${esc(B.name||"")}"></label>
     <label class="field"><span>${t("cust_phone")}</span><input type="tel" inputmode="tel" autocomplete="tel" id="c_phone" data-book="phone" value="${esc(B.phone||"")}" placeholder="98XXXXXXXX"></label>
+    <label class="field"><span>${t("cust_email")} <em>(${t("optional")})</em></span><input type="email" inputmode="email" autocomplete="email" id="c_email" data-book="email" value="${esc(B.email||"")}" placeholder="name@gmail.com"></label>
     ${UI.err?`<div class="banner bad" role="alert">${UI.err}</div>`:""}
     <button class="btn primary block" data-a="confirm" ${UI.busy?"disabled":""}>${t("confirm_bk")}</button></div>`;
 }
@@ -403,7 +411,8 @@ function viewBook(){
       <div class="msg"><span class="to">${esc(k.cust)} · ${esc(k.phone)}</span>${esc(m.cust)}</div>
       <div class="row"><a class="btn sm primary" href="${waLink(k.phone,m.cust)}" target="_blank" rel="noopener">${t("send_cust")}</a>
       <a class="btn sm" href="https://wa.me/?text=${encodeURIComponent(m.barber)}" target="_blank" rel="noopener">${t("send_barber")}</a>
-      <a class="btn sm" href="${calLink(s,k)}" target="_blank" rel="noopener">${t("calendar")}</a></div></div>
+      <a class="btn sm" href="${calLink(s,k,ownerGuests(s,k))}" target="_blank" rel="noopener">${t("calendar")}</a></div>
+      <p class="small muted">${t("cal_note")}</p></div>
     <button class="btn block" data-a="bookAgain">${t("book_another")}</button>`; }
   return `<div><h1>${t("book_h")}</h1><p class="small muted" style="margin-top:4px">${t("book_owner")}</p></div>` + bookingForm(S.salon, d=>ownerSlotsMap(d), true);
 }
@@ -491,7 +500,8 @@ function renderCustomer(){
   else if (UI.bookedData){ const k = UI.bookedData, m = msgs(s,k), svc = svcOf(s,k.serviceId), b = barberOf(s,k.barberId);
     body = `<div class="card lock"><div class="big" aria-hidden="true">✅</div><h2>${t("booked_h")}</h2>
       <p>${t("booked_p",{svc:esc(svc.name),barber:esc(b.name),date:dayLabel(k.date),time:nice(k.time)})}</p>
-      <a class="btn" href="${calLink(s,k)}" target="_blank" rel="noopener">${t("calendar")}</a></div>
+      <a class="btn" href="${calLink(s,k,custGuests(s,k))}" target="_blank" rel="noopener">${t("calendar")}</a>
+      <p class="small muted">${t("cal_note_c")}</p></div>
       ${s.phone?`<div class="card"><p class="small muted">${t("tell_salon_p")}</p><a class="btn primary block" href="${waLink(s.phone,m.salon)}" target="_blank" rel="noopener">${t("tell_salon")}</a></div>`:""}
       <button class="btn block" data-a="bookAgain">${t("book_another")}</button>`; }
   else body = `<div><h1>${t("book_h")}</h1></div>` + bookingForm(s, d => C.days[d], false);
@@ -560,15 +570,17 @@ const A = {
   confirm: async ()=>{ const B = UI.book; const salon = CUSTOMER_SID ? C.salon : S.salon, sid = CUSTOMER_SID || S.sid;
     if (!B.svc||!B.time){ UI.err = t("pick_time"); render(); return; }
     if (!(B.name||"").trim() || digits(B.phone).length!==10){ UI.err = t("need_details"); render(); return; }
+    const em = (B.email||"").trim().toLowerCase(); if (em && !isEmail(em)){ UI.err = t("bad_email"); render(); return; }
     const map = CUSTOMER_SID ? (C.days[B.date]||{}) : ownerSlotsMap(B.date);
     const slot = (freeSlots(salon,B.date,B.svc,B.barber||"any",map)||[]).find(s=>s.time===B.time);
     if (!slot){ UI.err = t("taken"); render(); return; }
     const k = { date:B.date, time:B.time, serviceId:B.svc, barberId:slot.barberId, cust:B.name.trim().slice(0,60), phone:digits(B.phone), status:"booked", created:Date.now(), src: CUSTOMER_SID?"online":"walkin" };
+    if (em) k.email = em.slice(0,100);
     UI.busy=true; UI.err=""; render();
     try{ await createBooking(sid, salon, k); UI.bookedData = k; if (CUSTOMER_SID){ delete C.days[B.date]; } window.scrollTo(0,0); }
     catch(e){ console.error(e); UI.err = e.message==="taken" ? t("taken") : t("save_fail"); if (CUSTOMER_SID){ delete C.days[B.date]; loadDay(B.date); } }
     UI.busy=false; render(); },
-  bookAgain:()=>go(()=>{ const keep = CUSTOMER_SID ? {name:UI.book.name, phone:UI.book.phone} : {}; UI.bookedData=null; UI.book=keep; if (CUSTOMER_SID) loadDay(ymd(new Date())); }),
+  bookAgain:()=>go(()=>{ const keep = CUSTOMER_SID ? {name:UI.book.name, phone:UI.book.phone, email:UI.book.email} : {}; UI.bookedData=null; UI.book=keep; if (CUSTOMER_SID) loadDay(ymd(new Date())); }),
   pickBarber:v=>go(()=>{ UI.barberId=v; }),
   planPick:v=>go(()=>{ UI.planPick=v; UI.err=""; }),
   copy:v=>{ try{ navigator.clipboard.writeText(v).then(()=>toast(t("copied")),()=>toast(v)); }catch(e){ toast(v); } },
