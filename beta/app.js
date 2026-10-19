@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.19-3";
+const APP_VERSION = "2026.10.19-4";
 const IS_BETA = /\/beta\//.test(location.pathname);
 
 const fb = initializeApp(firebaseConfig);
@@ -72,6 +72,9 @@ const T = {
   account:"Account", logout:"Sign out", signed_as:"Signed in as",
   install_h:"Put it on the home screen", install_p:"In Chrome, tap ⋮ then \"Add to Home screen\". It opens like an app.",
   new_bk:"New booking: {name} at {time}",
+  address:"Shop address", address_ph:"Shop no., building, street, landmark", maplink:"Google Maps link", maplink_help:"In Google Maps, find your shop, tap Share, then copy the link and paste it here.",
+  bad_map:"That isn't a Google Maps link. Paste the link from Google Maps → Share, or leave it empty.", need_addr:"Enter the shop address and area so customers can find you.",
+  addr_h:"Salon address", how_reach:"How to get there", directions:"Open in Google Maps", addr_missing:"Add your shop address so customers can find you.",
   bk_count:"{n} bookings", bk_count1:"1 booking", by_barber:"Bookings by barber", tap_barber:"Tap a barber to see their times.",
   send_summary:"Send today's summary on WhatsApp", summary_h:"Today at {salon}", summary_none:"No bookings", send_day:"Send {name}'s day on WhatsApp",
   rem_h:"Coming up in {n} min", rem_send:"Send reminder", rem_later:"Later", rem_msg:"Reminder: {name}, your {svc} at {salon} is at {time} (in {n} minutes). See you soon!",
@@ -131,6 +134,9 @@ const T = {
   account:"Account", logout:"Logout", signed_as:"Login है",
   install_h:"Home screen पर लगाएं", install_p:"Chrome में ⋮ पर tap करें, फिर \"Add to Home screen\"। ये app की तरह खुलेगा।",
   new_bk:"नई booking: {name}, {time}",
+  address:"दुकान का पता", address_ph:"Shop no., building, गली, landmark", maplink:"Google Maps link", maplink_help:"Google Maps में अपनी दुकान ढूँढें, Share दबाएं, link copy करके यहाँ paste करें।",
+  bad_map:"ये Google Maps का link नहीं है। Google Maps → Share से link paste करें, या खाली छोड़ दें।", need_addr:"दुकान का पता और एरिया डालें, ताकि customers आप तक पहुँच सकें।",
+  addr_h:"सैलून का पता", how_reach:"कैसे पहुँचें", directions:"Google Maps में खोलें", addr_missing:"दुकान का पता डालें, ताकि customers आप तक पहुँच सकें।",
   bk_count:"{n} bookings", bk_count1:"1 booking", by_barber:"Barber के हिसाब से bookings", tap_barber:"समय देखने के लिए barber पर tap करें।",
   send_summary:"आज का summary WhatsApp पर भेजें", summary_h:"{salon} में आज", summary_none:"कोई booking नहीं", send_day:"{name} का दिन WhatsApp पर भेजें",
   rem_h:"{n} मिनट में appointment", rem_send:"Reminder भेजें", rem_later:"बाद में", rem_msg:"Reminder: {name}, {salon} में आपका {svc} {time} बजे है ({n} मिनट में)। मिलते हैं!",
@@ -220,8 +226,8 @@ async function createBooking(sid, salon, b){
 function msgs(salon, k){
   const svc = svcOf(salon,k.serviceId)||{name:"",price:0}, b = barberOf(salon,k.barberId)||{name:""}, when = dayLabel(k.date)+", "+nice(k.time), hi = LANG==="hi";
   return {
-    cust: `${hi?"नमस्ते":"Hi"} ${k.cust}! ${hi?"आपकी booking पक्की है":"Your booking is confirmed"} ✅\n${salon.name}\n${svc.name} · ${b.name}\n${when}\n₹${svc.price}${salon.area?"\n📍 "+salon.area:""}`,
-    remind: `Reminder: ${k.cust}, ${nice(k.time)} — ${svc.name} @ ${salon.name}. ${hi?"मिलते हैं!":"See you!"}`,
+    cust: `${hi?"नमस्ते":"Hi"} ${k.cust}! ${hi?"आपकी booking पक्की है":"Your booking is confirmed"} ✅\n${salon.name}\n${svc.name} · ${b.name}\n${when}\n₹${svc.price}${fullAddr(salon)?"\n📍 "+fullAddr(salon):""}\n🗺️ ${mapUrl(salon)}`,
+    remind: `Reminder: ${k.cust}, ${nice(k.time)} — ${svc.name} @ ${salon.name}. ${hi?"मिलते हैं!":"See you!"}\n🗺️ ${mapUrl(salon)}`,
     salon: `${hi?"नई booking":"New booking"} ✂️\n${k.cust} (${k.phone})\n${svc.name} · ${b.name}\n${when}`,
     barber: `${b.name}, ${hi?"आपकी नई booking":"new booking for you"}: ${k.cust}\n${svc.name} · ${when}`
   };
@@ -232,8 +238,17 @@ function calLink(salon, k, guests){
   const s = k.date.replace(/-/g,"")+"T"+k.time.replace(":","")+"00";
   const e = k.date.replace(/-/g,"")+"T"+toHM(toMin(k.time)+(Number(svc.dur)||30)).replace(":","")+"00";
   return "https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(svc.name+" – "+(k.cust||salon.name))+
-    "&dates="+s+"/"+e+"&ctz=Asia/Kolkata&details="+encodeURIComponent(b.name+(k.phone?" · "+k.phone:""))+"&location="+encodeURIComponent(salon.name+(salon.area?", "+salon.area:""))+
+    "&dates="+s+"/"+e+"&ctz=Asia/Kolkata&details="+encodeURIComponent(b.name+(k.phone?" · "+k.phone:""))+"&location="+encodeURIComponent([salon.name, fullAddr(salon)].filter(Boolean).join(", "))+
     ((guests=[...new Set((guests||[]).map(g=>String(g||"").trim().toLowerCase()).filter(isEmail))]).length?"&add="+encodeURIComponent(guests.join(",")):"");
+}
+const isMapLink = u => /^https:\/\/((www\.)?google\.[a-z.]+\/maps|maps\.google\.[a-z.]+|maps\.app\.goo\.gl|goo\.gl\/maps)/i.test(String(u||"").trim());
+const mapUrl = s => isMapLink(s.mapLink) ? String(s.mapLink).trim() : "https://www.google.com/maps/search/?api=1&query="+encodeURIComponent([s.name, s.address, s.area].filter(Boolean).join(", "));
+const fullAddr = s => [s.address, s.area].filter(x=>x&&String(x).trim()).join(", ");
+function addrCard(s, title){
+  if (!s.address && !isMapLink(s.mapLink)) return "";
+  return `<div class="card"><h3>📍 ${title||t("addr_h")}</h3>${s.address?`<p>${esc(fullAddr(s))}</p>`:""}
+    <div class="row"><a class="btn primary sm" href="${esc(mapUrl(s))}" target="_blank" rel="noopener">${t("directions")}</a>
+    ${s.address?`<button class="btn sm" data-a="copy" data-v="${esc(fullAddr(s))}">${t("copy")}</button>`:""}</div></div>`;
 }
 const contactsOf = () => UI.view==="setup" ? (D.contacts = D.contacts||{}) : (S.contacts = S.contacts||{});
 const bc = id => (S.contacts||{})[id] || {};
@@ -331,7 +346,10 @@ function salonFields(o){
   return `<label class="field"><span>${t("salon_name")}</span><input type="text" id="f_name" data-salon="name" value="${esc(o.name)}"></label>
   <label class="field"><span>${t("owner_name")}</span><input type="text" id="f_owner" data-salon="owner" value="${esc(o.owner)}"></label>
   <label class="field"><span>${t("phone")}</span><input type="tel" inputmode="tel" id="f_phone" data-salon="phone" value="${esc(o.phone)}" placeholder="98XXXXXXXX"></label>
-  <label class="field"><span>${t("area")} <em>(${t("optional")})</em></span><input type="text" id="f_area" data-salon="area" value="${esc(o.area)}"></label>`;
+  <label class="field"><span>${t("address")}</span><textarea id="f_addr" data-salon="address" rows="2" placeholder="${t("address_ph")}" style="width:100%;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 12px;font:inherit;resize:vertical">${esc(o.address||"")}</textarea></label>
+  <label class="field"><span>${t("area")}</span><input type="text" id="f_area" data-salon="area" value="${esc(o.area)}" placeholder="Kolshet Road, Thane"></label>
+  <label class="field"><span>${t("maplink")} <em>(${t("optional")})</em></span><input type="url" inputmode="url" id="f_map" data-salon="mapLink" value="${esc(o.mapLink||"")}" placeholder="https://maps.app.goo.gl/..."><em>${t("maplink_help")}</em></label>
+  ${o.mapLink && !isMapLink(o.mapLink)?`<p class="small" style="color:var(--danger)">${t("bad_map")}</p>`:""}`;
 }
 function hoursFields(o){
   return `<div class="row"><label class="field grow"><span>${t("opens")}</span><input type="time" id="f_open" data-salon="open" value="${o.open}"></label>
@@ -356,6 +374,8 @@ function viewSetup(){
 }
 function validate(o, n){
   if (n===1 && (!o.name.trim() || digits(o.phone).length!==10)) return t("need_name");
+  if (n===1 && (String(o.address||"").trim().length<8 || !String(o.area||"").trim())) return t("need_addr");
+  if (n===1 && o.mapLink && !isMapLink(o.mapLink)) return t("bad_map");
   if (n===3 && !o.services.some(s=>s.name.trim() && Number(s.price)>0)) return t("need_svc");
   if (n===4 && !o.barbers.some(b=>b.name.trim())) return t("need_barber");
   return "";
@@ -404,6 +424,7 @@ function viewHome(){
   const later = S.bookings.filter(k=>k.date>td && k.status==="booked").sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).slice(0,8);
   let last = "";
   return `${subBanner()}
+  ${!String(S.salon.address||"").trim()?`<div class="banner warn"><span style="flex:1">${t("addr_missing")}</span><button class="btn sm saffron" data-a="tab" data-v="settings">${t("nav_settings")}</button></div>`:""}
   <div><p class="muted">${t("hello")}${S.salon.owner?", "+esc(S.salon.owner):""}</p><h1>${dayLabel(td)}</h1></div>
   <div class="stats"><div class="stat"><b>${today.filter(k=>k.status!=="cancelled").length}</b><span>${t("today_bk")}</span></div>
     <div class="stat"><b>${up}</b><span>${t("upcoming")}</span></div><div class="stat"><b>₹${earned}</b><span>${t("earned")}</span></div></div>
@@ -536,15 +557,16 @@ function renderCustomer(){
   const s = C.salon, i = subInfo(s);
   let body = "";
   if (!i.active) body = `<div class="card lock"><div class="big" aria-hidden="true">📞</div><h2>${t("bk_closed_h")}</h2><p class="muted">${t("bk_closed_p")}</p>
-      ${s.phone?`<div class="copy"><code>${esc(s.phone)}</code><button class="btn sm" data-a="copy" data-v="${esc(s.phone)}">${t("copy")}</button></div><a class="btn primary" href="${waLink(s.phone,"")}" target="_blank" rel="noopener">${t("whatsapp")}</a>`:""}</div>`;
+      ${s.phone?`<div class="copy"><code>${esc(s.phone)}</code><button class="btn sm" data-a="copy" data-v="${esc(s.phone)}">${t("copy")}</button></div><a class="btn primary" href="${waLink(s.phone,"")}" target="_blank" rel="noopener">${t("whatsapp")}</a>`:""}</div>${addrCard(s)}`;
   else if (UI.bookedData){ const k = UI.bookedData, m = msgs(s,k), svc = svcOf(s,k.serviceId), b = barberOf(s,k.barberId);
     body = `<div class="card lock"><div class="big" aria-hidden="true">✅</div><h2>${t("booked_h")}</h2>
       <p>${t("booked_p",{svc:esc(svc.name),barber:esc(b.name),date:dayLabel(k.date),time:nice(k.time)})}</p>
       <a class="btn" href="${calLink(s,k,custGuests(s,k))}" target="_blank" rel="noopener">${t("calendar")}</a>
       <p class="small muted">${t("cal_note_c")}</p></div>
+      ${addrCard(s, t("how_reach"))}
       ${s.phone?`<div class="card"><p class="small muted">${t("tell_salon_p")}</p><a class="btn primary block" href="${waLink(s.phone,m.salon)}" target="_blank" rel="noopener">${t("tell_salon")}</a></div>`:""}
       <button class="btn block" data-a="bookAgain">${t("book_another")}</button>`; }
-  else body = `<div><h1>${t("book_h")}</h1></div>` + bookingForm(s, d => C.days[d], false);
+  else body = `<div><h1>${t("book_h")}</h1></div>` + addrCard(s) + bookingForm(s, d => C.days[d], false);
   return topBar(s.name, s.area||t("tagline"))+`<main>${body}</main>`;
 }
 function loadDay(date){
@@ -572,7 +594,7 @@ async function saveSalon(){
   const contacts = cleanContacts(s);
   const clean = JSON.parse(JSON.stringify({services:s.services, barbers:s.barbers})); cleanList(clean);
   setDoc(doc(db,"salons",S.sid,"private","contacts"), { barbers: contacts }).catch(e=>console.error(e));
-  try{ await updateDoc(doc(db,"salons",S.sid), { name:s.name, owner:s.owner, phone:s.phone, area:s.area, open:s.open, close:s.close, days:s.days, services:clean.services, barbers:clean.barbers });
+  try{ await updateDoc(doc(db,"salons",S.sid), { name:s.name, owner:s.owner, phone:s.phone, address:String(s.address||"").trim(), mapLink: isMapLink(s.mapLink)?String(s.mapLink).trim():"", area:s.area, open:s.open, close:s.close, days:s.days, services:clean.services, barbers:clean.barbers });
     toast(t("saved")); }catch(e){ console.error(e); toast(t("save_fail")); }
 }
 
@@ -674,24 +696,24 @@ function stopOwner(){ S.unsub.forEach(f=>{try{f()}catch(e){}}); S.unsub=[]; if (
 function startOwner(sid){
   S.sid = sid; S.firstSnap = true;
   S.unsub.push(onSnapshot(doc(db,"salons",sid), d => {
-    if (!d.exists()){ if (UI.view!=="setup"){ D = { name:"", owner:S.user.displayName||"", phone:"", area:"", open:"10:00", close:"21:00", days:[0,1,2,3,4,5,6], services:[], barbers:[] }; UI.view="setup"; UI.step=1; render(); } return; }
+    if (!d.exists()){ if (UI.view!=="setup"){ D = { name:"", owner:S.user.displayName||"", phone:"", address:"", mapLink:"", area:"", open:"10:00", close:"21:00", days:[0,1,2,3,4,5,6], services:[], barbers:[] }; UI.view="setup"; UI.step=1; render(); } return; }
     const fresh = {id:d.id, ...d.data()};
     if (S.salon && (saveTimer || document.activeElement && document.activeElement.closest && document.activeElement.closest("[data-salon],[data-svc],[data-bar]"))){
       // keep local edits, take server-owned fields
       S.salon.sub = fresh.sub; S.salon.active = fresh.active; S.salon.payReq = fresh.payReq; S.salon.payments = fresh.payments;
     } else S.salon = fresh;
     if (UI.view!=="main"){ UI.view="main"; UI.tab="home"; }
-    if (!(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select"))) render();
+    if (!(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select,textarea"))) render();
   }, err => { console.error(err); }));
   S.unsub.push(onSnapshot(doc(db,"salons",sid,"private","contacts"), d => {
     if (saveTimer) return; S.contacts = d.exists() ? (d.data().barbers||{}) : {};
-    if (UI.view==="main" && !(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select"))) render();
+    if (UI.view==="main" && !(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select,textarea"))) render();
   }, err => console.error(err)));
   const since = ymd(new Date(Date.now()-DAY));
   S.unsub.push(onSnapshot(query(collection(db,"salons",sid,"bookings"), where("date",">=",since)), snap => {
     if (!S.firstSnap) snap.docChanges().forEach(ch=>{ if (ch.type==="added"){ const k = ch.doc.data(); if (k.src==="online"){ beep(); toast(t("new_bk",{name:k.cust,time:dayLabel(k.date)+" "+nice(k.time)})); } } });
     S.firstSnap = false; S.bookings = snap.docs.map(d=>({id:d.id,...d.data()})); setTimeout(checkReminders,0);
-    if (UI.view==="main" && !(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select"))) render();
+    if (UI.view==="main" && !(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select,textarea"))) render();
   }, err => console.error(err)));
 }
 
@@ -709,7 +731,7 @@ function checkReminders(){
     .sort((a,b)=>a.time.localeCompare(b.time))[0];
   if (!due){ if (box) box.remove(); remShown=null; return; }
   const n = toMin(due.time)-nowM, svc = svcOf(S.salon,due.serviceId)||{name:""}, b = barberOf(S.salon,due.barberId)||{name:""};
-  const msg = t("rem_msg",{name:due.cust, svc:svc.name, salon:S.salon.name, time:nice(due.time), n});
+  const msg = t("rem_msg",{name:due.cust, svc:svc.name, salon:S.salon.name, time:nice(due.time), n}) + "\n🗺️ " + mapUrl(S.salon);
   const html = `<div id="remBox" class="rembox" role="alertdialog" aria-live="assertive"><p class="label">⏰ ${t("rem_h",{n})}</p>
     <b>${esc(due.cust)} · ${nice(due.time)}</b><span class="small">${esc(svc.name)} · ${esc(b.name)} · ${esc(due.phone)}</span>
     <div class="row"><a class="btn saffron sm" data-a="remSent" data-v="${due.id}" href="${waLink(due.phone,msg)}" target="_blank" rel="noopener">${t("rem_send")}</a><button class="btn sm" data-a="remLater" data-v="${due.id}">${t("rem_later")}</button></div></div>`;
