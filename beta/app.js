@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.19-4";
+const APP_VERSION = "2026.10.19-5";
 const IS_BETA = /\/beta\//.test(location.pathname);
 
 const fb = initializeApp(firebaseConfig);
@@ -52,7 +52,8 @@ const T = {
   share_msg:"Book your appointment at {salon} online: {link}",
   book_h:"Book an appointment", book_owner:"Add a booking for a walk-in or phone customer.",
   pick_svc:"1. Choose a service", pick_barber:"2. Choose a barber", any_barber:"Any barber", any_sub:"First one free",
-  pick_date:"3. Choose a day", pick_time:"4. Choose a time", your_details:"5. Your details", cust_name:"Name", cust_phone:"Mobile number", cust_email:"Email (for Google Calendar reminder)", bad_email:"That email doesn't look right. Check it or leave it empty.", barber_email:"Gmail (for Google Calendar)", barber_phone:"WhatsApp number", private_note:"Only you see this. Customers never see barber numbers.", no_phone:"No WhatsApp number saved. Add it in Settings → Barbers.", send_each:"Send each barber their day",
+  pick_date:"3. Choose a day", pick_time:"4. Choose a time", your_details:"5. Your details", cust_name:"Name", cust_phone:"Mobile number", cust_email:"Email (for Google Calendar reminder)", bad_email:"That email doesn't look right. Check it or leave it empty.", barber_email:"Gmail (for Google Calendar)", barber_phone:"WhatsApp number", private_note:"Only you see this. Customers never see barber numbers.", no_phone:"No WhatsApp number saved. Add it in Settings → Barbers.", send_each:"Send each barber their day", send_all_p:"Each barber gets all of today's bookings in one message on their own WhatsApp. Tap the big button, send, come back, and the next barber is ready.",
+  send:"Send", sent:"Sent", send_all:"Start: send to {name}", send_next:"Next: send to {name}", all_sent:"All barbers have today's schedule.", send_again:"Send again from the start",
   cal_note:"Customer and barber emails are already added as guests. Tap Save in Google Calendar, then Send, so they get the invite.", cal_note_c:"The salon is already added as a guest. Tap Save in Google Calendar, then Send.",
   confirm_bk:"Confirm booking", closed_day:"The salon is closed this day.", no_slots:"No free times left this day. Try another day.", pick_svc_first:"Choose a service first.",
   need_details:"Enter a name and a 10-digit mobile number.", taken:"Someone just booked that time. Please pick another.",
@@ -114,7 +115,8 @@ const T = {
   share_msg:"{salon} में अपनी appointment online book करें: {link}",
   book_h:"Appointment बुक करें", book_owner:"Walk-in या फ़ोन वाले ग्राहक की booking जोड़ें।",
   pick_svc:"1. Service चुनें", pick_barber:"2. Barber चुनें", any_barber:"कोई भी barber", any_sub:"जो पहले free हो",
-  pick_date:"3. दिन चुनें", pick_time:"4. समय चुनें", your_details:"5. आपकी जानकारी", cust_name:"नाम", cust_phone:"मोबाइल नंबर", cust_email:"Email (Google Calendar reminder के लिए)", bad_email:"Email सही नहीं लग रहा। Check करें या खाली छोड़ दें।", barber_email:"Gmail (Google Calendar के लिए)", barber_phone:"WhatsApp नंबर", private_note:"ये सिर्फ़ आपको दिखेगा। Customers को barber का नंबर कभी नहीं दिखता।", no_phone:"WhatsApp नंबर save नहीं है। Settings → Barbers में डालें।", send_each:"हर barber को उसका दिन भेजें",
+  pick_date:"3. दिन चुनें", pick_time:"4. समय चुनें", your_details:"5. आपकी जानकारी", cust_name:"नाम", cust_phone:"मोबाइल नंबर", cust_email:"Email (Google Calendar reminder के लिए)", bad_email:"Email सही नहीं लग रहा। Check करें या खाली छोड़ दें।", barber_email:"Gmail (Google Calendar के लिए)", barber_phone:"WhatsApp नंबर", private_note:"ये सिर्फ़ आपको दिखेगा। Customers को barber का नंबर कभी नहीं दिखता।", no_phone:"WhatsApp नंबर save नहीं है। Settings → Barbers में डालें।", send_each:"हर barber को उसका दिन भेजें", send_all_p:"हर barber को आज की सारी bookings एक ही message में उसके अपने WhatsApp पर जाती हैं। बड़ा button दबाएं, Send करें, वापस आएं, अगला barber तैयार मिलेगा।",
+  send:"भेजें", sent:"भेजा", send_all:"शुरू करें: {name} को भेजें", send_next:"अगला: {name} को भेजें", all_sent:"सारे barbers को आज का schedule मिल गया।", send_again:"फिर से शुरू से भेजें",
   cal_note:"Customer और barber के email पहले से guest में जुड़ जाते हैं। Google Calendar में Save दबाएं, फिर Send, ताकि उन्हें invite मिले।", cal_note_c:"सैलून पहले से guest में जुड़ा है। Google Calendar में Save दबाएं, फिर Send।",
   confirm_bk:"Booking पक्की करें", closed_day:"इस दिन सैलून बंद है।", no_slots:"इस दिन कोई समय खाली नहीं है। दूसरा दिन चुनें।", pick_svc_first:"पहले service चुनें।",
   need_details:"नाम और 10 अंकों का मोबाइल नंबर डालें।", taken:"ये समय अभी किसी और ने book कर लिया। दूसरा समय चुनें।",
@@ -183,7 +185,8 @@ const CUSTOMER_SID = params.get("s");
 const app = document.getElementById("app");
 
 const S = { user:null, salon:null, sid:null, bookings:[], loaded:false, unsub:[], firstSnap:true, allSalons:null };
-const UI = { view:"loading", step:1, tab:"home", book:{}, bookedId:null, bookedData:null, barberId:null, planPick:"monthly", err:"", busy:false, day:{} };
+let SENT0 = null; try{ SENT0 = JSON.parse(localStorage.getItem("ss_sent")||"null"); }catch(e){}
+const UI = { sentDay: SENT0, view:"loading", step:1, tab:"home", book:{}, bookedId:null, bookedData:null, barberId:null, planPick:"monthly", err:"", busy:false, day:{} };
 let D = null; // setup draft
 
 const isAdmin = () => !!(S.user && S.user.email === ADMIN_EMAIL);
@@ -415,6 +418,20 @@ function linkCard(){
     <a class="btn sm" href="${esc(l)}" target="_blank" rel="noopener">${t("open_link")}</a></div>
     <div class="qr" data-qr="${esc(l)}" role="img" aria-label="QR"></div><p class="small muted" style="text-align:center">${t("qr_p")}</p></div>`;
 }
+function sendAllCard(today, td){
+  const withBk = S.salon.barbers.filter(b=>today.some(k=>k.barberId===b.id && k.status!=="cancelled"));
+  const sent = (UI.sentDay && UI.sentDay.date===td) ? UI.sentDay.ids : [];
+  const next = withBk.find(b=>!sent.includes(b.id));
+  const noPhone = S.salon.barbers.some(b=>digits(bc(b.id).phone).length!==10);
+  return `<hr><p class="label">${t("send_each")}</p><p class="small muted">${t("send_all_p")}</p>
+    <div class="stack" style="gap:6px">${withBk.length ? withBk.map(b=>{ const n = today.filter(k=>k.barberId===b.id && k.status!=="cancelled").length, done = sent.includes(b.id);
+      return `<div class="row" style="gap:8px">${avatar(b,"sm")}<span class="grow"><b>${esc(b.name)}</b> <span class="small muted">· ${n===1?t("bk_count1"):t("bk_count",{n})}${digits(bc(b.id).phone).length===10?"":" · ⚠️"}</span></span>
+        ${done?`<span class="pill ok">✓ ${t("sent")}</span>`:`<a class="btn sm" data-a="sendDay" data-v="${b.id}" href="${barberWa(b.id, daySummary(S.salon, td, b.id))}" target="_blank" rel="noopener">${t("send")}</a>`}</div>`; }).join("") : `<p class="small muted">${t("no_bk")}</p>`}</div>
+    ${next?`<a class="btn primary block" data-a="sendDay" data-v="${next.id}" href="${barberWa(next.id, daySummary(S.salon, td, next.id))}" target="_blank" rel="noopener">${sent.length?t("send_next",{name:esc(next.name)}):t("send_all",{name:esc(next.name)})}</a>`
+      : withBk.length?`<div class="banner ok">✓ ${t("all_sent")}</div>`:""}
+    ${sent.length?`<button class="btn ghost sm" data-a="resetSent">${t("send_again")}</button>`:""}
+    ${noPhone?`<p class="small muted">⚠️ ${t("no_phone")}</p>`:""}`;
+}
 function viewHome(){
   const td = ymd(new Date());
   const today = S.bookings.filter(k=>k.date===td).sort((a,b)=>a.time.localeCompare(b.time));
@@ -434,9 +451,7 @@ function viewHome(){
       const nxt = today.find(k=>k.barberId===b.id && k.status==="booked" && k.time>=nowHM);
       return `<button class="bcard" data-a="openBarber" data-v="${b.id}">${avatar(b)}<b>${esc(b.name)}</b><span class="pill ${n?"warn":""}">${n===1?t("bk_count1"):t("bk_count",{n})}</span>${nxt?`<small>${nice(nxt.time)} · ${esc(nxt.cust)}</small>`:""}</button>`; }).join("")}</div>
     <a class="btn saffron block" href="https://wa.me/?text=${encodeURIComponent(daySummary(S.salon, td))}" target="_blank" rel="noopener">${t("send_summary")}</a>
-    <p class="label">${t("send_each")}</p>
-    <div class="row" style="gap:6px">${S.salon.barbers.map(b=>`<a class="btn sm" href="${barberWa(b.id, daySummary(S.salon, td, b.id))}" target="_blank" rel="noopener">${avatar(b,"sm")} ${esc(b.name)}${digits(bc(b.id).phone).length===10?"":" ⚠️"}</a>`).join("")}</div>
-    ${S.salon.barbers.some(b=>digits(bc(b.id).phone).length!==10)?`<p class="small muted">⚠️ ${t("no_phone")}</p>`:""}</div>
+    ${sendAllCard(today, td)}</div>
   <div class="card"><h2>${t("today_bk")}</h2>${today.length?`<div>${today.map(k=>bookingRow(k,{remind:true,cancel:true})).join("")}</div>`:`<p class="muted">${t("no_bk")}</p>`}</div>
   ${later.length?`<div class="card"><h2>${t("upcoming")}</h2><div>${later.map(k=>{const h=k.date!==last?`<p class="label" style="margin-top:6px">${dayLabel(k.date)}</p>`:"";last=k.date;return h+bookingRow(k,{cancel:true});}).join("")}</div></div>`:""}
   ${linkCard()}`;
@@ -647,6 +662,9 @@ const A = {
     UI.busy=false; render(); },
   bookAgain:()=>go(()=>{ const keep = CUSTOMER_SID ? {name:UI.book.name, phone:UI.book.phone, email:UI.book.email} : {}; UI.bookedData=null; UI.book=keep; if (CUSTOMER_SID) loadDay(ymd(new Date())); }),
   pickBarber:v=>go(()=>{ UI.barberId=v; }),
+  sendDay:v=>{ const td = ymd(new Date()); let sd = {date:td, ids:[]}; try{ const x = JSON.parse(localStorage.getItem("ss_sent")||"null"); if (x && x.date===td) sd = x; }catch(e){}
+    if (UI.sentDay && UI.sentDay.date===td) sd = UI.sentDay; if (!sd.ids.includes(v)) sd.ids.push(v); UI.sentDay = sd; try{ localStorage.setItem("ss_sent", JSON.stringify(sd)); }catch(e){} setTimeout(render, 400); },
+  resetSent:()=>go(()=>{ UI.sentDay = {date:ymd(new Date()), ids:[]}; try{ localStorage.removeItem("ss_sent"); }catch(e){} }),
   openBarber:v=>go(()=>{ UI.barberId=v; UI.tab="barber"; window.scrollTo(0,0); }),
   remSent:v=>{ markReminded(v); updateDoc(doc(db,"salons",S.sid,"bookings",v),{reminded:true}).catch(()=>{}); setTimeout(checkReminders,300); },
   remLater:v=>{ markReminded(v); checkReminders(); },
@@ -673,7 +691,7 @@ const A = {
     UI.busy=false; render(); }
 };
 
-app.addEventListener("click", e => { const el = e.target.closest("[data-a]"); if (!el || el.disabled) return; const f = A[el.dataset.a]; if (f){ e.preventDefault(); f(el.dataset.v); } });
+app.addEventListener("click", e => { const el = e.target.closest("[data-a]"); if (!el || el.disabled) return; const f = A[el.dataset.a]; if (f){ if (el.tagName!=="A") e.preventDefault(); f(el.dataset.v); } });
 app.addEventListener("input", e => { const el = e.target, d = el.dataset; const o = editTarget();
   if (d.salon && o){ o[d.salon] = el.value; if (o===S.salon) queueSave(); }
   else if (d.svc && o){ const s = o.services.find(x=>x.id===d.svc); if (s){ s[d.k] = el.value; if (o===S.salon) queueSave(); } }
