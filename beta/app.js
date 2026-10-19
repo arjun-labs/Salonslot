@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.19-11";
+const APP_VERSION = "2026.10.19-12";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version
@@ -89,7 +89,7 @@ const T = {
   adm_none:"No salons yet.", approve:"Approve", reject:"Reject", turn_off:"Switch off", turn_on:"Switch on", extend7:"+7 days trial",
   adm_paid:"Paid {plan} · UTR {utr}", adm_off:"Off", adm_check:"Check this UTR in your GPay before approving.",
   download:"Full backup (technical file)", download_p:"Saves every salon and booking as a file on this device. Do this once a week.",
-  adj_days:"Change days", days:"days", adj_done:"Now ends on {date}", csv_h:"Salon list (Excel / Google Sheets)", csv_p:"Name, owner, WhatsApp, email, address, Maps link, plan and end date for every salon, in one sheet. Opens in Excel, Google Sheets or Numbers.", csv_btn:"Download salon list", csv_done:"{n} salons saved", approved:"Approved", rejected:"Payment request removed", switched:"Updated",
+  adj_days:"Change days", days:"days", adj_done:"Now ends on {date}", csv_h:"Salon list (Excel / Google Sheets)", csv_p:"Name, owner, WhatsApp, email, address, Maps link, plan and end date for every salon, in one sheet. Opens in Excel, Google Sheets or Numbers.", csv_btn:"Download salon list", csv_done:"{n} salons saved", booked_by:"Online booking by", approved:"Approved", rejected:"Payment request removed", switched:"Updated",
   dw:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], mon:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
   sugg:[["Haircut",200,30],["Beard trim",100,30],["Shave",80,30],["Hair colour",600,60],["Facial",800,60],["Head massage",250,30],["Hair spa",900,60],["Kids haircut",150,30],["Threading",50,10],["Upper lip",30,10],["Eyebrow shaping",80,20],["Clean-up",400,45]]
  },
@@ -152,7 +152,7 @@ const T = {
   adm_none:"अभी कोई सैलून नहीं है।", approve:"Approve", reject:"Reject", turn_off:"OFF करें", turn_on:"ON करें", extend7:"+7 दिन trial",
   adm_paid:"{plan} का payment · UTR {utr}", adm_off:"OFF", adm_check:"Approve करने से पहले ये UTR अपने GPay में check करें।",
   download:"पूरा backup (technical file)", download_p:"सारे सैलून और bookings इस device में file बनकर save हो जाएंगे। हफ़्ते में एक बार करें।",
-  adj_days:"दिन बदलें", days:"दिन", adj_done:"अब {date} को ख़त्म होगा", csv_h:"सैलून की list (Excel / Google Sheets)", csv_p:"हर सैलून का नाम, मालिक, WhatsApp, email, पता, Maps link, plan और ख़त्म होने की तारीख़, एक ही sheet में। Excel, Google Sheets या Numbers में खुलेगी।", csv_btn:"सैलून की list download करें", csv_done:"{n} सैलून save हो गए", approved:"Approve हो गया", rejected:"Payment request हटा दी", switched:"Update हो गया",
+  adj_days:"दिन बदलें", days:"दिन", adj_done:"अब {date} को ख़त्म होगा", csv_h:"सैलून की list (Excel / Google Sheets)", csv_p:"हर सैलून का नाम, मालिक, WhatsApp, email, पता, Maps link, plan और ख़त्म होने की तारीख़, एक ही sheet में। Excel, Google Sheets या Numbers में खुलेगी।", csv_btn:"सैलून की list download करें", csv_done:"{n} सैलून save हो गए", booked_by:"Online booking by", approved:"Approve हो गया", rejected:"Payment request हटा दी", switched:"Update हो गया",
   dw:["रवि","सोम","मंगल","बुध","गुरु","शुक्र","शनि"], mon:["जन","फ़र","मार्च","अप्रै","मई","जून","जुला","अग","सितं","अक्टू","नवं","दिसं"],
   sugg:[["Haircut",200,30],["Beard trim",100,30],["Shave",80,30],["Hair colour",600,60],["Facial",800,60],["Head massage",250,30],["Hair spa",900,60],["Kids haircut",150,30],["Threading",50,10],["Upper lip",30,10],["Eyebrow shaping",80,20],["Clean-up",400,45]]
  }
@@ -310,6 +310,8 @@ function navBar(){
     `<button data-a="tab" data-v="${k}" class="${UI.tab===k?"on":""}" aria-current="${UI.tab===k?"page":"false"}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic[k]}</svg>${t("nav_"+k)}</button>`).join("")}</div></nav>`;
 }
 
+const brandFoot = () => `<p class="brandfoot">${t("booked_by")} <a href="https://www.instagram.com/salon.slot/" target="_blank" rel="noopener"><b>SalonSlot</b> · @salon.slot</a><br><span>Powered by <a href="https://www.instagram.com/visualzonefilms/" target="_blank" rel="noopener">Visual Zone Films</a></span></p>`;
+
 /* ================= login ================= */
 const G_ICON = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
 function viewLogin(){
@@ -319,7 +321,7 @@ function viewLogin(){
     <p class="rule small">${t("free_trial")}</p>
     <p class="small muted" style="text-align:center">${t("signin_note")}</p>
     <div class="card"><p class="label">${t("plan_h")}</p><div class="plans">
-      ${["monthly","halfyearly","yearly"].map(p=>`<div class="plan"><span class="label">${t(p)}</span><b>₹${PLANS[p].price.toLocaleString("en-IN")}</b><span class="small muted">${t(p==="monthly"?"per_month":p==="yearly"?"per_year":"per_half")}</span></div>`).join("")}</div></div>`;
+      ${["monthly","halfyearly","yearly"].map(p=>`<div class="plan"><span class="label">${t(p)}</span><b>₹${PLANS[p].price.toLocaleString("en-IN")}</b><span class="small muted">${t(p==="monthly"?"per_month":p==="yearly"?"per_year":"per_half")}</span></div>`).join("")}</div></div>${brandFoot()}`;
 }
 
 /* ================= editors ================= */
@@ -595,7 +597,7 @@ function renderCustomer(){
       ${s.phone?`<div class="card"><p class="small muted">${t("tell_salon_p")}</p><a class="btn primary block" href="${waLink(s.phone,m.salon)}" target="_blank" rel="noopener">${t("tell_salon")}</a></div>`:""}
       <button class="btn block" data-a="bookAgain">${t("book_another")}</button>`; }
   else body = `<div><h1>${t("book_h")}</h1></div>` + addrCard(s) + bookingForm(s, d => C.days[d], false);
-  return topBar(s.name, s.area||t("tagline"))+`<main>${body}</main>`;
+  return topBar(s.name, s.area||t("tagline"))+`<main>${body}${brandFoot()}</main>`;
 }
 function loadDay(date){
   if (!CUSTOMER_SID || C.days[date]!==undefined || C["l_"+date]) return;
