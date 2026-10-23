@@ -300,3 +300,12 @@ table.led td{padding:8px 4px;border-bottom:1px dashed var(--line);font-variant-n
 @media (min-width:1280px){
   body.owner .cols{grid-template-columns:minmax(0,1.7fr) minmax(380px,1fr)}
 }
+/* bill sheet */
+.billrow{display:flex;align-items:center;gap:8px}
+.billp{display:flex;align-items:center;gap:4px;flex:none}
+.billp span{font-weight:600;color:var(--muted)}
+.billp input{width:104px;text-align:right;font-variant-numeric:tabular-nums}
+.billrow .x{flex:none;width:44px;height:44px;border:1px solid var(--line);background:var(--surface);border-radius:10px;font-size:20px;line-height:1;color:var(--muted)}
+.billrow .x:disabled{opacity:.35}
+.billtot{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);padding-top:10px;font-size:17px;font-weight:600}
+.billtot b{font-size:24px;font-variant-numeric:tabular-nums}
