@@ -52,7 +52,7 @@ p{margin:0}
 .field{display:flex;flex-direction:column;gap:4px;min-width:0}
 .field span{font-size:14px;font-weight:600}
 .field em{font-style:normal;font-weight:400;color:var(--muted);font-size:13px}
-input[type=text],input[type=tel],input[type=number],input[type=time],select{width:100%;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 12px;min-height:44px}
+input[type=text],input[type=tel],input[type=number],input[type=time],input[type=email],input[type=url],input[type=date],select{width:100%;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 12px;min-height:44px}
 input:focus,select:focus{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px var(--gold-soft)}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-size:14px;font-weight:500}
@@ -173,3 +173,130 @@ table.led td{padding:8px 4px;border-bottom:1px dashed var(--line);font-variant-n
 .svcopt .pr{font-family:var(--display);font-weight:600;font-size:19px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .svcbox{border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
 .brandfoot{text-align:center;font-size:12.5px;color:var(--muted);margin:8px 0 0;line-height:1.6}.brandfoot a{color:var(--fg);text-decoration:none}.brandfoot span{font-size:11.5px;letter-spacing:.04em}.brandfoot span a{color:var(--gold-deep);font-weight:600}
+
+/* nav with 7 tabs (admin) and the new-offer dot */
+.nav.seven div{grid-template-columns:repeat(7,1fr)}
+.nav.seven button{font-size:10.5px}
+.nav .ic{position:relative;display:inline-flex}
+.nav .dot{position:absolute;top:-2px;right:-5px;width:9px;height:9px;border-radius:50%;background:#E8892B;box-shadow:0 0 0 2px var(--ink)}
+/* rewards */
+.giftbar{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;border-radius:var(--r);padding:12px 14px;background:var(--ink);color:var(--ink-fg);font-weight:600;min-height:52px}
+.giftbar .gi{font-size:22px}
+.giftbar b{color:var(--gold);white-space:nowrap}
+.grow{flex:1;min-width:0}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.scard{background:var(--ink);color:var(--ink-fg);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;border:2px solid var(--gold)}
+.scard.deal{background:#1F3E7A;border-color:#8FA8D6}
+.scard .label{color:var(--gold)}
+.scard.deal .label{color:#C9D6EE}
+.shead{display:flex;flex-direction:column;gap:3px}
+.shead b{font-family:var(--display);font-size:22px;letter-spacing:.03em;text-transform:uppercase;line-height:1.15}
+.shead .soft{color:#CFC6B8}
+.sarea{position:relative;height:150px;border-radius:12px;overflow:hidden}
+.sreveal{position:absolute;inset:0;background:#FBF4E6;color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:10px}
+.sreveal .label{color:var(--pole-red)}
+.sbig{font-family:var(--display);font-weight:600;font-size:34px;line-height:1.05;color:var(--ink);overflow-wrap:anywhere}
+.sarea canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}
+.scard .stap{align-self:center;color:var(--ink-fg);border-color:rgba(255,255,255,.3);background:transparent}
+.scard .copy{background:rgba(255,255,255,.12)}
+.scard .copy .muted{color:#CFC6B8}
+.scard .btn.primary{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.scard .small.muted{color:#CFC6B8}
+.scard.pop{animation:pop .6s ease}
+@keyframes pop{0%{transform:scale(.96)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.scard.pop{animation:none}}
+.srow .scard{margin-top:4px}
+.scard.deal .sreveal .label{color:var(--pole-blue)}
+
+/* slots by hour + chosen slot */
+.hrs{display:flex;flex-direction:column;gap:8px}
+.hrow{display:grid;grid-template-columns:52px 1fr;gap:8px;align-items:start}
+.hl{font-family:var(--display);font-weight:600;font-size:14px;color:var(--gold-deep);padding-top:10px;white-space:nowrap}
+.hs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.selbox{display:flex;flex-direction:column;gap:2px;background:var(--ok-soft);border:1px solid #C7DDCC;border-radius:10px;padding:10px 12px}
+.selbox .label{color:var(--ok)}
+.selbox b{font-family:var(--display);font-size:20px;letter-spacing:.02em}
+/* owner day timeline */
+.tlwrap{overflow-x:auto;margin:0 -16px;padding:0 16px}
+.tlhead,.tlbody{display:grid;gap:0 6px}
+.tlhead{position:sticky;top:0;padding-bottom:6px}
+.tlb{display:flex;align-items:center;gap:6px;min-width:0;font-size:13px}
+.tlb b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tlb .av{width:26px;height:26px;font-size:12px}
+.tlbody{position:relative}
+.tlhours{position:relative}
+.tlhours span{position:absolute;left:0;transform:translateY(-50%);font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
+.tlcol{position:relative;background:var(--surface2);border-radius:8px;cursor:copy;min-width:0}
+.tlline{position:absolute;left:0;right:0;border-top:1px dashed var(--line)}
+.tlbk{position:absolute;left:3px;right:3px;border:0;border-radius:7px;background:var(--ink);color:var(--ink-fg);text-align:left;padding:3px 7px;overflow:hidden;display:flex;flex-direction:column;line-height:1.2;box-shadow:0 1px 0 rgba(0,0,0,.15);cursor:pointer}
+.tlbk b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tlbk small{font-size:11px;color:#CFC6B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tlbk.done{background:var(--ok)}
+.tlbk.done small{color:#DCEBDF}
+.tlnow{position:absolute;left:48px;right:0;border-top:2px solid var(--pole-red);pointer-events:none}
+.tlnow::before{content:"";position:absolute;left:-5px;top:-5px;width:8px;height:8px;border-radius:50%;background:var(--pole-red)}
+/* bottom sheet */
+.sheetbg{position:fixed;inset:0;background:rgba(20,18,16,.45);z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;max-width:560px;margin:0 auto;max-height:88vh;overflow-y:auto;background:var(--surface);border-radius:18px 18px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;box-shadow:0 -6px 24px rgba(0,0,0,.18)}
+.shhead{display:flex;gap:10px;align-items:flex-start}
+.shhead .grow{display:flex;flex-direction:column;gap:2px}
+.shhead b{font-size:18px}
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cdw{font-size:11px;font-weight:600;text-align:center;color:var(--muted);padding:2px 0}
+.cday{aspect-ratio:1;border:1px solid var(--line);background:var(--surface);border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0;min-height:40px}
+.cday.blank{border:0;background:none}
+.cday b{font-size:14px;font-weight:600}
+.cday span{font-size:11px;font-weight:700;border-radius:999px;padding:0 6px;background:var(--gold-soft);color:var(--gold-deep)}
+.cday.lv2 span{background:var(--gold);color:var(--ink)}
+.cday.lv3 span{background:var(--ink);color:var(--gold)}
+.cday.today{border-color:var(--gold);border-width:2px}
+.cday.on{background:var(--ink);border-color:var(--ink);color:var(--ink-fg)}
+.cday.on span{background:var(--gold);color:var(--ink)}
+.sheet>*{flex-shrink:0}
+.sheet .mvgo{position:sticky;bottom:0;box-shadow:0 -8px 12px var(--surface)}
+.date.leave{background:var(--danger-soft);border-color:#EBC3BF;color:var(--danger)}
+.date.leave small{color:var(--danger)}
+.bcard.off{opacity:.55}
+.tlcol.off{background:repeating-linear-gradient(-45deg,var(--danger-soft) 0 8px,#FBEDEB 8px 16px)}
+.tloff{position:absolute;top:6px;left:0;right:0;text-align:center;font-size:12px;font-weight:700;color:var(--danger)}
+
+/* ===== bigger screens: tablet and desktop (owner app only; customer page stays phone-sized) ===== */
+.cols,.colA,.colB{display:flex;flex-direction:column;gap:16px;min-width:0}
+@media (min-width:640px){
+  body.owner #app{max-width:860px}
+  body.owner .nav div{max-width:860px}
+  body.owner .barbers{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+}
+@media (min-width:960px){
+  body.owner #app{max-width:1440px}
+  body.owner main{padding-left:240px;padding-right:28px;padding-bottom:40px}
+  body.owner main.t-book,body.owner main.t-plan,body.owner main.t-settings,body.owner main.t-rewards,body.owner main.t-barber{max-width:1040px}
+  /* bottom bar becomes a menu on the left */
+  body.owner .nav{top:calc(68px + env(safe-area-inset-top,0px));right:auto;width:212px;border-top:0;border-right:2px solid var(--gold);padding:16px 10px}
+  body.owner .nav div{max-width:none;display:flex;flex-direction:column;gap:4px}
+  body.owner .nav button{flex-direction:row;justify-content:flex-start;gap:12px;padding:11px 14px;font-size:15px;border-radius:10px;text-align:left}
+  body.owner .nav button.on{background:rgba(255,255,255,.07)}
+  body.owner .nav.six button,body.owner .nav.seven button{font-size:15px}
+  body.owner .nav .dot{right:-4px}
+  /* today: timeline left, lists right; calendar: month left, day right */
+  body.owner .cols{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(340px,1fr);gap:20px;align-items:start}
+  body.owner .cols.cal2{grid-template-columns:minmax(0,1.2fr) minmax(340px,1fr)}
+  body.owner .colB{position:sticky;top:84px}
+  body.owner .cols.cal2 .colB{position:static}
+  body.owner .cday{min-height:64px}
+  body.owner .cday b{font-size:16px}
+  body.owner .cday span{font-size:13px}
+  body.owner .tlwrap{margin:0;padding:0}
+  body.owner main > .stats{grid-template-columns:repeat(3,minmax(0,220px))}
+  body.owner main > .btn.block{align-self:flex-start;width:auto;padding-inline:28px}
+  /* add-work / change-time opens in the middle, not from the bottom */
+  .sheet{top:50%;bottom:auto;left:50%;right:auto;transform:translate(-50%,-50%);width:min(600px,92vw);max-height:86vh;border-radius:18px;padding-bottom:18px}
+  body.owner .toast{bottom:28px;left:calc(50% + 106px)}
+  body.owner .rembox{bottom:24px;left:auto;right:24px;width:420px}
+  body.owner .betabar{bottom:0}
+  .srow .scard{max-width:420px}
+}
+@media (min-width:1280px){
+  body.owner .cols{grid-template-columns:minmax(0,1.7fr) minmax(380px,1fr)}
+}

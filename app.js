@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, onSnapshot, runTransaction, deleteField, getDocs, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, onSnapshot, runTransaction, deleteField, getDocs, arrayUnion, writeBatch, collectionGroup, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ================= config ================= */
 const firebaseConfig = {
@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.19-12";
+const APP_VERSION = "2026.10.23-3";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version
@@ -34,7 +34,7 @@ const T = {
   tagline:"Salon booking, made simple",
   welcome_h:"Run your salon's bookings from one phone",
   welcome_p:"Customers open your link, pick a barber, a service and a time. You see every booking the moment it comes in.",
-  signin:"Sign in with Google", signin_note:"Open this page in Chrome to sign in. Sign-in doesn't work inside WhatsApp or Instagram.", free_trial:"7-day free trial. No card needed.",
+  signin:"Sign in with Google", signin_note:"Open this page in Chrome to sign in. Sign-in doesn't work inside WhatsApp or Instagram.", free_trial:"Welcome offer: 10 days free. No card needed.",
   signin_fail:"Sign-in didn't finish. Open the link in Chrome and try again.",
   step:"Step", of:"of", next:"Next", back:"Back", finish:"Start my salon",
   s1_h:"Your salon", salon_name:"Salon name", owner_name:"Owner name", phone:"WhatsApp number", area:"Area / city", optional:"optional",
@@ -42,7 +42,27 @@ const T = {
   s3_h:"Services and prices", s3_p:"Tap a suggestion to add it, or type your own.", svc_name:"Service", price:"Price ₹", mins:"Minutes", add_service:"Add service",
   s4_h:"Your barbers", s4_p:"Add a photo, name and speciality for each barber. Customers see these when they book.", how_many:"How many barbers?",
   barber_name:"Name", speciality:"Speciality", spec_ph:"e.g. Beard expert, Hair colour", add_barber:"Add barber", tap_photo:"Tap the circle to add a photo",
-  s5_h:"You're ready", s5_p:"Your 7-day free trial starts now. Share your booking link and start taking bookings.",
+  s5_h:"You're ready", s5_p:"Your free trial starts now, and a welcome gift is waiting for you in Rewards. Share your booking link and start taking bookings.",
+  leave_h:"Leave", leave_p:"Tap the days this barber won't come. Customers can't book them on those days.", on_leave:"On leave", leave_warn:"This barber already has {n} booking(s) on leave days. Move them:", barber_off:"{name} is on leave on {date}. Please pick another barber.", leave_saved:"Leave saved",
+  nav_calendar:"Calendar", cal_h:"Calendar", cal_p:"Tap any day to see who came. Totals are for the whole month.", cal_total:"Bookings", cal_done:"Done", cal_cancel:"Cancelled", cal_earn:"Earned (done)",
+  cal_by_barber:"By barber this month", cal_now:"This month", cal_none:"No bookings this day.", cal_pick:"Tap a day to see its bookings.",
+  tl_h:"Day timeline", tl_p:"Tap an empty space to add a booking there. Tap a booking to add work or change its time.",
+  sh_extend:"+ Add work", sh_move:"Change time", sh_close:"Close", sh_add_svc:"Add a service", sh_add_min:"Or just add time", sh_mins:"+{n} min",
+  cf_h:"This runs into {name}'s booking at {time}.", cf_other:"Give {name} to {barber}", cf_other_none:"No other barber is free at that time.",
+  cf_shift:"Move {name} to {time}", cf_shift_none:"Can't push it back: the time after is also booked. Use Change time.", cf_keep:"Keep both as they are",
+  mv_date:"New day", mv_barber:"Barber", mv_time:"New time", mv_go:"Move to {time}", mv_none:"No free time this day.",
+  moved_msg:"Hi {name}, your booking at {salon} is now on {date} at {time}. Sorry for the change, see you!", moved_done:"Booking moved. Let the customer know:", send_wa:"Send on WhatsApp",
+  ext_done:"Time updated", sel_slot:"Your slot",
+  nav_rewards:"Rewards", rw_h:"Rewards", rw_p:"Scratch cards and offers for your salon.", rw_new:"New for you", rw_scratch:"Scratch here", rw_scratch_hint:"Rub with your finger",
+  rw_tap:"Tap to open", rw_mine:"Your rewards", rw_added:"{n} days added to your plan", rw_open:"Open offer", rw_none:"No new cards right now. New offers will show up here.",
+  rw_home:"A scratch card is waiting for you", rw_home_n:"{n} scratch cards are waiting for you", rw_open_btn:"Open", rw_ends:"Till {date}", rw_fail:"Couldn't open the card. Check the internet and try again.",
+  rw_got:"Got on {date}", rw_gift:"Your gift", rw_partner:"Partner offers", rw_code:"Code", rw_free:"FREE", rw_preview:"Preview", rw_preview_p:"Only you see this. Nothing is added to any salon.",
+  adm_rw_h:"Rewards and offers", adm_rw_p:"Scratch cards that salons see in their Rewards tab. A free-days card adds days to their plan by itself. A partner offer shows a brand's code and link.",
+  adm_rw_new:"New offer", of_kind:"Type", of_days_k:"Free days (scratch card)", of_deal_k:"Partner / brand offer", of_title:"Title (on the card)", of_desc:"Short line",
+  of_days:"Days to add", of_reveal:"Big text after scratch", of_note:"Line after scratch", of_brand:"Brand name", of_code:"Coupon code", of_link:"Offer link",
+  of_ends:"Last day", of_newonly:"Only salons that join from now on", of_save:"Create offer", of_need:"Add a title. A free-days card needs 1 to 30 days. A link must start with https://",
+  of_claims:"{n} opened", of_clicks:"{n} clicked", of_del:"Delete", of_del_sure:"Yes, delete", of_new_pill:"New salons only", of_all_pill:"All salons",
+  of_make_all:"Show to all salons", of_make_new:"Only new salons", of_created:"Offer created", of_none:"No offers yet.",
   need_name:"Enter the salon name and a 10-digit WhatsApp number to continue.", need_svc:"Add at least one service with a price.", need_barber:"Add at least one barber with a name.",
   nav_home:"Today", nav_book:"Book", nav_barber:"Barbers", nav_plan:"Plan", nav_settings:"Settings", nav_admin:"Admin",
   hello:"Good to see you", today_bk:"Today's bookings", earned:"Earned today", upcoming:"Coming up",
@@ -97,7 +117,7 @@ const T = {
   tagline:"सैलून बुकिंग, आसान",
   welcome_h:"अपने सैलून की सारी बुकिंग एक फ़ोन से चलाइए",
   welcome_p:"ग्राहक आपका link खोलकर barber, service और time चुनता है। Booking आते ही आपको दिख जाती है।",
-  signin:"Google से login करें", signin_note:"Login के लिए ये page Chrome में खोलें। WhatsApp या Instagram के अंदर login नहीं होता।", free_trial:"7 दिन का free trial. कोई card नहीं चाहिए।",
+  signin:"Google से login करें", signin_note:"Login के लिए ये page Chrome में खोलें। WhatsApp या Instagram के अंदर login नहीं होता।", free_trial:"Welcome offer: 10 दिन FREE. कोई card नहीं चाहिए।",
   signin_fail:"Login पूरा नहीं हुआ। Link को Chrome में खोलकर फिर कोशिश करें।",
   step:"Step", of:"/", next:"आगे", back:"पीछे", finish:"सैलून चालू करो",
   s1_h:"आपका सैलून", salon_name:"सैलून का नाम", owner_name:"मालिक का नाम", phone:"WhatsApp नंबर", area:"एरिया / शहर", optional:"ज़रूरी नहीं",
@@ -105,7 +125,27 @@ const T = {
   s3_h:"Services और दाम", s3_p:"Suggestion पर tap करके जोड़ें, या खुद लिखें।", svc_name:"Service", price:"दाम ₹", mins:"मिनट", add_service:"Service जोड़ें",
   s4_h:"आपके barbers", s4_p:"हर barber की photo, नाम और speciality डालें। Booking करते वक़्त ग्राहक को ये दिखेगा।", how_many:"कितने barbers हैं?",
   barber_name:"नाम", speciality:"Speciality", spec_ph:"जैसे Beard expert, Hair colour", add_barber:"Barber जोड़ें", tap_photo:"Photo लगाने के लिए गोले पर tap करें",
-  s5_h:"सब तैयार है", s5_p:"आपका 7 दिन का free trial अभी शुरू हो गया। Booking link share करें और bookings लेना शुरू करें।",
+  s5_h:"सब तैयार है", s5_p:"आपका free trial अभी शुरू हो गया, और Rewards में आपके लिए एक Welcome Gift रखा है। Booking link share करें और bookings लेना शुरू करें।",
+  leave_h:"छुट्टी", leave_p:"जिन दिनों ये barber नहीं आएगा, उन पर tap करें। उन दिनों customers इसके साथ booking नहीं कर पाएँगे।", on_leave:"छुट्टी पर", leave_warn:"छुट्टी वाले दिनों में इस barber की {n} booking पहले से हैं। इन्हें दूसरे समय या barber पर करें:", barber_off:"{name} {date} को छुट्टी पर है। कोई दूसरा barber चुनें।", leave_saved:"छुट्टी save हो गई",
+  nav_calendar:"Calendar", cal_h:"Calendar", cal_p:"किसी भी दिन पर tap करें और देखें कौन आया। ऊपर पूरे महीने का हिसाब है।", cal_total:"Bookings", cal_done:"Done", cal_cancel:"Cancel हुईं", cal_earn:"कमाई (done)",
+  cal_by_barber:"इस महीने barber के हिसाब से", cal_now:"इस महीने पर जाएं", cal_none:"इस दिन कोई booking नहीं।", cal_pick:"Bookings देखने के लिए किसी दिन पर tap करें।",
+  tl_h:"दिन की timeline", tl_p:"ख़ाली जगह पर tap करें तो वहीं booking जुड़ेगी। किसी booking पर tap करके काम जोड़ें या समय बदलें।",
+  sh_extend:"+ काम जोड़ें", sh_move:"समय बदलें", sh_close:"बंद करें", sh_add_svc:"Service जोड़ें", sh_add_min:"या सिर्फ़ समय बढ़ाएं", sh_mins:"+{n} मिनट",
+  cf_h:"इससे {name} की {time} वाली booking से टकराव होगा।", cf_other:"{name} को {barber} के पास भेजें", cf_other_none:"उस समय कोई दूसरा barber ख़ाली नहीं है।",
+  cf_shift:"{name} को {time} पर करें", cf_shift_none:"आगे नहीं खिसक सकता, उसके बाद भी booking है। \"समय बदलें\" से करें।", cf_keep:"दोनों को ऐसे ही रहने दें",
+  mv_date:"नया दिन", mv_barber:"Barber", mv_time:"नया समय", mv_go:"{time} पर करें", mv_none:"इस दिन कोई समय ख़ाली नहीं।",
+  moved_msg:"नमस्ते {name}, {salon} में आपकी booking अब {date} को {time} बजे है। बदलाव के लिए माफ़ी, मिलते हैं!", moved_done:"Booking का समय बदल गया। Customer को बता दें:", send_wa:"WhatsApp पर भेजें",
+  ext_done:"समय बढ़ गया", sel_slot:"आपका slot",
+  nav_rewards:"Rewards", rw_h:"Rewards", rw_p:"आपके सैलून के लिए scratch cards और offers।", rw_new:"आपके लिए नया", rw_scratch:"यहाँ scratch करें", rw_scratch_hint:"उँगली से घिसें",
+  rw_tap:"Tap करके खोलें", rw_mine:"आपको मिले rewards", rw_added:"आपके plan में {n} दिन जुड़ गए", rw_open:"Offer खोलें", rw_none:"अभी कोई नया card नहीं है। नए offers यहीं दिखेंगे।",
+  rw_home:"आपके लिए एक scratch card है", rw_home_n:"आपके लिए {n} scratch cards हैं", rw_open_btn:"खोलें", rw_ends:"{date} तक", rw_fail:"Card नहीं खुला। Internet check करके फिर कोशिश करें।",
+  rw_got:"{date} को मिला", rw_gift:"आपका gift", rw_partner:"Partner offers", rw_code:"Code", rw_free:"FREE", rw_preview:"Preview", rw_preview_p:"ये सिर्फ़ आपको दिख रहा है। किसी सैलून में कुछ नहीं जुड़ेगा।",
+  adm_rw_h:"Rewards और offers", adm_rw_p:"सैलून के Rewards tab में दिखने वाले scratch cards। Free-days वाले card से plan में दिन अपने आप जुड़ जाते हैं। Partner offer में brand का code और link दिखता है।",
+  adm_rw_new:"नया offer", of_kind:"Type", of_days_k:"Free दिन (scratch card)", of_deal_k:"Partner / brand offer", of_title:"Title (card पर)", of_desc:"छोटी line",
+  of_days:"कितने दिन जुड़ें", of_reveal:"Scratch के बाद बड़ा text", of_note:"Scratch के बाद की line", of_brand:"Brand का नाम", of_code:"Coupon code", of_link:"Offer link",
+  of_ends:"आख़िरी दिन", of_newonly:"सिर्फ़ अब से जुड़ने वाले सैलून", of_save:"Offer बनाएं", of_need:"Title डालें। Free-days card में 1 से 30 दिन डालें। Link https:// से शुरू होना चाहिए।",
+  of_claims:"{n} ने खोला", of_clicks:"{n} ने click किया", of_del:"Delete", of_del_sure:"हाँ, delete करें", of_new_pill:"सिर्फ़ नए सैलून", of_all_pill:"सारे सैलून",
+  of_make_all:"सारे सैलून को दिखाएं", of_make_new:"सिर्फ़ नए सैलून", of_created:"Offer बन गया", of_none:"अभी कोई offer नहीं है।",
   need_name:"आगे बढ़ने के लिए सैलून का नाम और 10 अंकों का WhatsApp नंबर डालें।", need_svc:"कम से कम एक service दाम के साथ डालें।", need_barber:"कम से कम एक barber का नाम डालें।",
   nav_home:"आज", nav_book:"Booking", nav_barber:"Barbers", nav_plan:"Plan", nav_settings:"Settings", nav_admin:"Admin",
   hello:"नमस्ते", today_bk:"आज की bookings", earned:"आज की कमाई", upcoming:"आगे की",
@@ -187,9 +227,12 @@ const params = new URLSearchParams(location.search);
 const CUSTOMER_SID = params.get("s");
 const app = document.getElementById("app");
 
-const S = { user:null, salon:null, sid:null, bookings:[], loaded:false, unsub:[], firstSnap:true, allSalons:null };
+const S = { user:null, salon:null, sid:null, bookings:[], loaded:false, unsub:[], firstSnap:true, allSalons:null, offers:null, claims:{}, allClaims:null };
 let SENT0 = null; try{ SENT0 = JSON.parse(localStorage.getItem("ss_sent")||"null"); }catch(e){}
-const UI = { sentDay: SENT0, view:"loading", step:1, tab:"home", book:{}, bookedId:null, bookedData:null, barberId:null, planPick:"monthly", err:"", busy:false, day:{} };
+const UI = { sentDay: SENT0, view:"loading", step:1, tab:"home", book:{}, bookedId:null, bookedData:null, barberId:null, planPick:"monthly", err:"", busy:false, day:{},
+  scratching:null, pendingRender:false, justGot:null, prevDone:{}, ofPreview:null, ofDelAsk:null, ofErr:"", of:null };
+const OF0 = () => ({ kind:"days", title:"", desc:"", days:"3", reveal:"", note:"", brand:"", code:"", link:"", ends:"", newOnly:false });
+UI.of = OF0();
 let D = null; // setup draft
 
 const isAdmin = () => !!(S.user && S.user.email === ADMIN_EMAIL);
@@ -200,17 +243,25 @@ function subInfo(s){ s = s || S.salon; if (!s) return {active:false,days:0,kind:
 
 /* ================= slots ================= */
 function busyList(slotsMap){ return Object.entries(slotsMap||{}).map(([k,dur])=>{ const i=k.lastIndexOf("_"); const hh=k.slice(i+1); return { b:k.slice(0,i), start: Number(hh.slice(0,2))*60+Number(hh.slice(2)), dur:Number(dur)||30 }; }); }
-function ownerSlotsMap(date){ const m={}; S.bookings.filter(k=>k.date===date && k.status!=="cancelled").forEach(k=>{ m[slotKey(k.barberId,k.time)] = Number((svcOf(S.salon,k.serviceId)||{}).dur)||30; }); return m; }
+function ownerSlotsMap(date){ const m={}; S.bookings.filter(k=>k.date===date && k.status!=="cancelled").forEach(k=>{ m[slotKey(k.barberId,k.time)] = bkDur(S.salon,k); }); return m; }
 const svcOf = (s,id) => (s.services||[]).find(x=>x.id===id);
 const barberOf = (s,id) => (s.barbers||[]).find(x=>x.id===id);
+// a booking's real length and bill include any work added in the chair
+const bkDur = (s,k) => Number(k.dur) || Number((svcOf(s,k.serviceId)||{}).dur) || 30;
+const bkPrice = (s,k) => [k.serviceId].concat(k.extra||[]).reduce((a,id)=>a+Number((svcOf(s,id)||{}).price||0),0);
+const bkNames = (s,k) => [k.serviceId].concat(k.extra||[]).map(id=>(svcOf(s,id)||{}).name).filter(Boolean).join(" + ") || "?";
+const hourLbl = m => { const h = Math.floor(m/60)%24; return (h%12||12)+" "+(h>=12?"PM":"AM"); };
+const niceRange = (tm, dur) => { const a = nice(tm), b = nice(toHM(toMin(tm)+dur)); return a.slice(-2)===b.slice(-2) ? a.slice(0,-3)+" – "+b : a+" – "+b; };
+const onLeave = (s,bid,date) => ((s.leave||{})[bid]||[]).includes(date);
 function isFree(busy, b, start, dur){ return !busy.some(x => x.b===b && start < x.start+x.dur && x.start < start+dur); }
-function freeSlots(salon, date, svcId, barberPref, slotsMap){
-  const svc = svcOf(salon, svcId); if (!svc) return [];
+// opt.dur: length to fit (default: the service's), opt.skip: {b,start} a booking to ignore (the one being moved)
+function freeSlots(salon, date, svcId, barberPref, slotsMap, opt){
+  opt = opt||{}; const svc = svcOf(salon, svcId); if (!svc && !opt.dur) return [];
   const d = new Date(date+"T00:00"); if (!(salon.days||[]).includes(d.getDay())) return null;
-  const open = toMin(salon.open||"10:00"), close = toMin(salon.close||"21:00"), dur = Number(svc.dur)||30;
+  const open = toMin(salon.open||"10:00"), close = toMin(salon.close||"21:00"), dur = opt.dur || Number(svc.dur)||30;
   const now = new Date(); const nowM = date===ymd(now) ? now.getHours()*60+now.getMinutes() : -1;
-  const cands = barberPref && barberPref!=="any" ? salon.barbers.filter(b=>b.id===barberPref) : salon.barbers;
-  const busy = busyList(slotsMap); const out = [];
+  const cands = (barberPref && barberPref!=="any" ? salon.barbers.filter(b=>b.id===barberPref) : salon.barbers).filter(b=>!onLeave(salon,b.id,date));
+  const busy = busyList(slotsMap).filter(x=>!(opt.skip && x.b===opt.skip.b && x.start===opt.skip.start)); const out = [];
   const step = dur < 30 ? 10 : 15;
   for (let m=open; m+dur<=close; m+=step){ if (m<=nowM) continue; const f = cands.find(b=>isFree(busy,b.id,m,dur)); if (f) out.push({time:toHM(m), barberId:f.id}); }
   return out;
@@ -230,7 +281,7 @@ async function createBooking(sid, salon, b){
 
 /* ================= messages ================= */
 function msgs(salon, k){
-  const svc = svcOf(salon,k.serviceId)||{name:"",price:0}, b = barberOf(salon,k.barberId)||{name:""}, when = dayLabel(k.date)+", "+nice(k.time), hi = LANG==="hi";
+  const svc = {name:bkNames(salon,k), price:bkPrice(salon,k)}, b = barberOf(salon,k.barberId)||{name:""}, when = dayLabel(k.date)+", "+nice(k.time), hi = LANG==="hi";
   return {
     cust: `${hi?"नमस्ते":"Hi"} ${k.cust}! ${hi?"आपकी booking पक्की है":"Your booking is confirmed"} ✅\n${salon.name}\n${svc.name} · ${b.name}\n${when}\n₹${svc.price}${fullAddr(salon)?"\n📍 "+fullAddr(salon):""}\n🗺️ ${mapUrl(salon)}`,
     remind: `Reminder: ${k.cust}, ${nice(k.time)} — ${svc.name} @ ${salon.name}. ${hi?"मिलते हैं!":"See you!"}\n🗺️ ${mapUrl(salon)}`,
@@ -240,9 +291,9 @@ function msgs(salon, k){
 }
 const isEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e||"").trim());
 function calLink(salon, k, guests){
-  const svc = svcOf(salon,k.serviceId)||{name:"",dur:30}, b = barberOf(salon,k.barberId)||{name:""};
+  const svc = {name:bkNames(salon,k)}, b = barberOf(salon,k.barberId)||{name:""};
   const s = k.date.replace(/-/g,"")+"T"+k.time.replace(":","")+"00";
-  const e = k.date.replace(/-/g,"")+"T"+toHM(toMin(k.time)+(Number(svc.dur)||30)).replace(":","")+"00";
+  const e = k.date.replace(/-/g,"")+"T"+toHM(toMin(k.time)+bkDur(salon,k)).replace(":","")+"00";
   return "https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(svc.name+" – "+(k.cust||salon.name))+
     "&dates="+s+"/"+e+"&ctz=Asia/Kolkata&details="+encodeURIComponent(b.name+(k.phone?" · "+k.phone:""))+"&location="+encodeURIComponent([salon.name, fullAddr(salon)].filter(Boolean).join(", "))+
     ((guests=[...new Set((guests||[]).map(g=>String(g||"").trim().toLowerCase()).filter(isEmail))]).length?"&add="+encodeURIComponent(guests.join(",")):"");
@@ -269,7 +320,7 @@ function daySummary(s, date, onlyBarber){
     const mine = list.filter(k=>k.barberId===b.id);
     lines.push("", `*${b.name}* (${mine.length})`);
     if (!mine.length) lines.push("  "+t("summary_none"));
-    mine.forEach(k=>{ const v = svcOf(s,k.serviceId)||{name:"",dur:30}; lines.push(`  ${nice(k.time)} – ${k.cust} · ${v.name} (${v.dur} min)${k.status==="done"?" ✅":""}`); });
+    mine.forEach(k=>{ lines.push(`  ${niceRange(k.time,bkDur(s,k))} – ${k.cust} · ${bkNames(s,k)}${k.status==="done"?" ✅":""}`); });
   });
   return lines.join("\n");
 }
@@ -280,34 +331,39 @@ function topBar(name, sub){
   <div class="lang" role="group" aria-label="Language"><button data-a="lang" data-v="hi" class="${LANG==="hi"?"on":""}">हिंदी</button><button data-a="lang" data-v="en" class="${LANG==="en"?"on":""}">EN</button></div></div></header>`;
 }
 function render(){
+  if (UI.scratching){ UI.pendingRender = true; return; } // don't wipe a card while someone is scratching it
   const y = window.scrollY; let html = "";
   if (CUSTOMER_SID){ html = renderCustomer(); }
   else {
     const name = S.salon ? S.salon.name : "SalonSlot", sub = S.salon ? (S.salon.area||t("tagline")) : t("tagline");
-    html = topBar(name, sub)+"<main>";
+    html = topBar(name, sub)+`<main class="t-${UI.view==="main"?UI.tab:UI.view}">`;
     if (UI.view==="loading") html += `<div class="center"><div class="spin" aria-label="${t("loading")}"></div></div>`;
     else if (UI.view==="login") html += viewLogin();
     else if (UI.view==="setup") html += viewSetup();
     else if (UI.view==="adminOnly") html += `<button class="btn sm" data-a="adminBack">← ${t("back")}</button>` + viewAdmin();
-    else html += ({home:viewHome, book:viewBook, barber:viewBarber, plan:viewPlan, settings:viewSettings, admin:viewAdmin}[UI.tab]||viewHome)();
+    else html += ({home:viewHome, calendar:viewCalendar, book:viewBook, barber:viewBarber, rewards:viewRewards, plan:viewPlan, settings:viewSettings, admin:viewAdmin}[UI.tab]||viewHome)();
     html += "</main>";
-    if (UI.view==="main") html += navBar();
+    if (UI.view==="main") html += navBar() + viewSheet();
   }
+  document.body.classList.toggle("owner", !CUSTOMER_SID && UI.view==="main");
   app.innerHTML = html; window.scrollTo(0,y);
-  drawQRs();
+  drawQRs(); initScratch();
 }
 function navBar(){
   const ic = {
     home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
-    book:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/>',
+    book:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+    calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M7.5 14h2M11 14h2M14.5 14h2M7.5 17.5h2M11 17.5h2"/>',
     barber:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.5c2.4.2 4 1.8 4.6 4.5"/>',
+    rewards:'<rect x="3" y="8.5" width="18" height="12.5" rx="1.5"/><path d="M3 12.5h18M12 8.5V21M12 8.5C10.6 5.3 7.2 4.4 6.8 6.4 6.4 8.4 9.8 8.5 12 8.5zm0 0c1.4-3.2 4.8-4.1 5.2-2.1.4 2-3 2.1-5.2 2.1z"/>',
     plan:'<rect x="2.5" y="5.5" width="19" height="13" rx="2"/><path d="M2.5 10h19M6.5 15h4"/>',
     settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
     admin:'<path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>'
   };
-  const tabs = ["home","book","barber","plan","settings"].concat(isAdmin()?["admin"]:[]);
-  return `<nav class="nav ${tabs.length>5?"six":""}" aria-label="Main"><div>${tabs.map(k=>
-    `<button data-a="tab" data-v="${k}" class="${UI.tab===k?"on":""}" aria-current="${UI.tab===k?"page":"false"}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic[k]}</svg>${t("nav_"+k)}</button>`).join("")}</div></nav>`;
+  const tabs = ["home","calendar","book","rewards","plan","settings"].concat(isAdmin()?["admin"]:[]);
+  const fresh = freshOffers().length;
+  return `<nav class="nav ${tabs.length>6?"seven":tabs.length>5?"six":""}" aria-label="Main"><div>${tabs.map(k=>
+    `<button data-a="tab" data-v="${k}" class="${UI.tab===k?"on":""}" aria-current="${UI.tab===k?"page":"false"}"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic[k]}</svg>${k==="rewards"&&fresh?`<i class="dot" aria-label="${fresh}"></i>`:""}</span>${t("nav_"+k)}</button>`).join("")}</div></nav>`;
 }
 
 const brandFoot = () => `<p class="brandfoot">${t("booked_by")} <a href="https://www.instagram.com/salon.slot/" target="_blank" rel="noopener"><b>SalonSlot</b> · @salon.slot</a><br><span>Powered by <a href="https://www.instagram.com/visualzonefilms/" target="_blank" rel="noopener">Visual Zone Films</a></span></p>`;
@@ -406,13 +462,15 @@ function subBanner(){
   return "";
 }
 function bookingRow(k, o){
-  o = o||{}; const s = S.salon, svc = svcOf(s,k.serviceId)||{name:"?",price:0}, b = barberOf(s,k.barberId)||{name:"?"}, m = msgs(s,k);
+  o = o||{}; const s = S.salon, svc = {name:bkNames(s,k), price:bkPrice(s,k)}, b = barberOf(s,k.barberId)||{name:"?"}, m = msgs(s,k);
   const pill = k.status==="done"?`<span class="pill ok">${t("st_done")}</span>`:k.status==="cancelled"?`<span class="pill bad">${t("st_cancelled")}</span>`:`<span class="pill warn">${t("st_booked")}</span>`;
+  const manage = !o.view && S.bookings.some(x=>x.id===k.id);
   return `<div class="bk"><div class="t">${nice(k.time).replace(" ","<small>")}</small></div><div class="body">
     <div class="row" style="gap:8px"><b class="grow">${esc(k.cust)}</b>${k.src==="online"?`<span class="pill">${t("online")}</span>`:""}${pill}</div>
-    <div class="row small muted" style="gap:6px">${avatar(b,"sm")}<span>${esc(b.name)} · ${esc(svc.name)} · ₹${esc(svc.price)} · ${esc(k.phone)}${k.email?" · "+esc(k.email):""}</span></div>
+    <div class="row small muted" style="gap:6px">${avatar(b,"sm")}<span>${niceRange(k.time,bkDur(s,k))} · ${esc(b.name)} · ${esc(svc.name)} · ₹${esc(svc.price)} · ${esc(k.phone)}${k.email?" · "+esc(k.email):""}</span></div>
     ${k.status==="booked"?`<div class="row" style="gap:6px">
       <button class="btn sm primary" data-a="done" data-v="${k.id}">${t("mark_done")}</button>
+      ${manage?`<button class="btn sm" data-a="sheetMode" data-v="${k.id}|extend">${t("sh_extend")}</button><button class="btn sm" data-a="sheetMode" data-v="${k.id}|move">${t("sh_move")}</button>`:""}
       <a class="btn sm" href="${waLink(k.phone, o.remind?m.remind:m.cust)}" target="_blank" rel="noopener">${o.remind?t("remind"):t("whatsapp")}</a>
       ${o.barber||o.remind?`<a class="btn sm" href="${barberWa(k.barberId,m.barber)}" target="_blank" rel="noopener">${t("send_barber")}</a>`:""}
       <a class="btn sm" href="${calLink(s,k,ownerGuests(s,k))}" target="_blank" rel="noopener">${t("calendar")}</a>
@@ -444,27 +502,181 @@ function sendAllCard(today, td){
 function viewHome(){
   const td = ymd(new Date());
   const today = S.bookings.filter(k=>k.date===td).sort((a,b)=>a.time.localeCompare(b.time));
-  const earned = today.filter(k=>k.status==="done").reduce((s,k)=>s+Number((svcOf(S.salon,k.serviceId)||{}).price||0),0);
+  const earned = today.filter(k=>k.status==="done").reduce((s,k)=>s+bkPrice(S.salon,k),0);
+  const tlDate = UI.tlDate || td, tlMin = ymd(new Date(Date.now()-DAY)), tlMax = ymd(new Date(Date.now()+6*DAY));
   const nowHM = toHM(new Date().getHours()*60+new Date().getMinutes());
   const up = today.filter(k=>k.status==="booked" && k.time>=nowHM).length;
   const later = S.bookings.filter(k=>k.date>td && k.status==="booked").sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).slice(0,8);
   let last = "";
+  const fresh = freshOffers().length;
   return `${subBanner()}
+  ${fresh?`<button class="giftbar" data-a="tab" data-v="rewards"><span class="gi" aria-hidden="true">🎁</span><span class="grow">${fresh===1?t("rw_home"):t("rw_home_n",{n:fresh})}</span><b>${t("rw_open_btn")} →</b></button>`:""}
   ${!String(S.salon.address||"").trim()?`<div class="banner warn"><span style="flex:1">${t("addr_missing")}</span><button class="btn sm saffron" data-a="tab" data-v="settings">${t("nav_settings")}</button></div>`:""}
   <div><p class="muted">${t("hello")}${S.salon.owner?", "+esc(S.salon.owner):""}</p><h1>${dayLabel(td)}</h1></div>
   <div class="stats"><div class="stat"><b>${today.filter(k=>k.status!=="cancelled").length}</b><span>${t("today_bk")}</span></div>
     <div class="stat"><b>${up}</b><span>${t("upcoming")}</span></div><div class="stat"><b>₹${earned}</b><span>${t("earned")}</span></div></div>
   <button class="btn primary block" data-a="walkin">+ ${t("add_walkin")}</button>
+  <div class="cols"><div class="colA">
+  <div class="card"><div class="row" style="gap:6px"><h2 class="grow">${t("tl_h")}</h2>
+      <button class="btn sm ghost" data-a="tlDay" data-v="-1" ${tlDate<=tlMin?"disabled":""} aria-label="${t("back")}">‹</button><b style="min-width:96px;text-align:center">${dayLabel(tlDate)}</b>
+      <button class="btn sm ghost" data-a="tlDay" data-v="1" ${tlDate>=tlMax?"disabled":""} aria-label="${t("next")}">›</button></div>
+    <p class="small muted">${t("tl_p")}</p>${dayTimeline(tlDate)}</div>
+  </div><div class="colB">
   <div class="card"><h2>${t("by_barber")}</h2><p class="small muted">${t("tap_barber")}</p>
     <div class="barbers">${S.salon.barbers.map(b=>{ const n = today.filter(k=>k.barberId===b.id && k.status!=="cancelled").length;
       const nxt = today.find(k=>k.barberId===b.id && k.status==="booked" && k.time>=nowHM);
-      return `<button class="bcard" data-a="openBarber" data-v="${b.id}">${avatar(b)}<b>${esc(b.name)}</b><span class="pill ${n?"warn":""}">${n===1?t("bk_count1"):t("bk_count",{n})}</span>${nxt?`<small>${nice(nxt.time)} · ${esc(nxt.cust)}</small>`:""}</button>`; }).join("")}</div>
+      return `<button class="bcard" data-a="openBarber" data-v="${b.id}">${avatar(b)}<b>${esc(b.name)}</b>${onLeave(S.salon,b.id,td)?`<span class="pill bad">${t("on_leave")}</span>`:""}<span class="pill ${n?"warn":""}">${n===1?t("bk_count1"):t("bk_count",{n})}</span>${nxt?`<small>${nice(nxt.time)} · ${esc(nxt.cust)}</small>`:""}</button>`; }).join("")}</div>
     <a class="btn saffron block" href="https://wa.me/?text=${encodeURIComponent(daySummary(S.salon, td))}" target="_blank" rel="noopener">${t("send_summary")}</a>
     ${sendAllCard(today, td)}</div>
   <div class="card"><h2>${t("today_bk")}</h2>${today.length?`<div>${today.map(k=>bookingRow(k,{remind:true,cancel:true})).join("")}</div>`:`<p class="muted">${t("no_bk")}</p>`}</div>
   ${later.length?`<div class="card"><h2>${t("upcoming")}</h2><div>${later.map(k=>{const h=k.date!==last?`<p class="label" style="margin-top:6px">${dayLabel(k.date)}</p>`:"";last=k.date;return h+bookingRow(k,{cancel:true});}).join("")}</div></div>`:""}
-  ${linkCard()}`;
+  ${linkCard()}</div></div>`;
 }
+// free times grouped in one row per hour: "2 PM  2:00 2:15 [2:30] 2:45"
+function slotGrid(slots, sel, act, withBarber){
+  const g = {}; slots.forEach(s=>{ const h = Math.floor(toMin(s.time)/60); (g[h] = g[h]||[]).push(s); });
+  return `<div class="hrs">${Object.keys(g).map(Number).sort((a,b)=>a-b).map(h=>`<div class="hrow"><span class="hl">${hourLbl(h*60)}</span><div class="hs">${g[h].map(s=>{
+    const v = withBarber ? s.time+"|"+s.barberId : s.time;
+    return `<button class="slot ${sel===s.time?"on":""}" data-a="${act}" data-v="${v}" aria-label="${nice(s.time)}">${nice(s.time).slice(0,-3)}</button>`; }).join("")}</div></div>`).join("")}</div>`;
+}
+function selBox(salon, B, slots){
+  const sl = B.time && slots.find(s=>s.time===B.time); if (!sl) return "";
+  const svc = svcOf(salon, B.svc)||{dur:30,name:""}, b = barberOf(salon, sl.barberId)||{name:""};
+  return `<div class="selbox" role="status"><span class="label">${t("sel_slot")}</span><b>${niceRange(B.time, Number(svc.dur)||30)}</b><span class="small">${esc(svc.name)} · ${esc(b.name)} · ${dayLabel(B.date)}</span></div>`;
+}
+
+/* ---- owner: one day as a timeline, a column per barber ---- */
+const PPM = 1.3; // pixels per minute
+function dayTimeline(date){
+  const s = S.salon, open = toMin(s.open||"10:00"), close = toMin(s.close||"21:00");
+  if (!(close > open) || !s.barbers.length) return "";
+  const list = S.bookings.filter(k=>k.date===date && k.status!=="cancelled");
+  const hours = []; for (let m=Math.ceil(open/60)*60; m<=close; m+=60) hours.push(m);
+  const nowD = new Date(), nowM = date===ymd(nowD) ? nowD.getHours()*60+nowD.getMinutes() : -1;
+  const closedDay = !(s.days||[]).includes(new Date(date+"T00:00").getDay());
+  const cols = `grid-template-columns:48px repeat(${s.barbers.length}, minmax(112px,1fr))`;
+  return `<div class="tlwrap">${closedDay?`<p class="small muted">${t("closed_day")}</p>`:""}
+    <div class="tlhead" style="${cols}"><span></span>${s.barbers.map(b=>`<span class="tlb">${avatar(b,"sm")}<b>${esc(b.name)}</b></span>`).join("")}</div>
+    <div class="tlbody" style="${cols};height:${Math.round((close-open)*PPM)}px">
+      <div class="tlhours">${hours.map(m=>`<span style="top:${Math.round((m-open)*PPM)}px">${hourLbl(m)}</span>`).join("")}</div>
+      ${s.barbers.map(b=>`<div class="tlcol ${onLeave(s,b.id,date)?"off":""}" data-a="tlTap" data-v="${b.id}" data-date="${date}" data-open="${open}">${onLeave(s,b.id,date)?`<span class="tloff">${t("on_leave")}</span>`:""}
+        ${hours.map(m=>`<i class="tlline" style="top:${Math.round((m-open)*PPM)}px"></i>`).join("")}
+        ${list.filter(k=>k.barberId===b.id).map(k=>{ const st = toMin(k.time), d = bkDur(s,k);
+          return `<button class="tlbk ${k.status}" data-a="sheet" data-v="${k.id}" style="top:${Math.round((st-open)*PPM)}px;height:${Math.max(Math.round(d*PPM)-2,22)}px"><b>${esc(k.cust)}</b><small>${niceRange(k.time,d)} · ${esc(bkNames(s,k))}</small></button>`; }).join("")}
+      </div>`).join("")}
+      ${nowM>=open && nowM<=close?`<i class="tlnow" style="top:${Math.round((nowM-open)*PPM)}px" aria-hidden="true"></i>`:""}
+    </div></div>`;
+}
+
+/* ---- owner: bottom sheet to add work or move a booking ---- */
+const curK = () => UI.sheet && S.bookings.find(x=>x.id===UI.sheet.id);
+function cfOpts(k, cf){
+  const s = S.salon, next = S.bookings.find(x=>x.id===cf.nextId); if (!next) return null;
+  const nd = bkDur(s,k)+cf.add, end = toMin(k.time)+nd, ndur = bkDur(s,next), close = toMin(s.close||"21:00");
+  const map = ownerSlotsMap(k.date); map[slotKey(k.barberId,k.time)] = nd; delete map[slotKey(next.barberId,next.time)];
+  const busy = busyList(map);
+  const other = s.barbers.find(b=>b.id!==next.barberId && isFree(busy,b.id,toMin(next.time),ndur));
+  const ns = Math.ceil(end/5)*5;
+  return { next, other, shiftTo: ns+ndur<=close && isFree(busy,next.barberId,ns,ndur) ? toHM(ns) : null };
+}
+function viewSheet(){
+  const sh = UI.sheet; if (!sh) return "";
+  const s = S.salon, k = curK(); if (!k) return "";
+  const d = bkDur(s,k), b = barberOf(s,k.barberId)||{name:"?"}, m = msgs(s,k);
+  let body = "";
+  if (sh.mode==="msg"){
+    body = `<div class="banner ok">✓ ${t("moved_done")}</div><div class="msg">${esc(sh.wa.text)}</div>
+      <a class="btn primary block" href="${waLink(sh.wa.phone, sh.wa.text)}" target="_blank" rel="noopener" data-a="sheetClose">${t("send_wa")}</a>`;
+  } else if (sh.mode==="extend" && sh.conflict){
+    const o = cfOpts(k, sh.conflict);
+    if (!o){ UI.sheet.conflict = null; return viewSheet(); }
+    body = `<div class="banner warn">⚠️ ${t("cf_h",{name:esc(o.next.cust), time:nice(o.next.time)})}</div>
+      ${o.other?`<button class="btn primary block" data-a="cfOther">${t("cf_other",{name:esc(o.next.cust), barber:esc(o.other.name)})}</button>`:`<p class="small muted">${t("cf_other_none")}</p>`}
+      ${o.shiftTo?`<button class="btn block" data-a="cfShift">${t("cf_shift",{name:esc(o.next.cust), time:nice(o.shiftTo)})}</button>`:`<p class="small muted">${t("cf_shift_none")}</p>`}
+      <button class="btn ghost block" data-a="cfKeep">${t("cf_keep")}</button>`;
+  } else if (sh.mode==="extend"){
+    const have = new Set([k.serviceId].concat(k.extra||[]));
+    body = `<p class="label">${t("sh_add_svc")}</p><div class="chips">${s.services.filter(v=>!have.has(v.id)).map(v=>`<button class="chip" data-a="shSvc" data-v="${v.id}">+ ${esc(v.name)} · ${esc(v.dur)} ${t("min")}</button>`).join("")}</div>
+      <p class="label">${t("sh_add_min")}</p><div class="row" style="gap:6px">${[10,15,30].map(n=>`<button class="btn sm" data-a="shMin" data-v="${n}">${t("sh_mins",{n})}</button>`).join("")}</div>`;
+  } else if (sh.mode==="move"){
+    const days = Array.from({length:7},(_,i)=>ymd(new Date(Date.now()+i*DAY)));
+    const slots = freeSlots(s, sh.mvDate, k.serviceId, sh.mvBarber, ownerSlotsMap(sh.mvDate), { dur:d, skip: sh.mvDate===k.date ? {b:k.barberId, start:toMin(k.time)} : null });
+    const sel = sh.mvTime && (slots||[]).find(x=>x.time===sh.mvTime);
+    body = `<p class="label">${t("mv_date")}</p><div class="hscroll">${days.map(x=>{ const dt = new Date(x+"T00:00"), closed = !(s.days||[]).includes(dt.getDay());
+        return `<button class="date ${sh.mvDate===x?"on":""}" data-a="mvDate" data-v="${x}" ${closed?"disabled":""}><small>${t("dw")[dt.getDay()]}</small><b>${dt.getDate()}</b><small>${t("mon")[dt.getMonth()]}</small></button>`; }).join("")}</div>
+      <p class="label">${t("mv_barber")}</p><div class="chips"><button class="chip ${sh.mvBarber==="any"?"on":""}" data-a="mvBarber" data-v="any">${t("any_barber")}</button>${s.barbers.map(x=>`<button class="chip ${sh.mvBarber===x.id?"on":""}" data-a="mvBarber" data-v="${x.id}">${esc(x.name)}</button>`).join("")}</div>
+      <p class="label">${t("mv_time")}</p>${slots===null?`<p class="muted">${t("closed_day")}</p>`:slots.length?slotGrid(slots, sh.mvTime, "mvTime", true):`<p class="muted">${t("mv_none")}</p>`}
+      ${sel?`<button class="btn primary block mvgo" data-a="mvGo" ${UI.busy?"disabled":""}>${t("mv_go",{time:dayLabel(sh.mvDate)+" "+niceRange(sel.time,d)})} · ${esc((barberOf(s,sel.barberId)||{}).name||"")}</button>`:""}`;
+  } else {
+    body = `<div class="stack" style="gap:8px">
+      ${k.status==="booked"?`<button class="btn primary block" data-a="done" data-v="${k.id}">${t("mark_done")}</button>
+      <div class="row" style="gap:8px"><button class="btn grow" data-a="sheetMode" data-v="${k.id}|extend">${t("sh_extend")}</button><button class="btn grow" data-a="sheetMode" data-v="${k.id}|move">${t("sh_move")}</button></div>`:""}
+      <div class="row" style="gap:8px"><a class="btn grow" href="${waLink(k.phone, m.remind)}" target="_blank" rel="noopener">${t("whatsapp")}</a><a class="btn grow" href="${barberWa(k.barberId,m.barber)}" target="_blank" rel="noopener">${t("send_barber")}</a></div>
+      ${k.status==="booked"?`<button class="btn ghost block" data-a="cancelBk" data-v="${k.id}">${t("cancel")}</button>`:""}</div>`;
+  }
+  return `<div class="sheetbg" data-a="sheetClose"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(k.cust)}">
+    <div class="shhead"><div class="grow"><b>${esc(k.cust)}</b><span class="small muted">${dayLabel(k.date)} · ${niceRange(k.time,d)} · ${esc(b.name)}</span><span class="small">${esc(bkNames(s,k))} · ₹${bkPrice(s,k)}</span></div>
+      <button class="btn sm ghost" data-a="sheetClose" aria-label="${t("sh_close")}">✕</button></div>${body}</div>`;
+}
+// change a booking and keep the day's slot map (what customers see as taken) in step
+async function updateBk(k, patch){
+  const n = {...k, ...patch}, oKey = slotKey(k.barberId,k.time), nKey = slotKey(n.barberId,n.time), nd = bkDur(S.salon,n);
+  const b = writeBatch(db);
+  b.update(doc(db,"salons",S.sid,"bookings",k.id), patch);
+  if (k.date===n.date) b.set(doc(db,"salons",S.sid,"days",n.date), { slots: { [nKey]: nd, ...(oKey!==nKey?{[oKey]:deleteField()}:{}) } }, { merge:true });
+  else { b.set(doc(db,"salons",S.sid,"days",k.date), { slots: { [oKey]: deleteField() } }, { merge:true }); b.set(doc(db,"salons",S.sid,"days",n.date), { slots: { [nKey]: nd } }, { merge:true }); }
+  await b.commit();
+  Object.assign(k, patch); // local copy until the live update arrives
+}
+async function doExtend(k, add, svcId, force){
+  const s = S.salon, nd = bkDur(s,k)+add, st = toMin(k.time), end = st+nd;
+  const next = S.bookings.filter(x=>x.id!==k.id && x.date===k.date && x.barberId===k.barberId && x.status!=="cancelled" && toMin(x.time)>=st && toMin(x.time)<end).sort((a,b)=>a.time.localeCompare(b.time))[0];
+  if (next && !force){ UI.sheet.conflict = { add, svcId, nextId: next.id }; render(); return false; }
+  try{ await updateBk(k, { dur: nd, ...(svcId ? { extra: (k.extra||[]).concat(svcId) } : {}) }); toast(t("ext_done")); UI.sheet = null; render(); return true; }
+  catch(e){ console.error(e); toast(t("save_fail")); render(); return false; }
+}
+const movedMsg = (k, date, time) => t("moved_msg",{name:k.cust, salon:S.salon.name, date:dayLabel(date), time:nice(time)});
+
+/* ---- calendar: any month, bookings per day, month totals ---- */
+async function loadMonth(ym){
+  S.month = S.month||{}; if (S.month[ym]!==undefined || S["ml_"+ym]) return; S["ml_"+ym] = true;
+  const [y,m] = ym.split("-").map(Number), a = ym+"-01", z = ym+"-"+pad(new Date(y,m,0).getDate());
+  try{ const q = await getDocs(query(collection(db,"salons",S.sid,"bookings"), where("date",">=",a), where("date","<=",z))); S.month[ym] = q.docs.map(d=>({id:d.id,...d.data()})); }
+  catch(e){ console.error(e); S.month[ym] = []; }
+  S["ml_"+ym] = false; render();
+}
+function monthList(ym){
+  const base = (S.month||{})[ym]; if (base===undefined) return undefined;
+  const mp = new Map(base.filter(k=>String(k.date||"").startsWith(ym)).map(k=>[k.id,k])); S.bookings.filter(k=>k.date.startsWith(ym)).forEach(k=>mp.set(k.id,k));
+  return [...mp.values()];
+}
+function viewCalendar(){
+  const s = S.salon, td = ymd(new Date()), ym = UI.calYM || td.slice(0,7), list = monthList(ym);
+  if (list===undefined) setTimeout(()=>loadMonth(ym),0);
+  const [y,m] = ym.split("-").map(Number), nDays = new Date(y,m,0).getDate(), start = new Date(y,m-1,1).getDay();
+  const all = list||[], live = all.filter(k=>k.status!=="cancelled"), done = all.filter(k=>k.status==="done"), canc = all.filter(k=>k.status==="cancelled");
+  const per = {}; live.forEach(k=>{ per[k.date] = (per[k.date]||0)+1; });
+  const max = Math.max(1, ...Object.values(per));
+  const cells = []; for (let i=0;i<start;i++) cells.push(`<span class="cday blank"></span>`);
+  for (let d=1; d<=nDays; d++){ const ds = ym+"-"+pad(d), n = per[ds]||0, lvl = n ? Math.ceil(n/max*3) : 0;
+    cells.push(`<button class="cday lv${lvl} ${ds===td?"today":""} ${UI.calDay===ds?"on":""}" data-a="calDay" data-v="${ds}" aria-label="${d} ${t("mon")[m-1]}: ${n}"><b>${d}</b>${n?`<span>${n}</span>`:""}</button>`); }
+  const dayList = UI.calDay && UI.calDay.startsWith(ym) ? all.filter(k=>k.date===UI.calDay).sort((a,b)=>a.time.localeCompare(b.time)) : null;
+  const old = ymd(new Date(Date.now()-DAY));
+  return `<div><h1>${t("cal_h")}</h1><p class="small muted" style="margin-top:4px">${t("cal_p")}</p></div>
+  <div class="cols cal2"><div class="colA">
+  <div class="card"><div class="row" style="gap:6px"><button class="btn sm ghost" data-a="calMove" data-v="-1" aria-label="${t("back")}">‹</button>
+      <h2 class="grow" style="text-align:center">${t("mon")[m-1]} ${y}</h2><button class="btn sm ghost" data-a="calMove" data-v="1" aria-label="${t("next")}">›</button></div>
+    ${ym!==td.slice(0,7)?`<button class="btn sm" style="align-self:center" data-a="calMove" data-v="0">${t("cal_now")}</button>`:""}
+    ${list===undefined?`<div class="spin"></div>`:`<div class="cal"><span class="cdw">${t("dw").join(`</span><span class="cdw">`)}</span>${cells.join("")}</div>`}</div>
+  ${list===undefined?"":`<div class="stats"><div class="stat"><b>${live.length}</b><span>${t("cal_total")}</span></div><div class="stat"><b>${done.length}</b><span>${t("cal_done")}</span></div><div class="stat"><b>₹${done.reduce((a,k)=>a+bkPrice(s,k),0).toLocaleString("en-IN")}</b><span>${t("cal_earn")}</span></div></div>
+  ${canc.length?`<p class="small muted" style="text-align:center">${t("cal_cancel")}: ${canc.length}</p>`:""}
+  </div><div class="colB">
+  ${dayList?`<div class="card"><h2>${dayLabel(UI.calDay)}</h2>${dayList.length?`<div>${dayList.map(k=>bookingRow(k,{cancel:true, view:k.date<old})).join("")}</div>`:`<p class="muted">${t("cal_none")}</p>`}</div>`:`<p class="small muted" style="text-align:center">${t("cal_pick")}</p>`}
+  ${live.length?`<div class="card"><h3>${t("cal_by_barber")}</h3>${s.barbers.map(b=>{ const mine = live.filter(k=>k.barberId===b.id), earn = mine.filter(k=>k.status==="done").reduce((a,k)=>a+bkPrice(s,k),0);
+    return `<div class="row" style="gap:8px">${avatar(b,"sm")}<b class="grow">${esc(b.name)}</b><span class="small">${mine.length===1?t("bk_count1"):t("bk_count",{n:mine.length})} · ₹${earn.toLocaleString("en-IN")}</span></div>`; }).join("")}</div>`:""}`}
+  </div></div>`;
+}
+
 function bookingForm(salon, slotsFor, ownerMode){
   const B = UI.book; const days = Array.from({length:7},(_,i)=>ymd(new Date(Date.now()+i*DAY)));
   if (!B.svc && salon.services.length===1) B.svc = salon.services[0].id;
@@ -479,10 +691,11 @@ function bookingForm(salon, slotsFor, ownerMode){
       <span class="pr">₹${esc(s.price)}</span></button>`).join("")}</div></div>
   <div class="card"><h3>${t("pick_barber")}</h3><div class="barbers">
     <button class="bcard ${(!B.barber||B.barber==="any")?"on":""}" data-a="bBarber" data-v="any"><span class="av lg" style="background:var(--surface2);color:var(--muted)" aria-hidden="true">✂</span><b>${t("any_barber")}</b><small>${t("any_sub")}</small></button>
-    ${salon.barbers.map(b=>`<button class="bcard ${B.barber===b.id?"on":""}" data-a="bBarber" data-v="${b.id}">${avatar(b,"lg")}<b>${esc(b.name)}</b>${b.spec?`<small>${esc(b.spec)}</small>`:""}</button>`).join("")}</div></div>
+    ${salon.barbers.map(b=>{ const off = onLeave(salon,b.id,B.date); return `<button class="bcard ${B.barber===b.id?"on":""} ${off?"off":""}" data-a="bBarber" data-v="${b.id}">${avatar(b,"lg")}<b>${esc(b.name)}</b>${off?`<span class="pill bad">${t("on_leave")}</span>`:b.spec?`<small>${esc(b.spec)}</small>`:""}</button>`; }).join("")}</div>
+    ${B.barber && B.barber!=="any" && onLeave(salon,B.barber,B.date)?`<div class="banner warn">${t("barber_off",{name:esc((barberOf(salon,B.barber)||{}).name||""), date:dayLabel(B.date)})}</div>`:""}</div>
   <div class="card"><h3>${t("pick_date")}</h3><div class="hscroll">${days.map(d=>{const dt=new Date(d+"T00:00");const closed=!(salon.days||[]).includes(dt.getDay());
     return `<button class="date ${B.date===d?"on":""}" data-a="bDate" data-v="${d}" ${closed?"disabled":""}><small>${t("dw")[dt.getDay()]}</small><b>${dt.getDate()}</b><small>${t("mon")[dt.getMonth()]}</small></button>`}).join("")}</div></div>
-  <div class="card" id="timeCard"><h3>${t("pick_time")}</h3>${!B.svc?`<button class="btn block" data-a="toSvc">↑ ${t("pick_svc_first")}</button>`:slots===undefined?`<div class="spin"></div>`:slots===null?`<p class="muted">${t("closed_day")}</p>`:slots.length?`<div class="slots">${slots.map(s=>`<button class="slot ${B.time===s.time?"on":""}" data-a="bTime" data-v="${s.time}">${nice(s.time)}</button>`).join("")}</div>`:`<p class="muted">${t("no_slots")}</p>`}</div>
+  <div class="card" id="timeCard"><h3>${t("pick_time")}</h3>${!B.svc?`<button class="btn block" data-a="toSvc">↑ ${t("pick_svc_first")}</button>`:slots===undefined?`<div class="spin"></div>`:slots===null?`<p class="muted">${t("closed_day")}</p>`:slots.length?slotGrid(slots, B.time, "bTime")+selBox(salon, B, slots):`<p class="muted">${t("no_slots")}</p>`}</div>
   <div class="card"><h3>${t("your_details")}</h3>
     <label class="field"><span>${t("cust_name")}</span><input type="text" id="c_name" autocomplete="name" data-book="name" value="${esc(B.name||"")}"></label>
     <label class="field"><span>${t("cust_phone")}</span><input type="tel" inputmode="tel" autocomplete="tel" id="c_phone" data-book="phone" value="${esc(B.phone||"")}" placeholder="98XXXXXXXX"></label>
@@ -503,8 +716,17 @@ function viewBook(){
     <button class="btn block" data-a="bookAgain">${t("book_another")}</button>`; }
   return `<div><h1>${t("book_h")}</h1><p class="small muted" style="margin-top:4px">${t("book_owner")}</p></div>` + bookingForm(S.salon, d=>ownerSlotsMap(d), true);
 }
+function leaveCard(b){
+  const s = S.salon, days = Array.from({length:21},(_,i)=>ymd(new Date(Date.now()+i*DAY)));
+  const hit = S.bookings.filter(k=>k.barberId===b.id && k.status==="booked" && onLeave(s,b.id,k.date)).sort((a,c)=>(a.date+a.time).localeCompare(c.date+c.time));
+  return `<h3>🌴 ${t("leave_h")}</h3><p class="small muted">${t("leave_p")}</p>
+    <div class="hscroll">${days.map(d=>{ const dt = new Date(d+"T00:00"), on = onLeave(s,b.id,d);
+      return `<button class="date ${on?"leave":""}" data-a="leaveToggle" data-v="${b.id}|${d}" aria-pressed="${on}"><small>${t("dw")[dt.getDay()]}</small><b>${dt.getDate()}</b><small>${on?t("on_leave"):t("mon")[dt.getMonth()]}</small></button>`; }).join("")}</div>
+    ${hit.length?`<div class="banner warn" style="flex-direction:column;align-items:stretch;gap:8px"><span>${t("leave_warn",{n:hit.length})}</span>
+      ${hit.map(k=>`<div class="row" style="gap:8px"><span class="grow small"><b>${esc(k.cust)}</b> · ${dayLabel(k.date)} ${nice(k.time)}</span><button class="btn sm" data-a="sheetMode" data-v="${k.id}|move">${t("sh_move")}</button></div>`).join("")}</div>`:""}`;
+}
 function viewBarber(){
-  if (!UI.barberId && S.salon.barbers[0]) UI.barberId = S.salon.barbers[0].id;
+  if (!barberOf(S.salon, UI.barberId) && S.salon.barbers[0]) UI.barberId = S.salon.barbers[0].id;
   const b = barberOf(S.salon, UI.barberId); const td = ymd(new Date());
   const mine = S.bookings.filter(k=>k.barberId===UI.barberId && k.date>=td && k.status!=="cancelled").sort((a,c)=>(a.date+a.time).localeCompare(c.date+c.time));
   let last = "";
@@ -513,6 +735,7 @@ function viewBarber(){
   ${b?`<div class="card"><div class="row">${avatar(b,"lg")}<div class="grow"><h2>${esc(b.name)}</h2>${b.spec?`<p class="muted small">${esc(b.spec)}</p>`:""}</div></div>
     <a class="btn saffron sm" style="align-self:flex-start" href="${barberWa(b.id, daySummary(S.salon, td, b.id))}" target="_blank" rel="noopener">${t("send_day",{name:esc(b.name)})}</a>
     ${digits(bc(b.id).phone).length===10?`<span class="small muted">📱 ${esc(bc(b.id).phone)}</span>`:`<span class="small muted">${t("no_phone")}</span>`}<hr>
+    ${leaveCard(b)}<hr>
     <h3>${t("your_day")}</h3>${mine.length?`<div>${mine.map(k=>{const h=k.date!==last?`<p class="label" style="margin-top:6px">${dayLabel(k.date)}</p>`:"";last=k.date;return h+bookingRow(k,{barber:true});}).join("")}</div>`:`<p class="muted">${t("no_bk")}</p>`}</div>`:""}`;
 }
 const upiUri = amt => "upi://pay?pa="+ADMIN_UPI+"&pn="+encodeURIComponent(ADMIN_NAME)+"&am="+amt+"&cu=INR&tn="+encodeURIComponent("SalonSlot "+(S.salon?S.salon.name:""));
@@ -546,6 +769,124 @@ function viewSettings(){
     <button class="btn" data-a="logout">${t("logout")}</button></div>`;
 }
 
+/* ================= rewards ================= */
+// offers/{id}: kind "days" (scratch card that adds free days) or "deal" (partner/brand code + link)
+function offerLive(o){ return !!o && o.active===true && (!o.endsAt || o.endsAt > Date.now()); }
+function offerFor(o, s){ return offerLive(o) && (!o.newSince || ((s&&s.createdAt)||0) >= o.newSince); }
+const byOrder = (a,b) => (a.order||0)-(b.order||0) || (a.createdAt||0)-(b.createdAt||0);
+function freshOffers(){ if (!S.salon || !S.offers) return []; return S.offers.filter(o=>offerFor(o,S.salon) && !(S.claims||{})[o.id]).sort(byOrder); }
+function revealBig(o){ return o.reveal || (o.kind==="deal" ? (o.code||"") : "+"+(Number(o.days)||0)+" "+t("days")+" "+t("rw_free")); }
+function revealNote(o){ return o.note || (o.kind==="days" ? t("rw_added",{n:Number(o.days)||0}) : ""); }
+function cardHead(o){
+  return `<div class="shead"><span class="label">${esc(o.kind==="deal" ? (o.brand||t("rw_partner")) : "SalonSlot")}</span><b>${esc(o.title||"")}</b>
+    ${o.desc?`<span class="small">${esc(o.desc)}</span>`:""}${o.endsAt?`<span class="small soft">${t("rw_ends",{date:longDate(o.endsAt)})}</span>`:""}</div>`;
+}
+function scratchCard(o, preview){
+  return `<div class="scard ${o.kind==="deal"?"deal":""}">${cardHead(o)}
+    <div class="sarea"><div class="sreveal"><span class="label">${t("rw_gift")}</span><b class="sbig">${esc(revealBig(o))}</b>${revealNote(o)?`<span class="small">${esc(revealNote(o))}</span>`:""}</div>
+      <canvas data-scratch="${o.id}" ${preview?'data-preview="1"':""} aria-hidden="true"></canvas></div>
+    <button class="btn sm ghost stap" data-a="${preview?"rwPrevOpen":"rwReveal"}" data-v="${o.id}">${t("rw_tap")}</button></div>`;
+}
+function rewardDone(o, c){
+  const deal = o.kind==="deal";
+  return `<div class="scard open ${deal?"deal":""} ${UI.justGot===o.id?"pop":""}">${cardHead(o)}
+    <div class="sarea"><div class="sreveal"><span class="label">${t("rw_gift")}</span><b class="sbig">${esc(revealBig(o))}</b>${revealNote(o)?`<span class="small">${esc(revealNote(o))}</span>`:""}</div></div>
+    ${deal && o.code?`<div class="copy"><span class="small muted">${t("rw_code")}</span><code>${esc(o.code)}</code><button class="btn sm" data-a="copy" data-v="${esc(o.code)}">${t("copy")}</button></div>`:""}
+    ${deal && o.link?`<a class="btn primary block" data-a="rwClick" data-v="${o.id}" href="${esc(o.link)}" target="_blank" rel="noopener">${t("rw_open")} →</a>`:""}
+    ${c && c.at?`<span class="small muted">${t("rw_got",{date:longDate(c.at)})}</span>`:""}</div>`;
+}
+function viewRewards(){
+  const fresh = freshOffers(), cl = S.claims||{};
+  const mine = (S.offers||[]).filter(o=>cl[o.id]).sort((a,b)=>(cl[b.id].at||0)-(cl[a.id].at||0));
+  const freshDays = fresh.filter(o=>o.kind!=="deal"), freshDeals = fresh.filter(o=>o.kind==="deal");
+  return `<div><h1>${t("rw_h")}</h1><p class="small muted" style="margin-top:4px">${t("rw_p")}</p></div>
+  ${S.offers===null?`<div class="center"><div class="spin"></div></div>`:""}
+  ${freshDays.length?`<p class="label">${t("rw_new")}</p><div class="sgrid">${freshDays.map(o=>scratchCard(o)).join("")}</div>`:""}
+  ${freshDeals.length?`<p class="label">${t("rw_partner")}</p><div class="sgrid">${freshDeals.map(o=>scratchCard(o)).join("")}</div>`:""}
+  ${S.offers!==null && !fresh.length?`<div class="card lock"><div class="big" aria-hidden="true">🎁</div><p class="muted">${t("rw_none")}</p></div>`:""}
+  ${mine.length?`<p class="label">${t("rw_mine")}</p><div class="sgrid">${mine.map(o=>rewardDone(o, cl[o.id])).join("")}</div>`:""}`;
+}
+async function claimOffer(o){
+  const cref = doc(db,"salons",S.sid,"claims",o.id);
+  const days = o.kind==="deal" ? 0 : (Number(o.days)||0);
+  const data = { oid:o.id, days, at:Date.now() };
+  if (days>0){
+    const cur = (S.salon.sub||{}).expires||0, now = Date.now();
+    const next = (cur>now ? cur : now) + days*DAY;
+    const b = writeBatch(db);
+    b.set(cref, data);
+    b.update(doc(db,"salons",S.sid), { "sub.expires": next, lastClaim: o.id });
+    await b.commit();
+  } else await setDoc(cref, data);
+}
+
+/* scratch: silver layer on a canvas, rubbed away with a finger or mouse */
+function initScratch(){
+  document.querySelectorAll("canvas[data-scratch]").forEach(cv=>{
+    if (cv.dataset.init) return; cv.dataset.init = "1";
+    const box = cv.parentElement, w = box.clientWidth, h = box.clientHeight, r = window.devicePixelRatio||1;
+    if (!w || !h) return;
+    cv.width = Math.round(w*r); cv.height = Math.round(h*r);
+    const g = cv.getContext("2d", {willReadFrequently:true}); g.scale(r,r);
+    g.fillStyle = "#C8C4BC"; g.fillRect(0,0,w,h);
+    g.strokeStyle = "rgba(255,255,255,.32)"; g.lineWidth = 5;
+    for (let x=-h; x<w; x+=14){ g.beginPath(); g.moveTo(x,h); g.lineTo(x+h,0); g.stroke(); }
+    g.fillStyle = "#24211F"; g.textAlign = "center"; g.textBaseline = "middle";
+    g.font = "700 20px Hind, system-ui, sans-serif"; g.fillText(t("rw_scratch"), w/2, h/2-10);
+    g.font = "500 14px Hind, system-ui, sans-serif"; g.fillText(t("rw_scratch_hint"), w/2, h/2+14);
+    g.globalCompositeOperation = "destination-out"; g.strokeStyle = "#000"; g.fillStyle = "#000"; g.lineCap = "round"; g.lineJoin = "round"; g.lineWidth = 40;
+    const id = cv.dataset.scratch, preview = !!cv.dataset.preview;
+    let down = false, last = null, moves = 0, fin = false;
+    const pos = e => { const b = cv.getBoundingClientRect(); return [e.clientX-b.left, e.clientY-b.top]; };
+    const cleared = () => { const d = g.getImageData(0,0,cv.width,cv.height).data; let c=0, n=0; for (let i=3; i<d.length; i+=4*37){ n++; if (d[i]===0) c++; } return n ? c/n : 0; };
+    const finish = () => { if (fin) return; fin = true; down = false; cv.style.transition = "opacity .45s"; cv.style.opacity = "0";
+      setTimeout(()=>{ UI.scratching = null; UI.pendingRender = false; preview ? A.rwPrevOpen(id) : A.rwReveal(id); }, 460); };
+    cv.addEventListener("pointerdown", e => { if (fin) return; down = true; UI.scratching = id; try{ cv.setPointerCapture(e.pointerId); }catch(x){}
+      last = pos(e); g.beginPath(); g.arc(last[0], last[1], 20, 0, 7); g.fill(); e.preventDefault(); });
+    cv.addEventListener("pointermove", e => { if (!down) return; const p = pos(e); g.beginPath(); g.moveTo(last[0],last[1]); g.lineTo(p[0],p[1]); g.stroke(); last = p;
+      if (++moves % 6 === 0 && cleared() > 0.45) finish(); });
+    const up = () => { if (!down) return; down = false; if (cleared() > 0.45) finish();
+      else { UI.scratching = null; if (UI.pendingRender){ UI.pendingRender = false; render(); } } };
+    cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up); cv.addEventListener("pointerleave", up);
+  });
+}
+
+function adminRewards(){
+  const offers = (S.offers||[]).slice().sort(byOrder), o = UI.of;
+  const cnt = {}, clk = {}; (S.allClaims||[]).forEach(c=>{ cnt[c.oid] = (cnt[c.oid]||0)+1; if (c.clicked) clk[c.oid] = (clk[c.oid]||0)+1; });
+  const f = (k, label, type, ph) => `<label class="field"><span class="small">${label}</span><input type="${type||"text"}" id="of_${k}" data-of="${k}" value="${esc(o[k])}" ${ph?`placeholder="${esc(ph)}"`:""} ${type==="number"?'inputmode="numeric" min="1" max="30"':""}></label>`;
+  return `<div class="card"><h2>🎁 ${t("adm_rw_h")}</h2><p class="small muted">${t("adm_rw_p")}</p>
+    ${offers.length?offers.map(x=>{ const live = offerLive(x);
+      return `<div class="srow"><div class="row" style="gap:8px"><b class="grow">${esc(x.title||"—")}</b>${live?`<span class="pill ok">${t("active")}</span>`:`<span class="pill bad">${t("adm_off")}</span>`}</div>
+        <span class="small muted">${x.kind==="deal"?esc((x.brand||"")+" · "+(x.code||"")):"+"+esc(x.days)+" "+t("days")} · ${x.newSince?t("of_new_pill"):t("of_all_pill")}${x.endsAt?" · "+t("rw_ends",{date:longDate(x.endsAt)}):""}</span>
+        <span class="small"><b>${t("of_claims",{n:cnt[x.id]||0})}</b>${x.kind==="deal"?" · "+t("of_clicks",{n:clk[x.id]||0}):""}</span>
+        <div class="row" style="gap:6px">
+          <button class="btn sm ${x.active?"danger":"primary"}" data-a="ofToggle" data-v="${x.id}">${x.active?t("turn_off"):t("turn_on")}</button>
+          <button class="btn sm" data-a="ofAudience" data-v="${x.id}">${x.newSince?t("of_make_all"):t("of_make_new")}</button>
+          <button class="btn sm" data-a="ofPreview" data-v="${x.id}">${t("rw_preview")}</button>
+          ${UI.ofDelAsk===x.id?`<button class="btn sm danger" data-a="ofDel" data-v="${x.id}">${t("of_del_sure")}</button>`:`<button class="btn sm ghost" data-a="ofDelAsk" data-v="${x.id}">${t("of_del")}</button>`}</div>
+        ${UI.ofPreview===x.id?`<p class="small muted">${t("rw_preview_p")}</p>${UI.prevDone[x.id]?rewardDone(x,null):scratchCard(x,true)}`:""}</div>`; }).join(""):`<p class="muted">${t("of_none")}</p>`}
+    <hr><h3>${t("adm_rw_new")}</h3>
+    <div class="field"><span class="small">${t("of_kind")}</span><div class="chips">
+      <button class="chip ${o.kind==="days"?"on":""}" data-a="ofKind" data-v="days" aria-pressed="${o.kind==="days"}">${t("of_days_k")}</button>
+      <button class="chip ${o.kind==="deal"?"on":""}" data-a="ofKind" data-v="deal" aria-pressed="${o.kind==="deal"}">${t("of_deal_k")}</button></div></div>
+    ${o.kind==="deal"?f("brand",t("of_brand"),"text","Brand"):""}
+    ${f("title",t("of_title"),"text",o.kind==="deal"?"20% off on hair colour":"Diwali Bonus")}
+    ${f("desc",t("of_desc")+" ("+t("optional")+")")}
+    ${o.kind==="days"?f("days",t("of_days"),"number"):f("code",t("of_code"),"text","SALON20")+f("link",t("of_link")+" ("+t("optional")+")","url","https://")}
+    ${f("reveal",t("of_reveal")+" ("+t("optional")+")","text",o.kind==="days"?"+"+(o.days||3)+" "+t("days")+" FREE":(o.code||"SALON20"))}
+    ${f("note",t("of_note")+" ("+t("optional")+")")}
+    ${f("ends",t("of_ends")+" ("+t("optional")+")","date")}
+    <label class="row small" style="gap:8px"><input type="checkbox" id="of_newOnly" data-of="newOnly" ${o.newOnly?"checked":""} style="width:20px;height:20px">${t("of_newonly")}</label>
+    ${UI.ofErr?`<div class="banner bad" role="alert">${UI.ofErr}</div>`:""}
+    <button class="btn primary" data-a="ofSave" ${UI.busy?"disabled":""}>${t("of_save")}</button></div>`;
+}
+const WELCOME = () => ({ kind:"days", days:3, title:"Welcome Gift", desc:"SalonSlot परिवार में स्वागत है!", reveal:"10 दिन FREE",
+  note:"आपके free trial में 3 दिन और जुड़ गए। अब पूरे 10 दिन आराम से चलाइए।", active:true, newSince:Date.now(), endsAt:0, order:0, createdAt:Date.now() });
+let welcomeTried = false;
+function seedWelcome(){ if (!isAdmin() || !S.offers || welcomeTried || S.offers.some(o=>o.id==="welcome")) return; welcomeTried = true;
+  setDoc(doc(db,"offers","welcome"), WELCOME()).catch(e=>console.error("welcome offer", e)); }
+
 /* ================= admin ================= */
 function viewAdmin(){
   if (!isAdmin()) return "";
@@ -569,6 +910,7 @@ function viewAdmin(){
         <span class="row" style="gap:4px" role="group" aria-label="${t("adj_days")}">${[-7,-1,1,7].map(d=>`<button class="btn sm ${d<0?"ghost":""}" data-a="admAdjust" data-v="${x.id}|${d}" aria-label="${d>0?"+":""}${d} ${t("days")}">${d>0?"+":"−"}${Math.abs(d)} ${t("days")}</button>`).join("")}</span>
         ${x.phone?`<a class="btn sm" href="${waLink(x.phone,"")}" target="_blank" rel="noopener">${t("whatsapp")}</a>`:""}
         <a class="btn sm ghost" href="${esc(linkFor(x.id))}" target="_blank" rel="noopener">${t("open_link")}</a></div></div>`; }).join(""):`<p class="muted">${t("adm_none")}</p>`}</div>
+  ${adminRewards()}
   <div class="card"><h3>📋 ${t("csv_h")}</h3><p class="small muted">${t("csv_p")}</p><button class="btn primary" data-a="admCsv" ${UI.busy?"disabled":""}>${t("csv_btn")}</button></div>
   <div class="card"><h3>${t("download")}</h3><p class="small muted">${t("download_p")}</p><button class="btn" data-a="admDownload" ${UI.busy?"disabled":""}>${t("download")}</button></div>`;
 }
@@ -577,6 +919,16 @@ function watchAdmin(){
   if (!isAdmin() || S.adminUnsub) return;
   S.adminUnsub = onSnapshot(collection(db,"salons"), snap => { S.allSalons = snap.docs.map(d=>({id:d.id,...d.data()})); if (UI.tab==="admin" || UI.view==="adminOnly") render(); },
     err => { console.error(err); S.allSalons = []; render(); });
+  S.adminClaimsUnsub = onSnapshot(collectionGroup(db,"claims"), snap => { S.allClaims = snap.docs.map(d=>({sid:d.ref.parent.parent.id, ...d.data()})); if ((UI.tab==="admin" || UI.view==="adminOnly") && !typing()) render(); },
+    err => { console.error(err); S.allClaims = []; });
+  watchOffers();
+}
+const typing = () => !!(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select,textarea"));
+function watchOffers(){
+  if (S.offersUnsub || !S.user) return;
+  S.offersUnsub = onSnapshot(collection(db,"offers"), snap => { S.offers = snap.docs.map(d=>({id:d.id,...d.data()})); seedWelcome();
+    if ((UI.view==="main" || UI.view==="adminOnly") && !typing()) render(); },
+    err => { console.error(err); S.offers = []; });
 }
 
 /* ================= customer page ================= */
@@ -665,10 +1017,10 @@ const A = {
   count:v=>{ const o = editTarget(); const n=Number(v); while(o.barbers.length<n) o.barbers.push({id:uid(),name:"",spec:"",photo:""}); if (o.barbers.length>n) o.barbers=o.barbers.slice(0,n); render(); if (o===S.salon) queueSave(); },
   addBarber:()=>{ const o = editTarget(); o.barbers.push({id:uid(),name:"",spec:"",photo:""}); render(); },
   delBarber:v=>{ const o = editTarget(); o.barbers=o.barbers.filter(b=>b.id!==v); render(); if (o===S.salon) queueSave(); },
-  done:v=>{ updateDoc(doc(db,"salons",S.sid,"bookings",v),{status:"done"}).catch(()=>toast(t("save_fail"))); },
-  cancelBk:async v=>{ const k = S.bookings.find(x=>x.id===v); if (!k) return;
+  done:v=>{ if (UI.sheet){ UI.sheet=null; render(); } updateDoc(doc(db,"salons",S.sid,"bookings",v),{status:"done"}).catch(()=>toast(t("save_fail"))); },
+  cancelBk:async v=>{ const k = S.bookings.find(x=>x.id===v); if (!k) return; if (UI.sheet){ UI.sheet=null; render(); }
     try{ await updateDoc(doc(db,"salons",S.sid,"bookings",v),{status:"cancelled"}); await updateDoc(doc(db,"salons",S.sid,"days",k.date),{["slots."+slotKey(k.barberId,k.time)]:deleteField()}).catch(()=>{}); }catch(e){ toast(t("save_fail")); } },
-  bSvc:v=>{ go(()=>{ UI.book.svc=v; UI.book.time=null; UI.flashSvc=false; if (CUSTOMER_SID) loadDay(UI.book.date); }); setTimeout(()=>{ const el=document.getElementById("timeCard"); if (el) el.scrollIntoView({behavior:"smooth", block:"start"}); }, 60); },
+  bSvc:v=>{ go(()=>{ UI.book.svc=v; UI.book.time=UI.book.prefTime||null; UI.flashSvc=false; if (CUSTOMER_SID) loadDay(UI.book.date); }); setTimeout(()=>{ const el=document.getElementById("timeCard"); if (el) el.scrollIntoView({behavior:"smooth", block:"start"}); }, 60); },
   toSvc:()=>{ UI.flashSvc=true; render(); const el=document.getElementById("svcCard"); if (el) el.scrollIntoView({behavior:"smooth", block:"start"}); setTimeout(()=>{ UI.flashSvc=false; render(); }, 1600); },
   bBarber:v=>go(()=>{ UI.book.barber=v; UI.book.time=null; }),
   bDate:v=>go(()=>{ UI.book.date=v; UI.book.time=null; if (CUSTOMER_SID) loadDay(v); }),
@@ -705,6 +1057,62 @@ const A = {
   admApprove: async id=>{ const x = S.allSalons.find(s=>s.id===id); if (!x||!x.payReq) return; const pl = PLANS[x.payReq.plan];
     const base = Math.max(Date.now(), (x.sub||{}).expires||0), till = base + pl.days*DAY;
     try{ await updateDoc(doc(db,"salons",id),{ "sub.plan":x.payReq.plan, "sub.expires":till, active:true, payReq:deleteField(), payments:arrayUnion({plan:x.payReq.plan, amt:pl.price, utr:x.payReq.utr, at:Date.now(), till}) }); toast(t("approved")); }catch(e){ console.error(e); toast(t("save_fail")); } },
+  sheet: v=>go(()=>{ UI.sheet = { id:v, mode:"menu" }; }),
+  sheetMode: v=>go(()=>{ const [id,mode] = v.split("|"); const k = S.bookings.find(x=>x.id===id);
+    UI.sheet = { id, mode, mvDate: k ? (k.date<ymd(new Date())?ymd(new Date()):k.date) : ymd(new Date()), mvBarber: k ? k.barberId : "any", mvTime:null }; }),
+  sheetClose: ()=>{ setTimeout(()=>{ UI.sheet = null; render(); }, 0); },
+  shSvc: v=>{ const k = curK(), sv = svcOf(S.salon,v); if (k && sv) doExtend(k, Number(sv.dur)||30, v, false); },
+  shMin: v=>{ const k = curK(); if (k) doExtend(k, Number(v)||15, null, false); },
+  cfKeep: ()=>{ const k = curK(), cf = UI.sheet.conflict; if (k && cf) doExtend(k, cf.add, cf.svcId, true); },
+  cfOther: async ()=>{ const k = curK(), cf = UI.sheet.conflict; const o = k && cf && cfOpts(k, cf); if (!o || !o.other) return;
+    try{ await updateBk(o.next, { barberId: o.other.id }); await doExtend(k, cf.add, cf.svcId, true); }catch(e){ console.error(e); toast(t("save_fail")); render(); } },
+  cfShift: async ()=>{ const k = curK(), cf = UI.sheet.conflict; const o = k && cf && cfOpts(k, cf); if (!o || !o.shiftTo) return;
+    try{ await updateBk(o.next, { time: o.shiftTo }); const ok = await doExtend(k, cf.add, cf.svcId, true);
+      if (ok){ UI.sheet = { id:o.next.id, mode:"msg", wa:{ phone:o.next.phone, text:movedMsg(o.next, o.next.date, o.shiftTo) } }; render(); } }
+    catch(e){ console.error(e); toast(t("save_fail")); render(); } },
+  mvDate: v=>go(()=>{ UI.sheet.mvDate = v; UI.sheet.mvTime = null; }),
+  mvBarber: v=>go(()=>{ UI.sheet.mvBarber = v; UI.sheet.mvTime = null; }),
+  mvTime: v=>go(()=>{ const [tm] = v.split("|"); UI.sheet.mvTime = tm; }),
+  mvGo: async ()=>{ const k = curK(), sh = UI.sheet; if (!k || !sh.mvTime) return; const s = S.salon, d = bkDur(s,k);
+    const sl = (freeSlots(s, sh.mvDate, k.serviceId, sh.mvBarber, ownerSlotsMap(sh.mvDate), { dur:d, skip: sh.mvDate===k.date ? {b:k.barberId, start:toMin(k.time)} : null })||[]).find(x=>x.time===sh.mvTime);
+    if (!sl){ toast(t("taken")); render(); return; }
+    UI.busy = true; render();
+    try{ await updateBk(k, { date: sh.mvDate, time: sl.time, barberId: sl.barberId, reminded: false });
+      UI.sheet = { id:k.id, mode:"msg", wa:{ phone:k.phone, text:movedMsg(k, sh.mvDate, sl.time) } }; }
+    catch(e){ console.error(e); toast(t("save_fail")); }
+    UI.busy = false; render(); },
+  leaveToggle: async v=>{ const [bid, d] = v.split("|"); const s = S.salon; const old = ymd(new Date(Date.now()-DAY));
+    const cur = ((s.leave||{})[bid]||[]).filter(x=>x>=old); const next = cur.includes(d) ? cur.filter(x=>x!==d) : cur.concat(d).sort();
+    s.leave = {...(s.leave||{}), [bid]: next}; render();
+    try{ await updateDoc(doc(db,"salons",S.sid), { ["leave."+bid]: next }); toast(t("leave_saved")); }catch(e){ console.error(e); toast(t("save_fail")); } },
+  tlDay: v=>go(()=>{ const cur = new Date((UI.tlDate||ymd(new Date()))+"T00:00"); cur.setDate(cur.getDate()+Number(v)); UI.tlDate = ymd(cur); }),
+  tlTap: (v, e, el)=>{ const open = Number(el.dataset.open), r = el.getBoundingClientRect(); const m = open + Math.max(0, Math.floor((e.clientY - r.top)/PPM/15)*15);
+    pushNav(); UI.tab = "book"; UI.bookedData = null; UI.book = { barber: v, date: el.dataset.date, time: toHM(m), prefTime: toHM(m) }; UI.err = ""; render(); window.scrollTo(0,0); },
+  calMove: v=>go(()=>{ const n = Number(v); const td = ymd(new Date()); if (!n){ UI.calYM = td.slice(0,7); UI.calDay = null; return; }
+    const [y,m] = (UI.calYM||td.slice(0,7)).split("-").map(Number); const d = new Date(y, m-1+n, 1); UI.calYM = d.getFullYear()+"-"+pad(d.getMonth()+1); UI.calDay = null; }),
+  calDay: v=>go(()=>{ UI.calDay = UI.calDay===v ? null : v; }),
+  rwReveal: async id=>{ const o = (S.offers||[]).find(x=>x.id===id); if (!o || UI.claiming || (S.claims||{})[id]) { render(); return; }
+    UI.claiming = true; UI.scratching = null;
+    try{ await claimOffer(o); UI.justGot = id; beep(); try{ navigator.vibrate && navigator.vibrate(120); }catch(e){} setTimeout(()=>{ UI.justGot = null; }, 2500); }
+    catch(e){ console.error(e); toast(t("rw_fail")); }
+    UI.claiming = false; render(); },
+  rwClick: id=>{ const c = (S.claims||{})[id]; if (c && !c.clicked) updateDoc(doc(db,"salons",S.sid,"claims",id),{clicked:true}).catch(()=>{}); },
+  rwPrevOpen: id=>go(()=>{ UI.scratching = null; UI.prevDone[id] = true; }),
+  ofKind: v=>go(()=>{ UI.of.kind = v; UI.ofErr = ""; }),
+  ofPreview: id=>go(()=>{ UI.ofPreview = UI.ofPreview===id ? null : id; UI.prevDone[id] = false; }),
+  ofToggle: async id=>{ const x = (S.offers||[]).find(o=>o.id===id); if (!x) return; try{ await updateDoc(doc(db,"offers",id),{ active: !x.active }); toast(t("switched")); }catch(e){ console.error(e); toast(t("save_fail")); } },
+  ofAudience: async id=>{ const x = (S.offers||[]).find(o=>o.id===id); if (!x) return; try{ await updateDoc(doc(db,"offers",id),{ newSince: x.newSince ? 0 : Date.now() }); toast(t("switched")); }catch(e){ console.error(e); toast(t("save_fail")); } },
+  ofDelAsk: id=>go(()=>{ UI.ofDelAsk = id; }),
+  ofDel: async id=>{ UI.ofDelAsk = null; try{ await deleteDoc(doc(db,"offers",id)); toast(t("switched")); }catch(e){ console.error(e); toast(t("save_fail")); } render(); },
+  ofSave: async ()=>{ const o = UI.of; const days = Math.round(Number(o.days)||0), link = String(o.link||"").trim();
+    if (!String(o.title).trim() || (o.kind==="days" && (days<1 || days>30)) || (o.kind==="deal" && !String(o.code).trim() && !link) || (link && !/^https:\/\/\S+$/i.test(link))){ UI.ofErr = t("of_need"); render(); return; }
+    const now = Date.now();
+    const data = { kind:o.kind, title:String(o.title).trim().slice(0,60), desc:String(o.desc||"").trim().slice(0,120), reveal:String(o.reveal||"").trim().slice(0,40), note:String(o.note||"").trim().slice(0,140),
+      active:true, order:now, createdAt:now, newSince: o.newOnly ? now : 0, endsAt: o.ends ? new Date(o.ends+"T23:59:59").getTime() : 0, days: o.kind==="days" ? days : 0 };
+    if (o.kind==="deal"){ data.brand = String(o.brand||"").trim().slice(0,40); data.code = String(o.code||"").trim().slice(0,30); data.link = link; }
+    UI.busy = true; UI.ofErr = ""; render();
+    try{ await setDoc(doc(collection(db,"offers")), data); UI.of = OF0(); toast(t("of_created")); }catch(e){ console.error(e); UI.ofErr = t("save_fail"); }
+    UI.busy = false; render(); },
   admReject: async id=>{ try{ await updateDoc(doc(db,"salons",id),{ payReq:deleteField() }); toast(t("rejected")); }catch(e){ toast(t("save_fail")); } },
   admToggle: async id=>{ const x = S.allSalons.find(s=>s.id===id); try{ await updateDoc(doc(db,"salons",id),{ active: x.active===false }); toast(t("switched")); }catch(e){ toast(t("save_fail")); } },
   admAdjust: async v=>{ const [id, ds] = v.split("|"); const d = Number(ds); const x = S.allSalons.find(s=>s.id===id); if (!x) return;
@@ -731,13 +1139,14 @@ const A = {
     UI.busy=false; render(); }
 };
 
-app.addEventListener("click", e => { const el = e.target.closest("[data-a]"); if (!el || el.disabled) return; const f = A[el.dataset.a]; if (f){ if (el.tagName!=="A") e.preventDefault(); f(el.dataset.v); } });
+app.addEventListener("click", e => { const el = e.target.closest("[data-a]"); if (!el || el.disabled) return; const f = A[el.dataset.a]; if (f){ if (el.tagName!=="A") e.preventDefault(); f(el.dataset.v, e, el); } });
 app.addEventListener("input", e => { const el = e.target, d = el.dataset; const o = editTarget();
   if (d.salon && o){ o[d.salon] = el.value; if (o===S.salon) queueSave(); }
   else if (d.svc && o){ const s = o.services.find(x=>x.id===d.svc); if (s){ s[d.k] = el.value; if (o===S.salon) queueSave(); } }
   else if (d.bar && o){ const b = o.barbers.find(x=>x.id===d.bar); if (b){ b[d.k] = el.value; if (o===S.salon) queueSave(); } }
   else if (d.bc){ const c = contactsOf(); c[d.bc] = {...(c[d.bc]||{}), [d.k]: el.value}; if (UI.view==="main") queueSave(); }
   else if (d.book){ UI.book[d.book] = el.value; }
+  else if (d.of){ UI.of[d.of] = el.type==="checkbox" ? el.checked : el.value; }
   else if (d.ui){ UI[d.ui] = el.value; }
 });
 app.addEventListener("change", e => { const el = e.target; const o = editTarget();
@@ -750,7 +1159,9 @@ app.addEventListener("change", e => { const el = e.target; const o = editTarget(
 });
 
 /* ================= owner boot ================= */
-function stopOwner(){ S.unsub.forEach(f=>{try{f()}catch(e){}}); S.unsub=[]; if (S.adminUnsub){ S.adminUnsub(); S.adminUnsub=null; } S.salon=null; S.bookings=[]; S.allSalons=null; S.contacts={}; }
+function stopOwner(){ S.unsub.forEach(f=>{try{f()}catch(e){}}); S.unsub=[]; if (S.adminUnsub){ S.adminUnsub(); S.adminUnsub=null; }
+  ["adminClaimsUnsub","offersUnsub"].forEach(k=>{ if (S[k]){ try{ S[k](); }catch(e){} S[k]=null; } });
+  S.salon=null; S.bookings=[]; S.allSalons=null; S.contacts={}; S.offers=null; S.claims={}; S.allClaims=null; }
 function startOwner(sid){
   S.sid = sid; S.firstSnap = true;
   S.unsub.push(onSnapshot(doc(db,"salons",sid), d => {
@@ -758,7 +1169,7 @@ function startOwner(sid){
     const fresh = {id:d.id, ...d.data()};
     if (S.salon && (saveTimer || document.activeElement && document.activeElement.closest && document.activeElement.closest("[data-salon],[data-svc],[data-bar]"))){
       // keep local edits, take server-owned fields
-      S.salon.sub = fresh.sub; S.salon.active = fresh.active; S.salon.payReq = fresh.payReq; S.salon.payments = fresh.payments;
+      S.salon.sub = fresh.sub; S.salon.active = fresh.active; S.salon.leave = fresh.leave; S.salon.payReq = fresh.payReq; S.salon.payments = fresh.payments;
     } else S.salon = fresh;
     if (UI.view!=="main"){ UI.view="main"; UI.tab="home"; }
     if (!(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select,textarea"))) render();
@@ -766,6 +1177,11 @@ function startOwner(sid){
   S.unsub.push(onSnapshot(doc(db,"salons",sid,"private","contacts"), d => {
     if (saveTimer) return; S.contacts = d.exists() ? (d.data().barbers||{}) : {};
     if (UI.view==="main" && !(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select,textarea"))) render();
+  }, err => console.error(err)));
+  watchOffers();
+  S.unsub.push(onSnapshot(collection(db,"salons",sid,"claims"), snap => {
+    S.claims = {}; snap.docs.forEach(d=>{ S.claims[d.id] = d.data(); });
+    if (UI.view==="main" && !typing()) render();
   }, err => console.error(err)));
   const since = ymd(new Date(Date.now()-DAY));
   S.unsub.push(onSnapshot(query(collection(db,"salons",sid,"bookings"), where("date",">=",since)), snap => {
