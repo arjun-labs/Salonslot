@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.23-1";
+const APP_VERSION = "2026.10.23-2";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version
@@ -43,6 +43,7 @@ const T = {
   s4_h:"Your barbers", s4_p:"Add a photo, name and speciality for each barber. Customers see these when they book.", how_many:"How many barbers?",
   barber_name:"Name", speciality:"Speciality", spec_ph:"e.g. Beard expert, Hair colour", add_barber:"Add barber", tap_photo:"Tap the circle to add a photo",
   s5_h:"You're ready", s5_p:"Your free trial starts now, and a welcome gift is waiting for you in Rewards. Share your booking link and start taking bookings.",
+  leave_h:"Leave", leave_p:"Tap the days this barber won't come. Customers can't book them on those days.", on_leave:"On leave", leave_warn:"This barber already has {n} booking(s) on leave days. Move them:", barber_off:"{name} is on leave on {date}. Please pick another barber.", leave_saved:"Leave saved",
   nav_calendar:"Calendar", cal_h:"Calendar", cal_p:"Tap any day to see who came. Totals are for the whole month.", cal_total:"Bookings", cal_done:"Done", cal_cancel:"Cancelled", cal_earn:"Earned (done)",
   cal_by_barber:"By barber this month", cal_now:"This month", cal_none:"No bookings this day.", cal_pick:"Tap a day to see its bookings.",
   tl_h:"Day timeline", tl_p:"Tap an empty space to add a booking there. Tap a booking to add work or change its time.",
@@ -125,6 +126,7 @@ const T = {
   s4_h:"आपके barbers", s4_p:"हर barber की photo, नाम और speciality डालें। Booking करते वक़्त ग्राहक को ये दिखेगा।", how_many:"कितने barbers हैं?",
   barber_name:"नाम", speciality:"Speciality", spec_ph:"जैसे Beard expert, Hair colour", add_barber:"Barber जोड़ें", tap_photo:"Photo लगाने के लिए गोले पर tap करें",
   s5_h:"सब तैयार है", s5_p:"आपका free trial अभी शुरू हो गया, और Rewards में आपके लिए एक Welcome Gift रखा है। Booking link share करें और bookings लेना शुरू करें।",
+  leave_h:"छुट्टी", leave_p:"जिन दिनों ये barber नहीं आएगा, उन पर tap करें। उन दिनों customers इसके साथ booking नहीं कर पाएँगे।", on_leave:"छुट्टी पर", leave_warn:"छुट्टी वाले दिनों में इस barber की {n} booking पहले से हैं। इन्हें दूसरे समय या barber पर करें:", barber_off:"{name} {date} को छुट्टी पर है। कोई दूसरा barber चुनें।", leave_saved:"छुट्टी save हो गई",
   nav_calendar:"Calendar", cal_h:"Calendar", cal_p:"किसी भी दिन पर tap करें और देखें कौन आया। ऊपर पूरे महीने का हिसाब है।", cal_total:"Bookings", cal_done:"Done", cal_cancel:"Cancel हुईं", cal_earn:"कमाई (done)",
   cal_by_barber:"इस महीने barber के हिसाब से", cal_now:"इस महीने पर जाएं", cal_none:"इस दिन कोई booking नहीं।", cal_pick:"Bookings देखने के लिए किसी दिन पर tap करें।",
   tl_h:"दिन की timeline", tl_p:"ख़ाली जगह पर tap करें तो वहीं booking जुड़ेगी। किसी booking पर tap करके काम जोड़ें या समय बदलें।",
@@ -250,6 +252,7 @@ const bkPrice = (s,k) => [k.serviceId].concat(k.extra||[]).reduce((a,id)=>a+Numb
 const bkNames = (s,k) => [k.serviceId].concat(k.extra||[]).map(id=>(svcOf(s,id)||{}).name).filter(Boolean).join(" + ") || "?";
 const hourLbl = m => { const h = Math.floor(m/60)%24; return (h%12||12)+" "+(h>=12?"PM":"AM"); };
 const niceRange = (tm, dur) => { const a = nice(tm), b = nice(toHM(toMin(tm)+dur)); return a.slice(-2)===b.slice(-2) ? a.slice(0,-3)+" – "+b : a+" – "+b; };
+const onLeave = (s,bid,date) => ((s.leave||{})[bid]||[]).includes(date);
 function isFree(busy, b, start, dur){ return !busy.some(x => x.b===b && start < x.start+x.dur && x.start < start+dur); }
 // opt.dur: length to fit (default: the service's), opt.skip: {b,start} a booking to ignore (the one being moved)
 function freeSlots(salon, date, svcId, barberPref, slotsMap, opt){
@@ -257,7 +260,7 @@ function freeSlots(salon, date, svcId, barberPref, slotsMap, opt){
   const d = new Date(date+"T00:00"); if (!(salon.days||[]).includes(d.getDay())) return null;
   const open = toMin(salon.open||"10:00"), close = toMin(salon.close||"21:00"), dur = opt.dur || Number(svc.dur)||30;
   const now = new Date(); const nowM = date===ymd(now) ? now.getHours()*60+now.getMinutes() : -1;
-  const cands = barberPref && barberPref!=="any" ? salon.barbers.filter(b=>b.id===barberPref) : salon.barbers;
+  const cands = (barberPref && barberPref!=="any" ? salon.barbers.filter(b=>b.id===barberPref) : salon.barbers).filter(b=>!onLeave(salon,b.id,date));
   const busy = busyList(slotsMap).filter(x=>!(opt.skip && x.b===opt.skip.b && x.start===opt.skip.start)); const out = [];
   const step = dur < 30 ? 10 : 15;
   for (let m=open; m+dur<=close; m+=step){ if (m<=nowM) continue; const f = cands.find(b=>isFree(busy,b.id,m,dur)); if (f) out.push({time:toHM(m), barberId:f.id}); }
@@ -519,7 +522,7 @@ function viewHome(){
   <div class="card"><h2>${t("by_barber")}</h2><p class="small muted">${t("tap_barber")}</p>
     <div class="barbers">${S.salon.barbers.map(b=>{ const n = today.filter(k=>k.barberId===b.id && k.status!=="cancelled").length;
       const nxt = today.find(k=>k.barberId===b.id && k.status==="booked" && k.time>=nowHM);
-      return `<button class="bcard" data-a="openBarber" data-v="${b.id}">${avatar(b)}<b>${esc(b.name)}</b><span class="pill ${n?"warn":""}">${n===1?t("bk_count1"):t("bk_count",{n})}</span>${nxt?`<small>${nice(nxt.time)} · ${esc(nxt.cust)}</small>`:""}</button>`; }).join("")}</div>
+      return `<button class="bcard" data-a="openBarber" data-v="${b.id}">${avatar(b)}<b>${esc(b.name)}</b>${onLeave(S.salon,b.id,td)?`<span class="pill bad">${t("on_leave")}</span>`:""}<span class="pill ${n?"warn":""}">${n===1?t("bk_count1"):t("bk_count",{n})}</span>${nxt?`<small>${nice(nxt.time)} · ${esc(nxt.cust)}</small>`:""}</button>`; }).join("")}</div>
     <a class="btn saffron block" href="https://wa.me/?text=${encodeURIComponent(daySummary(S.salon, td))}" target="_blank" rel="noopener">${t("send_summary")}</a>
     ${sendAllCard(today, td)}</div>
   <div class="card"><h2>${t("today_bk")}</h2>${today.length?`<div>${today.map(k=>bookingRow(k,{remind:true,cancel:true})).join("")}</div>`:`<p class="muted">${t("no_bk")}</p>`}</div>
@@ -553,7 +556,7 @@ function dayTimeline(date){
     <div class="tlhead" style="${cols}"><span></span>${s.barbers.map(b=>`<span class="tlb">${avatar(b,"sm")}<b>${esc(b.name)}</b></span>`).join("")}</div>
     <div class="tlbody" style="${cols};height:${Math.round((close-open)*PPM)}px">
       <div class="tlhours">${hours.map(m=>`<span style="top:${Math.round((m-open)*PPM)}px">${hourLbl(m)}</span>`).join("")}</div>
-      ${s.barbers.map(b=>`<div class="tlcol" data-a="tlTap" data-v="${b.id}" data-date="${date}" data-open="${open}">
+      ${s.barbers.map(b=>`<div class="tlcol ${onLeave(s,b.id,date)?"off":""}" data-a="tlTap" data-v="${b.id}" data-date="${date}" data-open="${open}">${onLeave(s,b.id,date)?`<span class="tloff">${t("on_leave")}</span>`:""}
         ${hours.map(m=>`<i class="tlline" style="top:${Math.round((m-open)*PPM)}px"></i>`).join("")}
         ${list.filter(k=>k.barberId===b.id).map(k=>{ const st = toMin(k.time), d = bkDur(s,k);
           return `<button class="tlbk ${k.status}" data-a="sheet" data-v="${k.id}" style="top:${Math.round((st-open)*PPM)}px;height:${Math.max(Math.round(d*PPM)-2,22)}px"><b>${esc(k.cust)}</b><small>${niceRange(k.time,d)} · ${esc(bkNames(s,k))}</small></button>`; }).join("")}
@@ -682,7 +685,8 @@ function bookingForm(salon, slotsFor, ownerMode){
       <span class="pr">₹${esc(s.price)}</span></button>`).join("")}</div></div>
   <div class="card"><h3>${t("pick_barber")}</h3><div class="barbers">
     <button class="bcard ${(!B.barber||B.barber==="any")?"on":""}" data-a="bBarber" data-v="any"><span class="av lg" style="background:var(--surface2);color:var(--muted)" aria-hidden="true">✂</span><b>${t("any_barber")}</b><small>${t("any_sub")}</small></button>
-    ${salon.barbers.map(b=>`<button class="bcard ${B.barber===b.id?"on":""}" data-a="bBarber" data-v="${b.id}">${avatar(b,"lg")}<b>${esc(b.name)}</b>${b.spec?`<small>${esc(b.spec)}</small>`:""}</button>`).join("")}</div></div>
+    ${salon.barbers.map(b=>{ const off = onLeave(salon,b.id,B.date); return `<button class="bcard ${B.barber===b.id?"on":""} ${off?"off":""}" data-a="bBarber" data-v="${b.id}">${avatar(b,"lg")}<b>${esc(b.name)}</b>${off?`<span class="pill bad">${t("on_leave")}</span>`:b.spec?`<small>${esc(b.spec)}</small>`:""}</button>`; }).join("")}</div>
+    ${B.barber && B.barber!=="any" && onLeave(salon,B.barber,B.date)?`<div class="banner warn">${t("barber_off",{name:esc((barberOf(salon,B.barber)||{}).name||""), date:dayLabel(B.date)})}</div>`:""}</div>
   <div class="card"><h3>${t("pick_date")}</h3><div class="hscroll">${days.map(d=>{const dt=new Date(d+"T00:00");const closed=!(salon.days||[]).includes(dt.getDay());
     return `<button class="date ${B.date===d?"on":""}" data-a="bDate" data-v="${d}" ${closed?"disabled":""}><small>${t("dw")[dt.getDay()]}</small><b>${dt.getDate()}</b><small>${t("mon")[dt.getMonth()]}</small></button>`}).join("")}</div></div>
   <div class="card" id="timeCard"><h3>${t("pick_time")}</h3>${!B.svc?`<button class="btn block" data-a="toSvc">↑ ${t("pick_svc_first")}</button>`:slots===undefined?`<div class="spin"></div>`:slots===null?`<p class="muted">${t("closed_day")}</p>`:slots.length?slotGrid(slots, B.time, "bTime")+selBox(salon, B, slots):`<p class="muted">${t("no_slots")}</p>`}</div>
@@ -706,8 +710,17 @@ function viewBook(){
     <button class="btn block" data-a="bookAgain">${t("book_another")}</button>`; }
   return `<div><h1>${t("book_h")}</h1><p class="small muted" style="margin-top:4px">${t("book_owner")}</p></div>` + bookingForm(S.salon, d=>ownerSlotsMap(d), true);
 }
+function leaveCard(b){
+  const s = S.salon, days = Array.from({length:21},(_,i)=>ymd(new Date(Date.now()+i*DAY)));
+  const hit = S.bookings.filter(k=>k.barberId===b.id && k.status==="booked" && onLeave(s,b.id,k.date)).sort((a,c)=>(a.date+a.time).localeCompare(c.date+c.time));
+  return `<h3>🌴 ${t("leave_h")}</h3><p class="small muted">${t("leave_p")}</p>
+    <div class="hscroll">${days.map(d=>{ const dt = new Date(d+"T00:00"), on = onLeave(s,b.id,d);
+      return `<button class="date ${on?"leave":""}" data-a="leaveToggle" data-v="${b.id}|${d}" aria-pressed="${on}"><small>${t("dw")[dt.getDay()]}</small><b>${dt.getDate()}</b><small>${on?t("on_leave"):t("mon")[dt.getMonth()]}</small></button>`; }).join("")}</div>
+    ${hit.length?`<div class="banner warn" style="flex-direction:column;align-items:stretch;gap:8px"><span>${t("leave_warn",{n:hit.length})}</span>
+      ${hit.map(k=>`<div class="row" style="gap:8px"><span class="grow small"><b>${esc(k.cust)}</b> · ${dayLabel(k.date)} ${nice(k.time)}</span><button class="btn sm" data-a="sheetMode" data-v="${k.id}|move">${t("sh_move")}</button></div>`).join("")}</div>`:""}`;
+}
 function viewBarber(){
-  if (!UI.barberId && S.salon.barbers[0]) UI.barberId = S.salon.barbers[0].id;
+  if (!barberOf(S.salon, UI.barberId) && S.salon.barbers[0]) UI.barberId = S.salon.barbers[0].id;
   const b = barberOf(S.salon, UI.barberId); const td = ymd(new Date());
   const mine = S.bookings.filter(k=>k.barberId===UI.barberId && k.date>=td && k.status!=="cancelled").sort((a,c)=>(a.date+a.time).localeCompare(c.date+c.time));
   let last = "";
@@ -716,6 +729,7 @@ function viewBarber(){
   ${b?`<div class="card"><div class="row">${avatar(b,"lg")}<div class="grow"><h2>${esc(b.name)}</h2>${b.spec?`<p class="muted small">${esc(b.spec)}</p>`:""}</div></div>
     <a class="btn saffron sm" style="align-self:flex-start" href="${barberWa(b.id, daySummary(S.salon, td, b.id))}" target="_blank" rel="noopener">${t("send_day",{name:esc(b.name)})}</a>
     ${digits(bc(b.id).phone).length===10?`<span class="small muted">📱 ${esc(bc(b.id).phone)}</span>`:`<span class="small muted">${t("no_phone")}</span>`}<hr>
+    ${leaveCard(b)}<hr>
     <h3>${t("your_day")}</h3>${mine.length?`<div>${mine.map(k=>{const h=k.date!==last?`<p class="label" style="margin-top:6px">${dayLabel(k.date)}</p>`:"";last=k.date;return h+bookingRow(k,{barber:true});}).join("")}</div>`:`<p class="muted">${t("no_bk")}</p>`}</div>`:""}`;
 }
 const upiUri = amt => "upi://pay?pa="+ADMIN_UPI+"&pn="+encodeURIComponent(ADMIN_NAME)+"&am="+amt+"&cu=INR&tn="+encodeURIComponent("SalonSlot "+(S.salon?S.salon.name:""));
@@ -1061,6 +1075,10 @@ const A = {
       UI.sheet = { id:k.id, mode:"msg", wa:{ phone:k.phone, text:movedMsg(k, sh.mvDate, sl.time) } }; }
     catch(e){ console.error(e); toast(t("save_fail")); }
     UI.busy = false; render(); },
+  leaveToggle: async v=>{ const [bid, d] = v.split("|"); const s = S.salon; const old = ymd(new Date(Date.now()-DAY));
+    const cur = ((s.leave||{})[bid]||[]).filter(x=>x>=old); const next = cur.includes(d) ? cur.filter(x=>x!==d) : cur.concat(d).sort();
+    s.leave = {...(s.leave||{}), [bid]: next}; render();
+    try{ await updateDoc(doc(db,"salons",S.sid), { ["leave."+bid]: next }); toast(t("leave_saved")); }catch(e){ console.error(e); toast(t("save_fail")); } },
   tlDay: v=>go(()=>{ const cur = new Date((UI.tlDate||ymd(new Date()))+"T00:00"); cur.setDate(cur.getDate()+Number(v)); UI.tlDate = ymd(cur); }),
   tlTap: (v, e, el)=>{ const open = Number(el.dataset.open), r = el.getBoundingClientRect(); const m = open + Math.max(0, Math.floor((e.clientY - r.top)/PPM/15)*15);
     pushNav(); UI.tab = "book"; UI.bookedData = null; UI.book = { barber: v, date: el.dataset.date, time: toHM(m), prefTime: toHM(m) }; UI.err = ""; render(); window.scrollTo(0,0); },
@@ -1145,7 +1163,7 @@ function startOwner(sid){
     const fresh = {id:d.id, ...d.data()};
     if (S.salon && (saveTimer || document.activeElement && document.activeElement.closest && document.activeElement.closest("[data-salon],[data-svc],[data-bar]"))){
       // keep local edits, take server-owned fields
-      S.salon.sub = fresh.sub; S.salon.active = fresh.active; S.salon.payReq = fresh.payReq; S.salon.payments = fresh.payments;
+      S.salon.sub = fresh.sub; S.salon.active = fresh.active; S.salon.leave = fresh.leave; S.salon.payReq = fresh.payReq; S.salon.payments = fresh.payments;
     } else S.salon = fresh;
     if (UI.view!=="main"){ UI.view="main"; UI.tab="home"; }
     if (!(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select,textarea"))) render();
