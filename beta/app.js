@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.23-2";
+const APP_VERSION = "2026.10.23-3";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version
@@ -336,7 +336,7 @@ function render(){
   if (CUSTOMER_SID){ html = renderCustomer(); }
   else {
     const name = S.salon ? S.salon.name : "SalonSlot", sub = S.salon ? (S.salon.area||t("tagline")) : t("tagline");
-    html = topBar(name, sub)+"<main>";
+    html = topBar(name, sub)+`<main class="t-${UI.view==="main"?UI.tab:UI.view}">`;
     if (UI.view==="loading") html += `<div class="center"><div class="spin" aria-label="${t("loading")}"></div></div>`;
     else if (UI.view==="login") html += viewLogin();
     else if (UI.view==="setup") html += viewSetup();
@@ -345,6 +345,7 @@ function render(){
     html += "</main>";
     if (UI.view==="main") html += navBar() + viewSheet();
   }
+  document.body.classList.toggle("owner", !CUSTOMER_SID && UI.view==="main");
   app.innerHTML = html; window.scrollTo(0,y);
   drawQRs(); initScratch();
 }
@@ -515,10 +516,12 @@ function viewHome(){
   <div class="stats"><div class="stat"><b>${today.filter(k=>k.status!=="cancelled").length}</b><span>${t("today_bk")}</span></div>
     <div class="stat"><b>${up}</b><span>${t("upcoming")}</span></div><div class="stat"><b>₹${earned}</b><span>${t("earned")}</span></div></div>
   <button class="btn primary block" data-a="walkin">+ ${t("add_walkin")}</button>
+  <div class="cols"><div class="colA">
   <div class="card"><div class="row" style="gap:6px"><h2 class="grow">${t("tl_h")}</h2>
       <button class="btn sm ghost" data-a="tlDay" data-v="-1" ${tlDate<=tlMin?"disabled":""} aria-label="${t("back")}">‹</button><b style="min-width:96px;text-align:center">${dayLabel(tlDate)}</b>
       <button class="btn sm ghost" data-a="tlDay" data-v="1" ${tlDate>=tlMax?"disabled":""} aria-label="${t("next")}">›</button></div>
     <p class="small muted">${t("tl_p")}</p>${dayTimeline(tlDate)}</div>
+  </div><div class="colB">
   <div class="card"><h2>${t("by_barber")}</h2><p class="small muted">${t("tap_barber")}</p>
     <div class="barbers">${S.salon.barbers.map(b=>{ const n = today.filter(k=>k.barberId===b.id && k.status!=="cancelled").length;
       const nxt = today.find(k=>k.barberId===b.id && k.status==="booked" && k.time>=nowHM);
@@ -527,7 +530,7 @@ function viewHome(){
     ${sendAllCard(today, td)}</div>
   <div class="card"><h2>${t("today_bk")}</h2>${today.length?`<div>${today.map(k=>bookingRow(k,{remind:true,cancel:true})).join("")}</div>`:`<p class="muted">${t("no_bk")}</p>`}</div>
   ${later.length?`<div class="card"><h2>${t("upcoming")}</h2><div>${later.map(k=>{const h=k.date!==last?`<p class="label" style="margin-top:6px">${dayLabel(k.date)}</p>`:"";last=k.date;return h+bookingRow(k,{cancel:true});}).join("")}</div></div>`:""}
-  ${linkCard()}`;
+  ${linkCard()}</div></div>`;
 }
 // free times grouped in one row per hour: "2 PM  2:00 2:15 [2:30] 2:45"
 function slotGrid(slots, sel, act, withBarber){
@@ -660,15 +663,18 @@ function viewCalendar(){
   const dayList = UI.calDay && UI.calDay.startsWith(ym) ? all.filter(k=>k.date===UI.calDay).sort((a,b)=>a.time.localeCompare(b.time)) : null;
   const old = ymd(new Date(Date.now()-DAY));
   return `<div><h1>${t("cal_h")}</h1><p class="small muted" style="margin-top:4px">${t("cal_p")}</p></div>
+  <div class="cols cal2"><div class="colA">
   <div class="card"><div class="row" style="gap:6px"><button class="btn sm ghost" data-a="calMove" data-v="-1" aria-label="${t("back")}">‹</button>
       <h2 class="grow" style="text-align:center">${t("mon")[m-1]} ${y}</h2><button class="btn sm ghost" data-a="calMove" data-v="1" aria-label="${t("next")}">›</button></div>
     ${ym!==td.slice(0,7)?`<button class="btn sm" style="align-self:center" data-a="calMove" data-v="0">${t("cal_now")}</button>`:""}
     ${list===undefined?`<div class="spin"></div>`:`<div class="cal"><span class="cdw">${t("dw").join(`</span><span class="cdw">`)}</span>${cells.join("")}</div>`}</div>
   ${list===undefined?"":`<div class="stats"><div class="stat"><b>${live.length}</b><span>${t("cal_total")}</span></div><div class="stat"><b>${done.length}</b><span>${t("cal_done")}</span></div><div class="stat"><b>₹${done.reduce((a,k)=>a+bkPrice(s,k),0).toLocaleString("en-IN")}</b><span>${t("cal_earn")}</span></div></div>
   ${canc.length?`<p class="small muted" style="text-align:center">${t("cal_cancel")}: ${canc.length}</p>`:""}
+  </div><div class="colB">
   ${dayList?`<div class="card"><h2>${dayLabel(UI.calDay)}</h2>${dayList.length?`<div>${dayList.map(k=>bookingRow(k,{cancel:true, view:k.date<old})).join("")}</div>`:`<p class="muted">${t("cal_none")}</p>`}</div>`:`<p class="small muted" style="text-align:center">${t("cal_pick")}</p>`}
   ${live.length?`<div class="card"><h3>${t("cal_by_barber")}</h3>${s.barbers.map(b=>{ const mine = live.filter(k=>k.barberId===b.id), earn = mine.filter(k=>k.status==="done").reduce((a,k)=>a+bkPrice(s,k),0);
-    return `<div class="row" style="gap:8px">${avatar(b,"sm")}<b class="grow">${esc(b.name)}</b><span class="small">${mine.length===1?t("bk_count1"):t("bk_count",{n:mine.length})} · ₹${earn.toLocaleString("en-IN")}</span></div>`; }).join("")}</div>`:""}`}`;
+    return `<div class="row" style="gap:8px">${avatar(b,"sm")}<b class="grow">${esc(b.name)}</b><span class="small">${mine.length===1?t("bk_count1"):t("bk_count",{n:mine.length})} · ₹${earn.toLocaleString("en-IN")}</span></div>`; }).join("")}</div>`:""}`}
+  </div></div>`;
 }
 
 function bookingForm(salon, slotsFor, ownerMode){

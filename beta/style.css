@@ -260,3 +260,43 @@ table.led td{padding:8px 4px;border-bottom:1px dashed var(--line);font-variant-n
 .bcard.off{opacity:.55}
 .tlcol.off{background:repeating-linear-gradient(-45deg,var(--danger-soft) 0 8px,#FBEDEB 8px 16px)}
 .tloff{position:absolute;top:6px;left:0;right:0;text-align:center;font-size:12px;font-weight:700;color:var(--danger)}
+
+/* ===== bigger screens: tablet and desktop (owner app only; customer page stays phone-sized) ===== */
+.cols,.colA,.colB{display:flex;flex-direction:column;gap:16px;min-width:0}
+@media (min-width:640px){
+  body.owner #app{max-width:860px}
+  body.owner .nav div{max-width:860px}
+  body.owner .barbers{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+}
+@media (min-width:960px){
+  body.owner #app{max-width:1440px}
+  body.owner main{padding-left:240px;padding-right:28px;padding-bottom:40px}
+  body.owner main.t-book,body.owner main.t-plan,body.owner main.t-settings,body.owner main.t-rewards,body.owner main.t-barber{max-width:1040px}
+  /* bottom bar becomes a menu on the left */
+  body.owner .nav{top:calc(68px + env(safe-area-inset-top,0px));right:auto;width:212px;border-top:0;border-right:2px solid var(--gold);padding:16px 10px}
+  body.owner .nav div{max-width:none;display:flex;flex-direction:column;gap:4px}
+  body.owner .nav button{flex-direction:row;justify-content:flex-start;gap:12px;padding:11px 14px;font-size:15px;border-radius:10px;text-align:left}
+  body.owner .nav button.on{background:rgba(255,255,255,.07)}
+  body.owner .nav.six button,body.owner .nav.seven button{font-size:15px}
+  body.owner .nav .dot{right:-4px}
+  /* today: timeline left, lists right; calendar: month left, day right */
+  body.owner .cols{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(340px,1fr);gap:20px;align-items:start}
+  body.owner .cols.cal2{grid-template-columns:minmax(0,1.2fr) minmax(340px,1fr)}
+  body.owner .colB{position:sticky;top:84px}
+  body.owner .cols.cal2 .colB{position:static}
+  body.owner .cday{min-height:64px}
+  body.owner .cday b{font-size:16px}
+  body.owner .cday span{font-size:13px}
+  body.owner .tlwrap{margin:0;padding:0}
+  body.owner main > .stats{grid-template-columns:repeat(3,minmax(0,220px))}
+  body.owner main > .btn.block{align-self:flex-start;width:auto;padding-inline:28px}
+  /* add-work / change-time opens in the middle, not from the bottom */
+  .sheet{top:50%;bottom:auto;left:50%;right:auto;transform:translate(-50%,-50%);width:min(600px,92vw);max-height:86vh;border-radius:18px;padding-bottom:18px}
+  body.owner .toast{bottom:28px;left:calc(50% + 106px)}
+  body.owner .rembox{bottom:24px;left:auto;right:24px;width:420px}
+  body.owner .betabar{bottom:0}
+  .srow .scard{max-width:420px}
+}
+@media (min-width:1280px){
+  body.owner .cols{grid-template-columns:minmax(0,1.7fr) minmax(380px,1fr)}
+}
