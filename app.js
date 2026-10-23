@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.23-3";
+const APP_VERSION = "2026.10.23-5";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version
@@ -53,6 +53,9 @@ const T = {
   mv_date:"New day", mv_barber:"Barber", mv_time:"New time", mv_go:"Move to {time}", mv_none:"No free time this day.",
   moved_msg:"Hi {name}, your booking at {salon} is now on {date} at {time}. Sorry for the change, see you!", moved_done:"Booking moved. Let the customer know:", send_wa:"Send on WhatsApp",
   ext_done:"Time updated", sel_slot:"Your slot",
+  bill_h:"Bill", bill_p:"Prices come from your services. Change them if you charged differently.", bill_add:"Add to bill", bill_disc:"Discount (₹)", bill_pay:"Paid by", pay_cash:"Cash", pay_upi:"UPI", bill_total:"Total",
+  bill_send:"Done + send bill on WhatsApp", bill_later:"Just mark done (bill later)", bill_resave_send:"Save and send again", bill_resave:"Save changes", bill_resend:"Send bill again", bill_make:"Send bill", bill_edit:"Edit bill",
+  bill_no:"Bill #{n}", bill_sent_n:"Sent {n} times", bill_sent1:"Sent once", bill_not_sent:"Not sent yet", bill_sent:"Bill ready. Press Send in WhatsApp.", bill_saved:"Saved", bill_empty:"Add at least one service", bill_edit_note:"If you change the amount after sending, the bill is marked as revised.", bill_rm:"Remove",
   nav_rewards:"Rewards", rw_h:"Rewards", rw_p:"Scratch cards and offers for your salon.", rw_new:"New for you", rw_scratch:"Scratch here", rw_scratch_hint:"Rub with your finger",
   rw_tap:"Tap to open", rw_mine:"Your rewards", rw_added:"{n} days added to your plan", rw_open:"Open offer", rw_none:"No new cards right now. New offers will show up here.",
   rw_home:"A scratch card is waiting for you", rw_home_n:"{n} scratch cards are waiting for you", rw_open_btn:"Open", rw_ends:"Till {date}", rw_fail:"Couldn't open the card. Check the internet and try again.",
@@ -136,6 +139,9 @@ const T = {
   mv_date:"नया दिन", mv_barber:"Barber", mv_time:"नया समय", mv_go:"{time} पर करें", mv_none:"इस दिन कोई समय ख़ाली नहीं।",
   moved_msg:"नमस्ते {name}, {salon} में आपकी booking अब {date} को {time} बजे है। बदलाव के लिए माफ़ी, मिलते हैं!", moved_done:"Booking का समय बदल गया। Customer को बता दें:", send_wa:"WhatsApp पर भेजें",
   ext_done:"समय बढ़ गया", sel_slot:"आपका slot",
+  bill_h:"Bill", bill_p:"दाम आपकी services से भरे हैं। अलग लिया हो तो बदल दें।", bill_add:"Bill में जोड़ें", bill_disc:"Discount (₹)", bill_pay:"Payment", pay_cash:"Cash", pay_upi:"UPI", bill_total:"कुल",
+  bill_send:"Done + WhatsApp पर bill भेजें", bill_later:"सिर्फ़ Done (bill बाद में)", bill_resave_send:"Save करके फिर भेजें", bill_resave:"बदलाव save करें", bill_resend:"Bill फिर भेजें", bill_make:"Bill भेजें", bill_edit:"Bill बदलें",
+  bill_no:"Bill #{n}", bill_sent_n:"{n} बार भेजा", bill_sent1:"1 बार भेजा", bill_not_sent:"अभी नहीं भेजा", bill_sent:"Bill तैयार, WhatsApp में Send दबाएँ", bill_saved:"Save हो गया", bill_empty:"कम से कम एक service जोड़ें", bill_edit_note:"भेजने के बाद रकम बदली तो bill पर “बदला हुआ” लिखा जाएगा।", bill_rm:"हटाएँ",
   nav_rewards:"Rewards", rw_h:"Rewards", rw_p:"आपके सैलून के लिए scratch cards और offers।", rw_new:"आपके लिए नया", rw_scratch:"यहाँ scratch करें", rw_scratch_hint:"उँगली से घिसें",
   rw_tap:"Tap करके खोलें", rw_mine:"आपको मिले rewards", rw_added:"आपके plan में {n} दिन जुड़ गए", rw_open:"Offer खोलें", rw_none:"अभी कोई नया card नहीं है। नए offers यहीं दिखेंगे।",
   rw_home:"आपके लिए एक scratch card है", rw_home_n:"आपके लिए {n} scratch cards हैं", rw_open_btn:"खोलें", rw_ends:"{date} तक", rw_fail:"Card नहीं खुला। Internet check करके फिर कोशिश करें।",
@@ -250,6 +256,26 @@ const barberOf = (s,id) => (s.barbers||[]).find(x=>x.id===id);
 const bkDur = (s,k) => Number(k.dur) || Number((svcOf(s,k.serviceId)||{}).dur) || 30;
 const bkPrice = (s,k) => [k.serviceId].concat(k.extra||[]).reduce((a,id)=>a+Number((svcOf(s,id)||{}).price||0),0);
 const bkNames = (s,k) => [k.serviceId].concat(k.extra||[]).map(id=>(svcOf(s,id)||{}).name).filter(Boolean).join(" + ") || "?";
+/* ---- bills: saved on the booking as k.bill = { no, items:[{n,p}], disc, total, pay, at, sent, edited } ---- */
+const bkEarn = (s,k) => k.bill && k.bill.total!=null ? Number(k.bill.total)||0 : bkPrice(s,k);
+const rs = n => "₹"+(Number(n)||0).toLocaleString("en-IN");
+function billDraft(s, k){
+  if (k.bill) return { items: (k.bill.items||[]).map(x=>({n:x.n, p:String(x.p)})), disc: k.bill.disc?String(k.bill.disc):"", pay: k.bill.pay||"cash" };
+  const items = [k.serviceId].concat(k.extra||[]).map(id=>svcOf(s,id)).filter(Boolean).map(v=>({n:v.name, p:String(Number(v.price)||0)}));
+  return { items: items.length ? items : [{n:bkNames(s,k), p:String(bkPrice(s,k))}], disc:"", pay:"cash" };
+}
+function billSum(d){ const sub = d.items.reduce((a,x)=>a+Math.max(0,Math.round(Number(x.p)||0)),0); const disc = Math.min(sub, Math.max(0,Math.round(Number(d.disc)||0))); return { sub, disc, total: sub-disc }; }
+function billText(s, k, bill){
+  const hi = LANG==="hi", b = barberOf(s,k.barberId)||{name:""}, addr = fullAddr(s), line = "———————";
+  const L = [`*${s.name}*`, `Bill #${bill.no}${bill.edited?(hi?" (बदला हुआ)":" (revised)"):""}`];
+  if (addr) L.push((hi?"पता: ":"Address: ")+addr);
+  L.push(`${hi?"तारीख़":"Date"}: ${longDate(new Date(k.date+"T00:00").getTime())}, ${nice(k.time)}`, `Customer: ${k.cust}${b.name?" · Barber: "+b.name:""}`, line);
+  bill.items.forEach(x=>L.push(`${x.n}: ${rs(x.p)}`));
+  if (bill.disc) L.push(`Discount: −${rs(bill.disc)}`);
+  L.push(`*${hi?"कुल":"Total"}: ${rs(bill.total)}* · ${bill.pay==="upi"?"UPI":"Cash"}`, line, hi?"धन्यवाद, फिर आइए!":"Thank you, see you again!", `${hi?"अगली booking यहाँ से":"Book your next visit"}: ${linkFor(S.sid)}`);
+  return L.join("\n");
+}
+const billSentLbl = b => !b.sent ? t("bill_not_sent") : b.sent===1 ? t("bill_sent1") : t("bill_sent_n",{n:b.sent});
 const hourLbl = m => { const h = Math.floor(m/60)%24; return (h%12||12)+" "+(h>=12?"PM":"AM"); };
 const niceRange = (tm, dur) => { const a = nice(tm), b = nice(toHM(toMin(tm)+dur)); return a.slice(-2)===b.slice(-2) ? a.slice(0,-3)+" – "+b : a+" – "+b; };
 const onLeave = (s,bid,date) => ((s.leave||{})[bid]||[]).includes(date);
@@ -283,9 +309,9 @@ async function createBooking(sid, salon, b){
 function msgs(salon, k){
   const svc = {name:bkNames(salon,k), price:bkPrice(salon,k)}, b = barberOf(salon,k.barberId)||{name:""}, when = dayLabel(k.date)+", "+nice(k.time), hi = LANG==="hi";
   return {
-    cust: `${hi?"नमस्ते":"Hi"} ${k.cust}! ${hi?"आपकी booking पक्की है":"Your booking is confirmed"} ✅\n${salon.name}\n${svc.name} · ${b.name}\n${when}\n₹${svc.price}${fullAddr(salon)?"\n📍 "+fullAddr(salon):""}\n🗺️ ${mapUrl(salon)}`,
-    remind: `Reminder: ${k.cust}, ${nice(k.time)} — ${svc.name} @ ${salon.name}. ${hi?"मिलते हैं!":"See you!"}\n🗺️ ${mapUrl(salon)}`,
-    salon: `${hi?"नई booking":"New booking"} ✂️\n${k.cust} (${k.phone})\n${svc.name} · ${b.name}\n${when}`,
+    cust: `${hi?"नमस्ते":"Hi"} ${k.cust}! ${hi?"आपकी booking पक्की है":"Your booking is confirmed"}.\n${salon.name}\n${svc.name} · ${b.name}\n${when}\n₹${svc.price}${fullAddr(salon)?"\n"+(hi?"पता: ":"Address: ")+fullAddr(salon):""}\n${hi?"रास्ता":"Map"}: ${mapUrl(salon)}`,
+    remind: `Reminder: ${k.cust}, ${nice(k.time)} — ${svc.name} @ ${salon.name}. ${hi?"मिलते हैं!":"See you!"}\n${hi?"रास्ता":"Map"}: ${mapUrl(salon)}`,
+    salon: `${hi?"नई booking":"New booking"}\n${k.cust} (${k.phone})\n${svc.name} · ${b.name}\n${when}`,
     barber: `${b.name}, ${hi?"आपकी नई booking":"new booking for you"}: ${k.cust}\n${svc.name} · ${when}`
   };
 }
@@ -315,12 +341,12 @@ const custGuests = (s,k) => [s.ownerEmail];
 
 function daySummary(s, date, onlyBarber){
   const list = S.bookings.filter(k=>k.date===date && k.status!=="cancelled").sort((a,b)=>a.time.localeCompare(b.time));
-  const lines = [`✂️ ${t("summary_h",{salon:s.name})} · ${dayLabel(date)}`];
+  const lines = [`${t("summary_h",{salon:s.name})} · ${dayLabel(date)}`];
   s.barbers.filter(b=>!onlyBarber||b.id===onlyBarber).forEach(b=>{
     const mine = list.filter(k=>k.barberId===b.id);
     lines.push("", `*${b.name}* (${mine.length})`);
     if (!mine.length) lines.push("  "+t("summary_none"));
-    mine.forEach(k=>{ lines.push(`  ${niceRange(k.time,bkDur(s,k))} – ${k.cust} · ${bkNames(s,k)}${k.status==="done"?" ✅":""}`); });
+    mine.forEach(k=>{ lines.push(`  ${niceRange(k.time,bkDur(s,k))} – ${k.cust} · ${bkNames(s,k)}${k.status==="done"?(LANG==="hi"?" (हो गया)":" (done)"):""}`); });
   });
   return lines.join("\n");
 }
@@ -466,8 +492,11 @@ function bookingRow(k, o){
   const pill = k.status==="done"?`<span class="pill ok">${t("st_done")}</span>`:k.status==="cancelled"?`<span class="pill bad">${t("st_cancelled")}</span>`:`<span class="pill warn">${t("st_booked")}</span>`;
   const manage = !o.view && S.bookings.some(x=>x.id===k.id);
   return `<div class="bk"><div class="t">${nice(k.time).replace(" ","<small>")}</small></div><div class="body">
-    <div class="row" style="gap:8px"><b class="grow">${esc(k.cust)}</b>${k.src==="online"?`<span class="pill">${t("online")}</span>`:""}${pill}</div>
-    <div class="row small muted" style="gap:6px">${avatar(b,"sm")}<span>${niceRange(k.time,bkDur(s,k))} · ${esc(b.name)} · ${esc(svc.name)} · ₹${esc(svc.price)} · ${esc(k.phone)}${k.email?" · "+esc(k.email):""}</span></div>
+    <div class="row" style="gap:8px"><b class="grow">${esc(k.cust)}</b>${k.src==="online"?`<span class="pill">${t("online")}</span>`:""}${k.bill?`<span class="pill">${t("bill_no",{n:k.bill.no})}</span>`:""}${pill}</div>
+    <div class="row small muted" style="gap:6px">${avatar(b,"sm")}<span>${niceRange(k.time,bkDur(s,k))} · ${esc(b.name)} · ${esc(svc.name)} · ${rs(bkEarn(s,k))}${k.bill?" "+(k.bill.pay==="upi"?"UPI":"Cash"):""} · ${esc(k.phone)}${k.email?" · "+esc(k.email):""}</span></div>
+    ${k.status==="done" && manage?`<div class="row" style="gap:6px">
+      ${k.bill?`<a class="btn sm primary" data-a="billResent" data-v="${k.id}" href="${waLink(k.phone, billText(s,k,{...k.bill, edited:!!k.bill.edited}))}" target="_blank" rel="noopener">${t("bill_resend")}</a><button class="btn sm" data-a="billOpen" data-v="${k.id}">${t("bill_edit")}</button><span class="small muted">${billSentLbl(k.bill)}</span>`
+        :`<button class="btn sm primary" data-a="billOpen" data-v="${k.id}">${t("bill_make")}</button>`}</div>`:""}
     ${k.status==="booked"?`<div class="row" style="gap:6px">
       <button class="btn sm primary" data-a="done" data-v="${k.id}">${t("mark_done")}</button>
       ${manage?`<button class="btn sm" data-a="sheetMode" data-v="${k.id}|extend">${t("sh_extend")}</button><button class="btn sm" data-a="sheetMode" data-v="${k.id}|move">${t("sh_move")}</button>`:""}
@@ -502,7 +531,7 @@ function sendAllCard(today, td){
 function viewHome(){
   const td = ymd(new Date());
   const today = S.bookings.filter(k=>k.date===td).sort((a,b)=>a.time.localeCompare(b.time));
-  const earned = today.filter(k=>k.status==="done").reduce((s,k)=>s+bkPrice(S.salon,k),0);
+  const earned = today.filter(k=>k.status==="done").reduce((s,k)=>s+bkEarn(S.salon,k),0);
   const tlDate = UI.tlDate || td, tlMin = ymd(new Date(Date.now()-DAY)), tlMax = ymd(new Date(Date.now()+6*DAY));
   const nowHM = toHM(new Date().getHours()*60+new Date().getMinutes());
   const up = today.filter(k=>k.status==="booked" && k.time>=nowHM).length;
@@ -514,7 +543,7 @@ function viewHome(){
   ${!String(S.salon.address||"").trim()?`<div class="banner warn"><span style="flex:1">${t("addr_missing")}</span><button class="btn sm saffron" data-a="tab" data-v="settings">${t("nav_settings")}</button></div>`:""}
   <div><p class="muted">${t("hello")}${S.salon.owner?", "+esc(S.salon.owner):""}</p><h1>${dayLabel(td)}</h1></div>
   <div class="stats"><div class="stat"><b>${today.filter(k=>k.status!=="cancelled").length}</b><span>${t("today_bk")}</span></div>
-    <div class="stat"><b>${up}</b><span>${t("upcoming")}</span></div><div class="stat"><b>₹${earned}</b><span>${t("earned")}</span></div></div>
+    <div class="stat"><b>${up}</b><span>${t("upcoming")}</span></div><div class="stat"><b>${rs(earned)}</b><span>${t("earned")}</span></div></div>
   <button class="btn primary block" data-a="walkin">+ ${t("add_walkin")}</button>
   <div class="cols"><div class="colA">
   <div class="card"><div class="row" style="gap:6px"><h2 class="grow">${t("tl_h")}</h2>
@@ -584,7 +613,21 @@ function viewSheet(){
   const s = S.salon, k = curK(); if (!k) return "";
   const d = bkDur(s,k), b = barberOf(s,k.barberId)||{name:"?"}, m = msgs(s,k);
   let body = "";
-  if (sh.mode==="msg"){
+  if (sh.mode==="bill" && UI.bill){
+    const dr = UI.bill, sm = billSum(dr), old = k.bill;
+    body = `<div class="row" style="gap:8px"><h2 class="grow">${old?t("bill_no",{n:old.no}):t("bill_h")}</h2>${old?`<span class="small muted">${billSentLbl(old)}</span>`:""}</div>
+      <p class="small muted">${t("bill_p")}</p>
+      <div class="stack" style="gap:6px">${dr.items.map((x,i)=>`<div class="billrow"><span class="grow">${esc(x.n)}</span>
+        <label class="billp"><span aria-hidden="true">₹</span><input type="number" inputmode="numeric" min="0" id="bp_${i}" data-bill="p" data-i="${i}" value="${esc(x.p)}" aria-label="${esc(x.n)}"></label>
+        <button class="x" data-a="billDel" data-v="${i}" aria-label="${t("bill_rm")}: ${esc(x.n)}" ${dr.items.length<2?"disabled":""}>×</button></div>`).join("")}</div>
+      <p class="label">${t("bill_add")}</p><div class="chips">${s.services.map(v=>`<button class="chip" data-a="billAdd" data-v="${v.id}">+ ${esc(v.name)} · ${rs(v.price)}</button>`).join("")}</div>
+      <div class="billrow"><label class="grow" for="bdisc">${t("bill_disc")}</label><label class="billp"><span aria-hidden="true">₹</span><input type="number" inputmode="numeric" min="0" id="bdisc" data-bill="disc" value="${esc(dr.disc)}" placeholder="0"></label></div>
+      <p class="label">${t("bill_pay")}</p><div class="chips">${["cash","upi"].map(p=>`<button class="chip ${dr.pay===p?"on":""}" data-a="billPay" data-v="${p}" aria-pressed="${dr.pay===p}">${t("pay_"+p)}</button>`).join("")}</div>
+      <div class="billtot"><span>${t("bill_total")}</span><b id="billTotal">${rs(sm.total)}</b></div>
+      <button class="btn primary block" data-a="billSend">${old?t("bill_resave_send"):t("bill_send")}</button>
+      <button class="btn block" data-a="billSave">${old?t("bill_resave"):t("bill_later")}</button>
+      ${old&&old.sent?`<p class="small muted">${t("bill_edit_note")}</p>`:""}`;
+  } else if (sh.mode==="msg"){
     body = `<div class="banner ok">✓ ${t("moved_done")}</div><div class="msg">${esc(sh.wa.text)}</div>
       <a class="btn primary block" href="${waLink(sh.wa.phone, sh.wa.text)}" target="_blank" rel="noopener" data-a="sheetClose">${t("send_wa")}</a>`;
   } else if (sh.mode==="extend" && sh.conflict){
@@ -611,11 +654,13 @@ function viewSheet(){
     body = `<div class="stack" style="gap:8px">
       ${k.status==="booked"?`<button class="btn primary block" data-a="done" data-v="${k.id}">${t("mark_done")}</button>
       <div class="row" style="gap:8px"><button class="btn grow" data-a="sheetMode" data-v="${k.id}|extend">${t("sh_extend")}</button><button class="btn grow" data-a="sheetMode" data-v="${k.id}|move">${t("sh_move")}</button></div>`:""}
+      ${k.status==="done"?(k.bill?`<div class="row" style="gap:8px"><a class="btn primary grow" data-a="billResent" data-v="${k.id}" href="${waLink(k.phone, billText(s,k,k.bill))}" target="_blank" rel="noopener">${t("bill_resend")}</a><button class="btn grow" data-a="billOpen" data-v="${k.id}">${t("bill_edit")}</button></div><p class="small muted">${t("bill_no",{n:k.bill.no})} · ${billSentLbl(k.bill)}</p>`
+        :`<button class="btn primary block" data-a="billOpen" data-v="${k.id}">${t("bill_make")}</button>`):""}
       <div class="row" style="gap:8px"><a class="btn grow" href="${waLink(k.phone, m.remind)}" target="_blank" rel="noopener">${t("whatsapp")}</a><a class="btn grow" href="${barberWa(k.barberId,m.barber)}" target="_blank" rel="noopener">${t("send_barber")}</a></div>
       ${k.status==="booked"?`<button class="btn ghost block" data-a="cancelBk" data-v="${k.id}">${t("cancel")}</button>`:""}</div>`;
   }
   return `<div class="sheetbg" data-a="sheetClose"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(k.cust)}">
-    <div class="shhead"><div class="grow"><b>${esc(k.cust)}</b><span class="small muted">${dayLabel(k.date)} · ${niceRange(k.time,d)} · ${esc(b.name)}</span><span class="small">${esc(bkNames(s,k))} · ₹${bkPrice(s,k)}</span></div>
+    <div class="shhead"><div class="grow"><b>${esc(k.cust)}</b><span class="small muted">${dayLabel(k.date)} · ${niceRange(k.time,d)} · ${esc(b.name)}</span><span class="small">${esc(bkNames(s,k))} · ${rs(bkEarn(s,k))}</span></div>
       <button class="btn sm ghost" data-a="sheetClose" aria-label="${t("sh_close")}">✕</button></div>${body}</div>`;
 }
 // change a booking and keep the day's slot map (what customers see as taken) in step
@@ -627,6 +672,24 @@ async function updateBk(k, patch){
   else { b.set(doc(db,"salons",S.sid,"days",k.date), { slots: { [oKey]: deleteField() } }, { merge:true }); b.set(doc(db,"salons",S.sid,"days",n.date), { slots: { [nKey]: nd } }, { merge:true }); }
   await b.commit();
   Object.assign(k, patch); // local copy until the live update arrives
+}
+// save the bill on the booking (and mark it done); with send, WhatsApp opens first so the browser treats it as the tap's own window
+function saveBill(send){
+  const k = curK(), s = S.salon, d = UI.bill; if (!k || !d) return;
+  const items = d.items.map(x=>({ n:String(x.n||"").slice(0,60), p:Math.max(0,Math.round(Number(x.p)||0)) })).filter(x=>x.n);
+  if (!items.length){ toast(t("bill_empty")); return; }
+  const { disc, total } = billSum({ items, disc:d.disc }), old = k.bill;
+  const changed = !!old && (old.total!==total || (old.disc||0)!==disc || JSON.stringify(old.items)!==JSON.stringify(items));
+  const no = old ? old.no : (Number(s.billSeq)||0)+1;
+  const bill = { no, items, disc, total, pay: d.pay==="upi"?"upi":"cash", at: old&&old.at ? old.at : Date.now(),
+    sent: (old ? Number(old.sent)||0 : 0) + (send?1:0), edited: !!old && (!!old.edited || (changed && (Number(old.sent)||0)>0)) };
+  if (send) window.open(waLink(k.phone, billText(s, k, bill)), "_blank", "noopener");
+  const b = writeBatch(db);
+  b.update(doc(db,"salons",S.sid,"bookings",k.id), { status:"done", bill });
+  if (!old){ b.update(doc(db,"salons",S.sid), { billSeq: no }); s.billSeq = no; }
+  Object.assign(k, { status:"done", bill });
+  UI.sheet = null; UI.bill = null; render();
+  b.commit().then(()=>toast(send?t("bill_sent"):t("bill_saved"))).catch(e=>{ console.error(e); toast(t("save_fail")); });
 }
 async function doExtend(k, add, svcId, force){
   const s = S.salon, nd = bkDur(s,k)+add, st = toMin(k.time), end = st+nd;
@@ -668,11 +731,11 @@ function viewCalendar(){
       <h2 class="grow" style="text-align:center">${t("mon")[m-1]} ${y}</h2><button class="btn sm ghost" data-a="calMove" data-v="1" aria-label="${t("next")}">›</button></div>
     ${ym!==td.slice(0,7)?`<button class="btn sm" style="align-self:center" data-a="calMove" data-v="0">${t("cal_now")}</button>`:""}
     ${list===undefined?`<div class="spin"></div>`:`<div class="cal"><span class="cdw">${t("dw").join(`</span><span class="cdw">`)}</span>${cells.join("")}</div>`}</div>
-  ${list===undefined?"":`<div class="stats"><div class="stat"><b>${live.length}</b><span>${t("cal_total")}</span></div><div class="stat"><b>${done.length}</b><span>${t("cal_done")}</span></div><div class="stat"><b>₹${done.reduce((a,k)=>a+bkPrice(s,k),0).toLocaleString("en-IN")}</b><span>${t("cal_earn")}</span></div></div>
+  ${list===undefined?"":`<div class="stats"><div class="stat"><b>${live.length}</b><span>${t("cal_total")}</span></div><div class="stat"><b>${done.length}</b><span>${t("cal_done")}</span></div><div class="stat"><b>₹${done.reduce((a,k)=>a+bkEarn(s,k),0).toLocaleString("en-IN")}</b><span>${t("cal_earn")}</span></div></div>
   ${canc.length?`<p class="small muted" style="text-align:center">${t("cal_cancel")}: ${canc.length}</p>`:""}
   </div><div class="colB">
   ${dayList?`<div class="card"><h2>${dayLabel(UI.calDay)}</h2>${dayList.length?`<div>${dayList.map(k=>bookingRow(k,{cancel:true, view:k.date<old})).join("")}</div>`:`<p class="muted">${t("cal_none")}</p>`}</div>`:`<p class="small muted" style="text-align:center">${t("cal_pick")}</p>`}
-  ${live.length?`<div class="card"><h3>${t("cal_by_barber")}</h3>${s.barbers.map(b=>{ const mine = live.filter(k=>k.barberId===b.id), earn = mine.filter(k=>k.status==="done").reduce((a,k)=>a+bkPrice(s,k),0);
+  ${live.length?`<div class="card"><h3>${t("cal_by_barber")}</h3>${s.barbers.map(b=>{ const mine = live.filter(k=>k.barberId===b.id), earn = mine.filter(k=>k.status==="done").reduce((a,k)=>a+bkEarn(s,k),0);
     return `<div class="row" style="gap:8px">${avatar(b,"sm")}<b class="grow">${esc(b.name)}</b><span class="small">${mine.length===1?t("bk_count1"):t("bk_count",{n:mine.length})} · ₹${earn.toLocaleString("en-IN")}</span></div>`; }).join("")}</div>`:""}`}
   </div></div>`;
 }
@@ -1017,7 +1080,17 @@ const A = {
   count:v=>{ const o = editTarget(); const n=Number(v); while(o.barbers.length<n) o.barbers.push({id:uid(),name:"",spec:"",photo:""}); if (o.barbers.length>n) o.barbers=o.barbers.slice(0,n); render(); if (o===S.salon) queueSave(); },
   addBarber:()=>{ const o = editTarget(); o.barbers.push({id:uid(),name:"",spec:"",photo:""}); render(); },
   delBarber:v=>{ const o = editTarget(); o.barbers=o.barbers.filter(b=>b.id!==v); render(); if (o===S.salon) queueSave(); },
-  done:v=>{ if (UI.sheet){ UI.sheet=null; render(); } updateDoc(doc(db,"salons",S.sid,"bookings",v),{status:"done"}).catch(()=>toast(t("save_fail"))); },
+  done:v=>{ const k = S.bookings.find(x=>x.id===v);
+    if (k){ A.billOpen(v); return; }
+    if (UI.sheet){ UI.sheet=null; render(); } updateDoc(doc(db,"salons",S.sid,"bookings",v),{status:"done"}).catch(()=>toast(t("save_fail"))); },
+  billOpen:v=>{ const k = S.bookings.find(x=>x.id===v); if (!k) return; UI.bill = billDraft(S.salon, k); UI.sheet = { id:v, mode:"bill" }; render(); },
+  billAdd:v=>{ const sv = svcOf(S.salon,v); if (!sv || !UI.bill) return; UI.bill.items.push({n:sv.name, p:String(Number(sv.price)||0)}); render(); },
+  billDel:v=>{ if (!UI.bill || UI.bill.items.length<2) return; UI.bill.items.splice(Number(v),1); render(); },
+  billPay:v=>go(()=>{ if (UI.bill) UI.bill.pay = v==="upi"?"upi":"cash"; }),
+  billSend:()=>saveBill(true),
+  billSave:()=>saveBill(false),
+  billResent:v=>{ const k = S.bookings.find(x=>x.id===v); if (!k || !k.bill) return; const n = (Number(k.bill.sent)||0)+1;
+    k.bill.sent = n; setTimeout(render, 300); updateDoc(doc(db,"salons",S.sid,"bookings",v),{"bill.sent":n}).catch(()=>{}); },
   cancelBk:async v=>{ const k = S.bookings.find(x=>x.id===v); if (!k) return; if (UI.sheet){ UI.sheet=null; render(); }
     try{ await updateDoc(doc(db,"salons",S.sid,"bookings",v),{status:"cancelled"}); await updateDoc(doc(db,"salons",S.sid,"days",k.date),{["slots."+slotKey(k.barberId,k.time)]:deleteField()}).catch(()=>{}); }catch(e){ toast(t("save_fail")); } },
   bSvc:v=>{ go(()=>{ UI.book.svc=v; UI.book.time=UI.book.prefTime||null; UI.flashSvc=false; if (CUSTOMER_SID) loadDay(UI.book.date); }); setTimeout(()=>{ const el=document.getElementById("timeCard"); if (el) el.scrollIntoView({behavior:"smooth", block:"start"}); }, 60); },
@@ -1147,6 +1220,8 @@ app.addEventListener("input", e => { const el = e.target, d = el.dataset; const 
   else if (d.bc){ const c = contactsOf(); c[d.bc] = {...(c[d.bc]||{}), [d.k]: el.value}; if (UI.view==="main") queueSave(); }
   else if (d.book){ UI.book[d.book] = el.value; }
   else if (d.of){ UI.of[d.of] = el.type==="checkbox" ? el.checked : el.value; }
+  else if (d.bill && UI.bill){ if (d.bill==="p"){ const x = UI.bill.items[Number(d.i)]; if (x) x.p = el.value; } else UI.bill[d.bill] = el.value;
+    const tot = document.getElementById("billTotal"); if (tot) tot.textContent = rs(billSum(UI.bill).total); }
   else if (d.ui){ UI[d.ui] = el.value; }
 });
 app.addEventListener("change", e => { const el = e.target; const o = editTarget();
@@ -1205,7 +1280,7 @@ function checkReminders(){
     .sort((a,b)=>a.time.localeCompare(b.time))[0];
   if (!due){ if (box) box.remove(); remShown=null; return; }
   const n = toMin(due.time)-nowM, svc = svcOf(S.salon,due.serviceId)||{name:""}, b = barberOf(S.salon,due.barberId)||{name:""};
-  const msg = t("rem_msg",{name:due.cust, svc:svc.name, salon:S.salon.name, time:nice(due.time), n}) + "\n🗺️ " + mapUrl(S.salon);
+  const msg = t("rem_msg",{name:due.cust, svc:svc.name, salon:S.salon.name, time:nice(due.time), n}) + "\n" + (LANG==="hi"?"रास्ता: ":"Map: ") + mapUrl(S.salon);
   const html = `<div id="remBox" class="rembox" role="alertdialog" aria-live="assertive"><p class="label">⏰ ${t("rem_h",{n})}</p>
     <b>${esc(due.cust)} · ${nice(due.time)}</b><span class="small">${esc(svc.name)} · ${esc(b.name)} · ${esc(due.phone)}</span>
     <div class="row"><a class="btn saffron sm" data-a="remSent" data-v="${due.id}" href="${waLink(due.phone,msg)}" target="_blank" rel="noopener">${t("rem_send")}</a><button class="btn sm" data-a="remLater" data-v="${due.id}">${t("rem_later")}</button></div></div>`;
