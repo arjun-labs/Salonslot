@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1E1C1A">
+<title>SalonSlot · सैलून के लिए online booking</title>
+<meta name="description" content="Customer अपने फ़ोन से ख़ुद barber, service और time चुनकर booking करे। न लाइन, न डायरी। Hindi + English, ₹499 महीना, 10 दिन FREE।">
+<meta property="og:site_name" content="SalonSlot">
+<meta property="og:title" content="SalonSlot · डायरी बंद, बुकिंग चालू">
+<meta property="og:description" content="सैलून के लिए online booking app · Hindi + English · Welcome offer: 10 दिन FREE">
+<meta property="og:image" content="https://arjun-labs.github.io/Salonslot/icon-512.png">
+<meta property="og:type" content="website">
+<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Hind:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+<style>
+:root{
+  --ink:#1E1C1A; --ink2:#2A2724; --bg:#F6F2EA; --surface:#FFFDF9; --line:#E2D9CB; --muted:#5F574E;
+  --gold:#C9A24A; --gold-deep:#7A5C14; --gold-soft:#F4E7C4; --ok:#2F6B3A; --ok-soft:#E3F0E2; --bad:#9B2C2C; --bad-soft:#F8E4E2;
+  --wa:#1F8A4C; --r:14px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Hind',system-ui,sans-serif;font-size:17px;line-height:1.55}
+img{max-width:100%}
+a{color:var(--gold-deep)}
+h1,h2,h3{line-height:1.2;margin:0;text-wrap:balance}
+h2{font-size:28px;font-weight:700}
+h3{font-size:18px;font-weight:700}
+p{margin:0;text-wrap:pretty}
+.wrap{max-width:1040px;margin:0 auto;padding:0 18px}
+section{padding:44px 0}
+.kicker{font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-deep);margin-bottom:6px}
+.lead{color:var(--muted);margin-top:8px;max-width:640px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:12px 20px;border-radius:12px;font-weight:700;font-size:17px;text-decoration:none;border:1px solid transparent}
+.btn.gold{background:var(--gold);color:#1E1C1A}
+.btn.wa{background:var(--wa);color:#fff}
+.btn.line{border-color:rgba(255,255,255,.35);color:#fff}
+.btn.dark{background:var(--ink);color:#fff}
+.btn.outline{border-color:var(--line);background:var(--surface);color:var(--ink)}
+.btn svg{flex:none}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:5;background:rgba(30,28,26,.96);backdrop-filter:blur(6px)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;height:58px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.word{font-family:'Oswald',sans-serif;font-weight:700;font-size:24px;letter-spacing:2px;line-height:1}
+.word b{color:#fff;font-weight:700}.word span{color:var(--gold)}
+.top .btn{min-height:40px;padding:8px 14px;font-size:15px}
+.jump{display:flex;gap:6px;overflow-x:auto;padding:0 18px 10px;scrollbar-width:none;max-width:1040px;margin:0 auto}
+.jump::-webkit-scrollbar{display:none}
+.jump a{flex:none;color:#E9E2D3;text-decoration:none;font-size:14px;font-weight:600;padding:6px 12px;border:1px solid rgba(255,255,255,.18);border-radius:999px}
+.jump a:hover{border-color:var(--gold);color:#fff}
+
+/* hero */
+.hero{background:var(--ink);color:#fff;padding:36px 0 52px}
+.hero .wrap{display:grid;gap:32px;align-items:center}
+.hero h1{font-size:40px;font-weight:700}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.hero p.sub{color:#DCD5C7;font-size:19px;margin-top:14px;max-width:560px}
+.offer{display:inline-flex;align-items:center;gap:8px;background:var(--gold-soft);color:#3D2E0A;border-radius:999px;padding:6px 14px;font-weight:700;font-size:15px;margin-bottom:16px}
+.ctas{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.trust{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:22px;color:#CFC7B7;font-size:15px}
+.trust span{display:flex;align-items:center;gap:6px}
+.trust svg{color:var(--gold)}
+
+/* phone mockup */
+.phone{width:min(300px,100%);margin:0 auto;background:#0E0D0C;border-radius:36px;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.screen{background:var(--bg);border-radius:28px;overflow:hidden;color:var(--ink)}
+.scr-top{background:var(--ink);color:#fff;padding:16px 16px 14px}
+.scr-top small{display:block;color:#CFC7B7;font-size:12px}
+.scr-top b{font-size:17px}
+.scr-body{padding:12px 14px 16px;display:flex;flex-direction:column;gap:10px}
+.scr-lbl{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-deep)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 10px;font-size:13px;font-weight:500}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.barbers{display:flex;gap:8px}
+.bb{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:600}
+.bb.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-soft)}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px}
+.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.sl{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 0;text-align:center;font-size:13px;font-weight:600}
+.sl.on{background:var(--gold);border-color:var(--gold)}
+.scr-go{background:var(--ink);color:#fff;text-align:center;border-radius:10px;padding:10px;font-weight:700;font-size:14px}
+
+/* cards & grids */
+.grid{display:grid;gap:14px;margin-top:24px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.ico{width:42px;height:42px;border-radius:12px;background:var(--gold-soft);display:grid;place-items:center;color:var(--gold-deep);margin-bottom:10px}
+.card p{color:var(--muted);margin-top:4px;font-size:16px}
+.prob .ico{background:var(--bad-soft);color:var(--bad)}
+.dark{background:var(--ink);color:#fff}
+.dark .lead{color:#CFC7B7}
+.dark .kicker{color:var(--gold)}
+
+/* steps */
+.steps{counter-reset:s;display:grid;gap:14px;margin-top:24px}
+.step{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 18px 18px 66px}
+.step::before{counter-increment:s;content:counter(s);position:absolute;left:18px;top:18px;width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--gold);font-family:'Oswald',sans-serif;font-weight:700;font-size:18px;display:grid;place-items:center}
+.step p{color:var(--muted);margin-top:4px;font-size:16px}
+.dark .step{background:var(--ink2);border-color:#3A3631}
+.dark .step p{color:#CFC7B7}
+.dark .step::before{background:var(--gold);color:var(--ink)}
+
+/* whatsapp bill sample */
+.split{display:grid;gap:24px;align-items:center;margin-top:24px}
+.wa-chat{background:#E9DFD0;border-radius:18px;padding:16px;max-width:380px;width:100%;margin:0 auto}
+.bubble{background:#DCF8C6;border-radius:12px 12px 12px 3px;padding:10px 12px;font-size:14.5px;line-height:1.45;white-space:pre-line;color:#1B1B1B;box-shadow:0 1px 1px rgba(0,0,0,.08)}
+.bubble .ln{color:#1D6FB8;text-decoration:underline;word-break:break-all}
+.bubble time{display:block;text-align:right;font-size:11px;color:#667;margin-top:4px}
+.sample{font-size:13px;color:var(--muted);text-align:center;margin-top:8px}
+.ticks{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+.ticks li{display:flex;gap:10px;align-items:flex-start}
+.ticks svg{flex:none;margin-top:4px;color:var(--ok)}
+
+/* table */
+.tbl{margin-top:24px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.trow{display:grid;grid-template-columns:1fr;border-top:1px solid var(--line)}
+.trow:first-child{border-top:0}
+.thead{display:none}
+.tcell{padding:10px 14px;font-size:15.5px}
+.tcell.k{font-weight:700;background:#EFE8DC;padding-top:10px;padding-bottom:6px}
+.tcell .tag{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tcell.us{background:var(--gold-soft)}
+.tcell.us .tag{color:var(--gold-deep)}
+.foot{font-size:13px;color:var(--muted);margin-top:10px}
+
+/* pricing */
+.plans{display:grid;gap:14px;margin-top:24px}
+.plan{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:4px}
+.plan .price{font-family:'Oswald',sans-serif;font-size:40px;font-weight:600;line-height:1.1}
+.plan .per{color:var(--muted)}
+.plan .save{display:inline-block;align-self:flex-start;margin-top:8px;background:var(--ok-soft);color:var(--ok);font-weight:700;font-size:14px;border-radius:999px;padding:3px 10px}
+.plan.best{background:var(--ink);color:#fff;border-color:var(--ink)}
+.plan.best .per{color:#CFC7B7}
+.plan.best .price{color:var(--gold)}
+.plan .badge{align-self:flex-start;background:var(--gold);color:var(--ink);font-weight:700;font-size:13px;border-radius:999px;padding:2px 10px;margin-bottom:6px}
+.freebar{margin-top:16px;background:var(--gold-soft);border:1px solid #DCC58A;border-radius:var(--r);padding:16px 18px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between}
+.freebar b{font-size:22px}
+
+/* faq */
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 16px}
+details+details{margin-top:10px}
+summary{cursor:pointer;list-style:none;font-weight:700;padding:14px 28px 14px 0;position:relative;min-height:48px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";position:absolute;right:0;top:10px;font-size:24px;color:var(--gold-deep);font-weight:400}
+details[open] summary::after{content:"–"}
+details p{padding:0 0 14px;color:var(--muted)}
+
+/* contact */
+.contact{display:grid;gap:24px;align-items:center}
+.qrbox{background:#fff;border-radius:16px;padding:14px;width:200px;margin:0 auto;text-align:center;color:var(--ink)}
+.qrbox #qr{width:172px;height:172px;margin:0 auto}
+.qrbox #qr img,.qrbox #qr canvas{width:172px!important;height:172px!important}
+.qrbox small{display:block;margin-top:8px;font-weight:600;font-size:14px}
+.cline{display:flex;flex-direction:column;gap:6px;margin-top:14px;color:#DCD5C7}
+.cline a{color:#fff;font-weight:600;text-decoration:none}
+footer{background:#141210;color:#A99F8F;font-size:14px;padding:22px 0 calc(22px + env(safe-area-inset-bottom,0px));text-align:center}
+footer a{color:#E9E2D3}
+
+/* sticky bottom CTA on phones */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(246,242,234,.97);border-top:1px solid var(--line)}
+.dock .btn{flex:1;min-height:46px;font-size:16px;padding:10px}
+body{padding-bottom:76px}
+
+@media (min-width:720px){
+  h2{font-size:34px}
+  section{padding:64px 0}
+  .hero{padding:56px 0 72px}
+  .hero .wrap{grid-template-columns:1.2fr .8fr}
+  .hero h1{font-size:54px}
+  .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .steps.h{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .steps.h4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .split{grid-template-columns:1fr 1fr}
+  .plans{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .contact{grid-template-columns:1fr auto}
+  .thead{display:grid}
+  .trow{grid-template-columns:1.1fr 1fr 1fr 1.35fr}
+  .tcell{border-left:1px solid var(--line)}
+  .tcell:first-child{border-left:0}
+  .tcell.k{background:transparent;padding:12px 14px}
+  .tcell .tag{display:none}
+  .thead .tcell{font-weight:700;background:#EFE8DC;font-size:15px}
+  .thead .tcell.us{background:var(--ink);color:var(--gold);font-family:'Oswald',sans-serif;letter-spacing:1px}
+  .dock{display:none}
+  body{padding-bottom:0}
+}
+@media (min-width:1000px){
+  .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .steps.h4{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media print{
+  .top,.dock{display:none}
+  body{padding:0}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="SalonSlot">
+      <svg width="16" height="34" viewBox="0 0 26 56" aria-hidden="true"><defs><clipPath id="pl"><rect x="3" y="8" width="20" height="40" rx="4"/></clipPath></defs><rect x="1" y="1" width="24" height="7" rx="3" fill="#C9A24A"/><rect x="1" y="48" width="24" height="7" rx="3" fill="#C9A24A"/><g clip-path="url(#pl)"><rect x="3" y="8" width="20" height="40" fill="#fff"/><path d="M-10 18 L30 2 L30 9 L-10 25 Z" fill="#C0392B"/><path d="M-10 32 L30 16 L30 23 L-10 39 Z" fill="#2B4C8C"/><path d="M-10 46 L30 30 L30 37 L-10 53 Z" fill="#C0392B"/><path d="M-10 60 L30 44 L30 51 L-10 67 Z" fill="#2B4C8C"/></g><rect x="3" y="8" width="20" height="40" rx="4" fill="none" stroke="#C9A24A" stroke-width="2"/></svg>
+      <span class="word"><b>SALON</b><span>SLOT</span></span>
+    </a>
+    <a class="btn gold" href="https://arjun-labs.github.io/Salonslot/?s=xWvAeZNfg8ZW6fHMV3xQJ8AHlqx1" target="_blank" rel="noopener">Demo देखें</a>
+  </div>
+  <nav class="jump" aria-label="इस page पर">
+    <a href="#problem">दिक़्क़त</a><a href="#how">कैसे चलता है</a><a href="#features">Features</a><a href="#bill">WhatsApp bill</a><a href="#compare">तुलना</a><a href="#price">दाम</a><a href="#start">शुरुआत</a><a href="#faq">सवाल</a><a href="#contact">Contact</a>
+  </nav>
+</header>
+
+<main id="top">
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="offer">Welcome offer: 10 दिन FREE</span>
+      <h1>डायरी बंद,<br><em>बुकिंग चालू।</em></h1>
+      <p class="sub">आपके सैलून के लिए online booking app। Customer अपने फ़ोन से ख़ुद service, barber और time चुनकर booking करता है। न लाइन, न डायरी, न “भैया लिख लेना” वाली गड़बड़।</p>
+      <div class="ctas">
+        <a class="btn gold" href="https://arjun-labs.github.io/Salonslot/?s=xWvAeZNfg8ZW6fHMV3xQJ8AHlqx1" target="_blank" rel="noopener">Demo सैलून में booking करके देखें</a>
+        <a class="btn line" href="https://wa.me/918850865540?text=%E0%A4%A8%E0%A4%AE%E0%A4%B8%E0%A5%8D%E0%A4%A4%E0%A5%87%2C%20%E0%A4%AE%E0%A5%81%E0%A4%9D%E0%A5%87%20%E0%A4%85%E0%A4%AA%E0%A4%A8%E0%A5%87%20%E0%A4%B8%E0%A5%88%E0%A4%B2%E0%A5%82%E0%A4%A8%20%E0%A4%95%E0%A5%87%20%E0%A4%B2%E0%A4%BF%E0%A4%8F%20SalonSlot%20%E0%A4%9A%E0%A4%BE%E0%A4%B9%E0%A4%BF%E0%A4%8F%E0%A5%A4" target="_blank" rel="noopener">WhatsApp पर बात करें</a>
+      </div>
+      <div class="trust">
+        <span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Hindi + English</span>
+        <span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Customer को app download नहीं</span>
+        <span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>₹499 महीना</span>
+        <span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>5 मिनट में चालू</span>
+      </div>
+    </div>
+
+    <div class="phone" role="img" aria-label="Customer के फ़ोन पर SalonSlot का booking page: service, barber और time चुनना">
+      <div class="screen">
+        <div class="scr-top"><small>Online booking</small><b>आपका सैलून</b></div>
+        <div class="scr-body">
+          <div class="scr-lbl">1 · Service</div>
+          <div class="chips"><span class="chip on">Haircut · ₹150</span><span class="chip">Beard · ₹80</span><span class="chip">Threading · ₹50</span></div>
+          <div class="scr-lbl">2 · Barber</div>
+          <div class="barbers">
+            <div class="bb on"><span class="av" style="background:#8C6A27">R</span>Raju</div>
+            <div class="bb"><span class="av" style="background:#1F3E7A">S</span>Suraj</div>
+            <div class="bb"><span class="av" style="background:#3E5A47">A</span>कोई भी</div>
+          </div>
+          <div class="scr-lbl">3 · आज का time</div>
+          <div class="slots"><span class="sl">5:15</span><span class="sl on">5:45</span><span class="sl">6:00</span><span class="sl">6:15</span><span class="sl">6:45</span><span class="sl">7:00</span><span class="sl">7:30</span><span class="sl">7:45</span></div>
+          <div class="scr-go">Booking पक्की करें</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="problem">
+  <div class="wrap">
+    <p class="kicker">आज क्या होता है</p>
+    <h2>Booking की वो गड़बड़ जो हर सैलून में होती है</h2>
+    <div class="grid g2 g4 prob">
+      <div class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></div><h3>काम के बीच फ़ोन</h3><p>कैंची हाथ में है और booking का फ़ोन बज रहा है।</p></div>
+      <div class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M8 8l6 6M14 8l-6 6"/></svg></div><h3>डायरी की ग़लती</h3><p>एक ही time पर दो नाम, या पन्ना ही नहीं मिलता।</p></div>
+      <div class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.7 7.1L4 20l1-4.8A8 8 0 1 1 21 12z"/><path d="M12 8v4M12 15h.01"/></svg></div><h3>“भैया लिख लेना”</h3><p>वादा किया, लिखना भूल गए, customer आया तो कुर्सी ख़ाली नहीं।</p></div>
+      <div class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M10 2h4"/></svg></div><h3>लाइन और इंतज़ार</h3><p>Customer बैठा-बैठा थक गया और दूसरी दुकान चला गया।</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="how" class="dark">
+  <div class="wrap">
+    <p class="kicker">कैसे चलता है</p>
+    <h2>Customer के लिए 3 steps, आपके लिए 0 मेहनत</h2>
+    <p class="lead">आपके counter पर QR लगेगा, और WhatsApp या Instagram पर आपका booking link। Customer को कोई app download नहीं करना, कोई login नहीं।</p>
+    <div class="steps h">
+      <div class="step"><h3>QR scan या link खोलें</h3><p>Counter का standee, WhatsApp status या Instagram bio, कहीं से भी।</p></div>
+      <div class="step"><h3>Service, barber, time चुनें</h3><p>Barber की photo दिखती है। सिर्फ़ ख़ाली time दिखते हैं, तो एक slot पर दो booking हो ही नहीं सकती।</p></div>
+      <div class="step"><h3>Booking पक्की</h3><p>आपके फ़ोन पर आवाज़ के साथ नई booking आती है, और customer को दुकान का पता और Maps का रास्ता मिलता है।</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <p class="kicker">मालिक के लिए</p>
+    <h2>पूरी दुकान की booking एक screen पर</h2>
+    <p class="lead">Phone, tablet या counter के laptop पर, Hindi या English में।</p>
+    <div class="grid g2 g3">
+      <div class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg></div><h3>आज की timeline</h3><p>हर barber का अलग कॉलम, कौन कब ख़ाली है एक नज़र में। ख़ाली जगह tap करो, वहीं walk-in booking।</p></div>
+      <div class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></div><h3>“+ काम जोड़ें”</h3><p>Customer ने बीच में beard भी जुड़वाई? App बताता है कि अगली booking किस ख़ाली barber को दें या आगे खिसकाएँ।</p></div>
+      <div class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.7 7.1L4 20l1-4.8A8 8 0 1 1 21 12z"/><path d="M9 11h6M9 14h4"/></svg></div><h3>हर barber को उसका दिन</h3><p>एक tap में हर barber को उसकी दिन की bookings WhatsApp पर। Barber का नंबर customer को नहीं दिखता।</p></div>
+      <div class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 14l6 5M15 14l-6 5"/></svg></div><h3>Barber की छुट्टी</h3><p>छुट्टी का दिन mark करो, उस दिन उसके साथ booking अपने आप बंद।</p></div>
+      <div class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></div><h3>समय बदलें</h3><p>Booking दूसरे दिन या time पर खिसकाओ, customer के लिए WhatsApp message अपने आप तैयार।</p></div>
+      <div class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/></svg></div><h3>10 मिनट के छोटे slots</h3><p>Threading या trim जैसे छोटे काम पर पूरा आधा घंटा block नहीं होता।</p></div>
+      <div class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div><h3>महीने का हिसाब</h3><p>Calendar में किसी भी दिन पर tap करो: कौन आया, कितनी कमाई, किस barber ने कितना काम किया।</p></div>
+      <div class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div><h3>Reminder और Calendar</h3><p>Booking से 20 मिनट पहले app याद दिलाता है, customer को WhatsApp reminder एक tap में। Google Calendar में भी जोड़ सकते हैं।</p></div>
+      <div class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-2-4-6-4-6-1.5S12 8 12 8zM12 8c2-4 6-4 6-1.5S12 8 12 8z"/></svg></div><h3>Rewards</h3><p>App में scratch cards और beauty brands के offers, सैलून मालिक के लिए।</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="bill" style="padding-top:0">
+  <div class="wrap">
+    <div class="split">
+      <div>
+        <p class="kicker">नया · WhatsApp bill</p>
+        <h2>काम ख़त्म, bill सीधे customer के WhatsApp पर</h2>
+        <ul class="ticks">
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg><span>“Done” दबाते ही दाम पहले से भरे मिलते हैं, discount और Cash / UPI एक tap में।</span></li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg><span>हर bill का अपना number, ज़रूरत पड़े तो फिर से भेजो।</span></li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg><span>Bill के नीचे अगली booking का link, तो customer बार-बार लौटता है।</span></li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg><span>दिन की कमाई Home पर, महीने की Calendar में।</span></li>
+        </ul>
+      </div>
+      <div>
+        <div class="wa-chat" role="img" aria-label="WhatsApp पर भेजे गए bill का नमूना">
+          <div class="bubble"><b>आपका सैलून</b>
+Bill #128
+पता: Station Road, Diva
+तारीख़: 24 अक्टू 2026, 6:30 PM
+Customer: Rahul · Barber: Raju
+———————
+Haircut: ₹150
+Beard: ₹80
+Discount: −₹30
+<b>कुल: ₹200</b> · UPI
+———————
+धन्यवाद, फिर आइए!
+अगली booking यहाँ से: <span class="ln">arjun-labs.github.io/Salonslot/…</span><time>6:52 PM</time></div>
+        </div>
+        <p class="sample">नमूना bill। नाम और दाम आपके सैलून के हिसाब से आते हैं।</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="compare" style="background:#EFE8DC">
+  <div class="wrap">
+    <p class="kicker">तुलना</p>
+    <h2>SalonSlot क्यों?</h2>
+    <p class="lead">डायरी / फ़ोन वाली booking और बड़े salon software से सीधी तुलना।</p>
+    <div class="tbl" role="table" aria-label="तुलना">
+      <div class="trow thead" role="row"><div class="tcell" role="columnheader">बात</div><div class="tcell" role="columnheader">डायरी / फ़ोन</div><div class="tcell" role="columnheader">बड़े salon software</div><div class="tcell us" role="columnheader">SALONSLOT</div></div>
+      <div class="trow" role="row"><div class="tcell k" role="rowheader">महीने का खर्च</div><div class="tcell" role="cell"><span class="tag">डायरी / फ़ोन</span>₹0, पर छूटी booking का नुकसान</div><div class="tcell" role="cell"><span class="tag">बड़े software</span>लगभग ₹999 – ₹2,500*</div><div class="tcell us" role="cell"><span class="tag">SalonSlot</span><b>₹499</b> · साल का लो तो ₹417 महीना</div></div>
+      <div class="trow" role="row"><div class="tcell k" role="rowheader">भाषा</div><div class="tcell" role="cell"><span class="tag">डायरी / फ़ोन</span>—</div><div class="tcell" role="cell"><span class="tag">बड़े software</span>ज़्यादातर English</div><div class="tcell us" role="cell"><span class="tag">SalonSlot</span><b>Hindi + English</b></div></div>
+      <div class="trow" role="row"><div class="tcell k" role="rowheader">शुरू करना</div><div class="tcell" role="cell"><span class="tag">डायरी / फ़ोन</span>—</div><div class="tcell" role="cell"><span class="tag">बड़े software</span>Demo call, training, लंबा setup</div><div class="tcell us" role="cell"><span class="tag">SalonSlot</span><b>5 मिनट</b>, हम दुकान पर आकर चालू करते हैं</div></div>
+      <div class="trow" role="row"><div class="tcell k" role="rowheader">Customer booking</div><div class="tcell" role="cell"><span class="tag">डायरी / फ़ोन</span>फ़ोन करके, दुकान खुली हो तब</div><div class="tcell" role="cell"><span class="tag">बड़े software</span>Online</div><div class="tcell us" role="cell"><span class="tag">SalonSlot</span><b>QR या WhatsApp link</b>, 24 घंटे, न app न login</div></div>
+      <div class="trow" role="row"><div class="tcell k" role="rowheader">Double booking</div><div class="tcell" role="cell"><span class="tag">डायरी / फ़ोन</span>अक्सर गड़बड़</div><div class="tcell" role="cell"><span class="tag">बड़े software</span>रुकती है</div><div class="tcell us" role="cell"><span class="tag">SalonSlot</span><b>रुकती है</b>, एक slot पर एक booking</div></div>
+      <div class="trow" role="row"><div class="tcell k" role="rowheader">Customer को bill</div><div class="tcell" role="cell"><span class="tag">डायरी / फ़ोन</span>नहीं</div><div class="tcell" role="cell"><span class="tag">बड़े software</span>हाँ, पूरा billing system</div><div class="tcell us" role="cell"><span class="tag">SalonSlot</span><b>WhatsApp पर सादा bill</b> (GST invoice नहीं)</div></div>
+      <div class="trow" role="row"><div class="tcell k" role="rowheader">चलाना</div><div class="tcell" role="cell"><span class="tag">डायरी / फ़ोन</span>पन्ने पलटो</div><div class="tcell" role="cell"><span class="tag">बड़े software</span>Billing, stock, salary… सीखना पड़ता है</div><div class="tcell us" role="cell"><span class="tag">SalonSlot</span><b>सिर्फ़ ज़रूरी चीज़ें</b>, चलाना आसान</div></div>
+      <div class="trow" role="row"><div class="tcell k" role="rowheader">मदद</div><div class="tcell" role="cell"><span class="tag">डायरी / फ़ोन</span>—</div><div class="tcell" role="cell"><span class="tag">बड़े software</span>Call center या email</div><div class="tcell us" role="cell"><span class="tag">SalonSlot</span><b>Thane में</b>, सीधे Founder से</div></div>
+    </div>
+    <p class="foot">* बड़े salon software के दाम अक्टूबर 2026 की public जानकारी पर अंदाज़ा हैं; हर कंपनी के plan अलग होते हैं।</p>
+  </div>
+</section>
+
+<section id="price">
+  <div class="wrap">
+    <p class="kicker">दाम</p>
+    <h2>रोज़ ₹17 से भी कम में पूरी दुकान की booking</h2>
+    <p class="lead">Payment GPay / UPI से। कोई auto-debit नहीं, आप जब चाहें recharge करें।</p>
+    <div class="plans">
+      <div class="plan"><span class="per">Monthly</span><span class="price">₹499</span><span class="per">हर महीने</span></div>
+      <div class="plan"><span class="per">6 महीने</span><span class="price">₹2,699</span><span class="per">≈ ₹450 महीना</span><span class="save">₹295 की बचत</span></div>
+      <div class="plan best"><span class="badge">सबसे सस्ता</span><span class="per">Yearly</span><span class="price">₹4,999</span><span class="per">≈ ₹417 महीना</span><span class="save">₹989 की बचत</span></div>
+    </div>
+    <div class="freebar"><b>Welcome offer: 10 दिन FREE</b><span>पहले चलाकर देखो, पसंद आए तब plan लो।</span></div>
+  </div>
+</section>
+
+<section id="start" class="dark">
+  <div class="wrap">
+    <p class="kicker">शुरुआत</p>
+    <h2>आज ही, आपकी दुकान पर, 5 मिनट में</h2>
+    <div class="steps h4">
+      <div class="step"><h3>Demo देखें</h3><p>अपने फ़ोन से demo सैलून में एक booking करके देखें।</p></div>
+      <div class="step"><h3>Google से login</h3><p>Chrome में app खोलें, अपने Gmail से sign in करें।</p></div>
+      <div class="step"><h3>दुकान की जानकारी</h3><p>नाम, पता, समय, services के दाम और barbers की photo। हम साथ बैठकर भर देते हैं।</p></div>
+      <div class="step"><h3>QR counter पर</h3><p>आपका booking QR standee पर, link WhatsApp और Instagram पर। Booking शुरू।</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap" style="max-width:760px">
+    <p class="kicker">सवाल-जवाब</p>
+    <h2>अक्सर पूछे जाने वाले सवाल</h2>
+    <div style="margin-top:20px">
+      <details><summary>क्या customer को कोई app download करना पड़ेगा?</summary><p>नहीं। Customer QR scan करता है या link खोलता है और browser में ही booking हो जाती है। Login भी नहीं चाहिए, बस नाम और फ़ोन नंबर।</p></details>
+      <details><summary>मुझे क्या-क्या चाहिए?</summary><p>एक smartphone (या laptop / tablet), internet, और एक Gmail account। App को phone की home screen पर भी जोड़ सकते हैं, फिर ये app की तरह खुलता है।</p></details>
+      <details><summary>जो customer बिना booking के आता है, उसका क्या?</summary><p>“+ Walk-in” से उसकी entry दो tap में हो जाती है, ताकि वो time online booking के लिए block हो जाए।</p></details>
+      <details><summary>Reminder अपने आप जाता है?</summary><p>अभी app booking से 20 मिनट पहले आपको याद दिलाता है, और customer का WhatsApp reminder तैयार मिलता है, बस Send दबाना है। Automatic reminder आगे आने वाला है।</p></details>
+      <details><summary>क्या GST वाला tax invoice बनता है?</summary><p>अभी नहीं। App WhatsApp पर सादा bill भेजता है, जिसमें services, दाम, discount और कुल रकम होती है। GST-registered सैलून के लिए tax invoice बाद में आएगा।</p></details>
+      <details><summary>मेरा data कौन देख सकता है?</summary><p>आपके सैलून की bookings सिर्फ़ आपके Google login से खुलती हैं। Support और plan के काम के लिए SalonSlot admin के पास access रहता है। Barbers के फ़ोन नंबर customers को नहीं दिखते।</p></details>
+      <details><summary>Plan ख़त्म हो गया तो?</summary><p>Online booking रुक जाती है और app recharge का कहता है। GPay / UPI से recharge करते ही फिर चालू। कोई auto-debit नहीं है।</p></details>
+      <details><summary>Online booking आते ही मुझे पता चलेगा?</summary><p>हाँ, app खुला हो तो आवाज़ के साथ नई booking दिखती है, और हर booking timeline में अपने आप आ जाती है।</p></details>
+    </div>
+  </div>
+</section>
+
+<section id="contact" class="dark">
+  <div class="wrap contact">
+    <div>
+      <p class="kicker">बात करें</p>
+      <h2>अपने सैलून को आज ही online करें</h2>
+      <p class="lead">Message कीजिए, मैं ख़ुद आकर 5 मिनट में आपका सैलून चालू कर दूँगा।</p>
+      <div class="ctas">
+        <a class="btn wa" href="https://wa.me/918850865540?text=%E0%A4%A8%E0%A4%AE%E0%A4%B8%E0%A5%8D%E0%A4%A4%E0%A5%87%2C%20%E0%A4%AE%E0%A5%81%E0%A4%9D%E0%A5%87%20%E0%A4%85%E0%A4%AA%E0%A4%A8%E0%A5%87%20%E0%A4%B8%E0%A5%88%E0%A4%B2%E0%A5%82%E0%A4%A8%20%E0%A4%95%E0%A5%87%20%E0%A4%B2%E0%A4%BF%E0%A4%8F%20SalonSlot%20%E0%A4%9A%E0%A4%BE%E0%A4%B9%E0%A4%BF%E0%A4%8F%E0%A5%A4" target="_blank" rel="noopener">WhatsApp पर message करें</a>
+        <a class="btn line" href="https://arjun-labs.github.io/Salonslot/" target="_blank" rel="noopener">अपना सैलून जोड़ें</a>
+      </div>
+      <div class="cline">
+        <span><b style="color:#fff">Arjun Vishwakarma</b> · Founder, SalonSlot</span>
+        <a href="tel:+918850865540">+91 88508 65540</a>
+        <a href="mailto:hello.salonslot@gmail.com">hello.salonslot@gmail.com</a>
+        <a href="https://www.instagram.com/salon.slot/" target="_blank" rel="noopener">Instagram @salon.slot</a>
+      </div>
+    </div>
+    <div class="qrbox"><div id="qr" role="img" aria-label="Demo सैलून का QR"></div><small>Scan करके demo देखें</small></div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">SalonSlot · डायरी बंद, बुकिंग चालू · Powered by <a href="https://www.instagram.com/visualzonefilms/" target="_blank" rel="noopener">Visual Zone Films</a></div>
+</footer>
+
+<div class="dock">
+  <a class="btn dark" href="https://arjun-labs.github.io/Salonslot/?s=xWvAeZNfg8ZW6fHMV3xQJ8AHlqx1" target="_blank" rel="noopener">Demo देखें</a>
+  <a class="btn wa" href="https://wa.me/918850865540?text=%E0%A4%A8%E0%A4%AE%E0%A4%B8%E0%A5%8D%E0%A4%A4%E0%A5%87%2C%20%E0%A4%AE%E0%A5%81%E0%A4%9D%E0%A5%87%20%E0%A4%85%E0%A4%AA%E0%A4%A8%E0%A5%87%20%E0%A4%B8%E0%A5%88%E0%A4%B2%E0%A5%82%E0%A4%A8%20%E0%A4%95%E0%A5%87%20%E0%A4%B2%E0%A4%BF%E0%A4%8F%20SalonSlot%20%E0%A4%9A%E0%A4%BE%E0%A4%B9%E0%A4%BF%E0%A4%8F%E0%A5%A4" target="_blank" rel="noopener">WhatsApp करें</a>
+</div>
+
+<script>
+window.addEventListener("load", function(){
+  var el = document.getElementById("qr");
+  if (!el || !window.QRCode) return;
+  try{ new QRCode(el, { text: "https://arjun-labs.github.io/Salonslot/?s=xWvAeZNfg8ZW6fHMV3xQJ8AHlqx1", width: 344, height: 344, colorDark: "#1E1C1A", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M }); }catch(e){}
+});
+</script>
+</body>
+</html>
