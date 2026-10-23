@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.23-4";
+const APP_VERSION = "2026.10.23-5";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version
@@ -267,12 +267,12 @@ function billDraft(s, k){
 function billSum(d){ const sub = d.items.reduce((a,x)=>a+Math.max(0,Math.round(Number(x.p)||0)),0); const disc = Math.min(sub, Math.max(0,Math.round(Number(d.disc)||0))); return { sub, disc, total: sub-disc }; }
 function billText(s, k, bill){
   const hi = LANG==="hi", b = barberOf(s,k.barberId)||{name:""}, addr = fullAddr(s), line = "———————";
-  const L = [`🧾 *${s.name}*`, `Bill #${bill.no}${bill.edited?(hi?" (बदला हुआ)":" (revised)"):""}`];
-  if (addr) L.push("📍 "+addr);
-  L.push(`📅 ${longDate(new Date(k.date+"T00:00").getTime())}, ${nice(k.time)}`, `👤 ${k.cust}${b.name?" · ✂️ "+b.name:""}`, line);
+  const L = [`*${s.name}*`, `Bill #${bill.no}${bill.edited?(hi?" (बदला हुआ)":" (revised)"):""}`];
+  if (addr) L.push((hi?"पता: ":"Address: ")+addr);
+  L.push(`${hi?"तारीख़":"Date"}: ${longDate(new Date(k.date+"T00:00").getTime())}, ${nice(k.time)}`, `Customer: ${k.cust}${b.name?" · Barber: "+b.name:""}`, line);
   bill.items.forEach(x=>L.push(`${x.n}: ${rs(x.p)}`));
   if (bill.disc) L.push(`Discount: −${rs(bill.disc)}`);
-  L.push(`*${hi?"कुल":"Total"}: ${rs(bill.total)}* · ${bill.pay==="upi"?"UPI":"Cash"}`, line, hi?"धन्यवाद 🙏 फिर आइए!":"Thank you 🙏 See you again!", `${hi?"अगली booking यहाँ से":"Book your next visit"}: ${linkFor(S.sid)}`);
+  L.push(`*${hi?"कुल":"Total"}: ${rs(bill.total)}* · ${bill.pay==="upi"?"UPI":"Cash"}`, line, hi?"धन्यवाद, फिर आइए!":"Thank you, see you again!", `${hi?"अगली booking यहाँ से":"Book your next visit"}: ${linkFor(S.sid)}`);
   return L.join("\n");
 }
 const billSentLbl = b => !b.sent ? t("bill_not_sent") : b.sent===1 ? t("bill_sent1") : t("bill_sent_n",{n:b.sent});
@@ -309,9 +309,9 @@ async function createBooking(sid, salon, b){
 function msgs(salon, k){
   const svc = {name:bkNames(salon,k), price:bkPrice(salon,k)}, b = barberOf(salon,k.barberId)||{name:""}, when = dayLabel(k.date)+", "+nice(k.time), hi = LANG==="hi";
   return {
-    cust: `${hi?"नमस्ते":"Hi"} ${k.cust}! ${hi?"आपकी booking पक्की है":"Your booking is confirmed"} ✅\n${salon.name}\n${svc.name} · ${b.name}\n${when}\n₹${svc.price}${fullAddr(salon)?"\n📍 "+fullAddr(salon):""}\n🗺️ ${mapUrl(salon)}`,
-    remind: `Reminder: ${k.cust}, ${nice(k.time)} — ${svc.name} @ ${salon.name}. ${hi?"मिलते हैं!":"See you!"}\n🗺️ ${mapUrl(salon)}`,
-    salon: `${hi?"नई booking":"New booking"} ✂️\n${k.cust} (${k.phone})\n${svc.name} · ${b.name}\n${when}`,
+    cust: `${hi?"नमस्ते":"Hi"} ${k.cust}! ${hi?"आपकी booking पक्की है":"Your booking is confirmed"}.\n${salon.name}\n${svc.name} · ${b.name}\n${when}\n₹${svc.price}${fullAddr(salon)?"\n"+(hi?"पता: ":"Address: ")+fullAddr(salon):""}\n${hi?"रास्ता":"Map"}: ${mapUrl(salon)}`,
+    remind: `Reminder: ${k.cust}, ${nice(k.time)} — ${svc.name} @ ${salon.name}. ${hi?"मिलते हैं!":"See you!"}\n${hi?"रास्ता":"Map"}: ${mapUrl(salon)}`,
+    salon: `${hi?"नई booking":"New booking"}\n${k.cust} (${k.phone})\n${svc.name} · ${b.name}\n${when}`,
     barber: `${b.name}, ${hi?"आपकी नई booking":"new booking for you"}: ${k.cust}\n${svc.name} · ${when}`
   };
 }
@@ -341,12 +341,12 @@ const custGuests = (s,k) => [s.ownerEmail];
 
 function daySummary(s, date, onlyBarber){
   const list = S.bookings.filter(k=>k.date===date && k.status!=="cancelled").sort((a,b)=>a.time.localeCompare(b.time));
-  const lines = [`✂️ ${t("summary_h",{salon:s.name})} · ${dayLabel(date)}`];
+  const lines = [`${t("summary_h",{salon:s.name})} · ${dayLabel(date)}`];
   s.barbers.filter(b=>!onlyBarber||b.id===onlyBarber).forEach(b=>{
     const mine = list.filter(k=>k.barberId===b.id);
     lines.push("", `*${b.name}* (${mine.length})`);
     if (!mine.length) lines.push("  "+t("summary_none"));
-    mine.forEach(k=>{ lines.push(`  ${niceRange(k.time,bkDur(s,k))} – ${k.cust} · ${bkNames(s,k)}${k.status==="done"?" ✅":""}`); });
+    mine.forEach(k=>{ lines.push(`  ${niceRange(k.time,bkDur(s,k))} – ${k.cust} · ${bkNames(s,k)}${k.status==="done"?(LANG==="hi"?" (हो गया)":" (done)"):""}`); });
   });
   return lines.join("\n");
 }
@@ -1280,7 +1280,7 @@ function checkReminders(){
     .sort((a,b)=>a.time.localeCompare(b.time))[0];
   if (!due){ if (box) box.remove(); remShown=null; return; }
   const n = toMin(due.time)-nowM, svc = svcOf(S.salon,due.serviceId)||{name:""}, b = barberOf(S.salon,due.barberId)||{name:""};
-  const msg = t("rem_msg",{name:due.cust, svc:svc.name, salon:S.salon.name, time:nice(due.time), n}) + "\n🗺️ " + mapUrl(S.salon);
+  const msg = t("rem_msg",{name:due.cust, svc:svc.name, salon:S.salon.name, time:nice(due.time), n}) + "\n" + (LANG==="hi"?"रास्ता: ":"Map: ") + mapUrl(S.salon);
   const html = `<div id="remBox" class="rembox" role="alertdialog" aria-live="assertive"><p class="label">⏰ ${t("rem_h",{n})}</p>
     <b>${esc(due.cust)} · ${nice(due.time)}</b><span class="small">${esc(svc.name)} · ${esc(b.name)} · ${esc(due.phone)}</span>
     <div class="row"><a class="btn saffron sm" data-a="remSent" data-v="${due.id}" href="${waLink(due.phone,msg)}" target="_blank" rel="noopener">${t("rem_send")}</a><button class="btn sm" data-a="remLater" data-v="${due.id}">${t("rem_later")}</button></div></div>`;
