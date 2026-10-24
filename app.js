@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.23-5";
+const APP_VERSION = "2026.10.24-1";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version
@@ -752,14 +752,14 @@ function bookingForm(salon, slotsFor, ownerMode){
       <span class="tick" aria-hidden="true">${B.svc===s.id?"✓":""}</span>
       <span class="nm"><b>${esc(s.name)}</b><small>⏱ ${esc(s.dur)} ${t("min")}</small>${s.desc?`<span class="ds">${esc(s.desc)}</span>`:""}</span>
       <span class="pr">₹${esc(s.price)}</span></button>`).join("")}</div></div>
-  <div class="card"><h3>${t("pick_barber")}</h3><div class="barbers">
+  <div class="card" id="barberCard"><h3>${t("pick_barber")}</h3><div class="barbers">
     <button class="bcard ${(!B.barber||B.barber==="any")?"on":""}" data-a="bBarber" data-v="any"><span class="av lg" style="background:var(--surface2);color:var(--muted)" aria-hidden="true">✂</span><b>${t("any_barber")}</b><small>${t("any_sub")}</small></button>
     ${salon.barbers.map(b=>{ const off = onLeave(salon,b.id,B.date); return `<button class="bcard ${B.barber===b.id?"on":""} ${off?"off":""}" data-a="bBarber" data-v="${b.id}">${avatar(b,"lg")}<b>${esc(b.name)}</b>${off?`<span class="pill bad">${t("on_leave")}</span>`:b.spec?`<small>${esc(b.spec)}</small>`:""}</button>`; }).join("")}</div>
     ${B.barber && B.barber!=="any" && onLeave(salon,B.barber,B.date)?`<div class="banner warn">${t("barber_off",{name:esc((barberOf(salon,B.barber)||{}).name||""), date:dayLabel(B.date)})}</div>`:""}</div>
-  <div class="card"><h3>${t("pick_date")}</h3><div class="hscroll">${days.map(d=>{const dt=new Date(d+"T00:00");const closed=!(salon.days||[]).includes(dt.getDay());
+  <div class="card" id="dateCard"><h3>${t("pick_date")}</h3><div class="hscroll">${days.map(d=>{const dt=new Date(d+"T00:00");const closed=!(salon.days||[]).includes(dt.getDay());
     return `<button class="date ${B.date===d?"on":""}" data-a="bDate" data-v="${d}" ${closed?"disabled":""}><small>${t("dw")[dt.getDay()]}</small><b>${dt.getDate()}</b><small>${t("mon")[dt.getMonth()]}</small></button>`}).join("")}</div></div>
   <div class="card" id="timeCard"><h3>${t("pick_time")}</h3>${!B.svc?`<button class="btn block" data-a="toSvc">↑ ${t("pick_svc_first")}</button>`:slots===undefined?`<div class="spin"></div>`:slots===null?`<p class="muted">${t("closed_day")}</p>`:slots.length?slotGrid(slots, B.time, "bTime")+selBox(salon, B, slots):`<p class="muted">${t("no_slots")}</p>`}</div>
-  <div class="card"><h3>${t("your_details")}</h3>
+  <div class="card" id="detailsCard"><h3>${t("your_details")}</h3>
     <label class="field"><span>${t("cust_name")}</span><input type="text" id="c_name" autocomplete="name" data-book="name" value="${esc(B.name||"")}"></label>
     <label class="field"><span>${t("cust_phone")}</span><input type="tel" inputmode="tel" autocomplete="tel" id="c_phone" data-book="phone" value="${esc(B.phone||"")}" placeholder="98XXXXXXXX"></label>
     <label class="field"><span>${t("cust_email")} <em>(${t("optional")})</em></span><input type="email" inputmode="email" autocomplete="email" id="c_email" data-book="email" value="${esc(B.email||"")}" placeholder="name@gmail.com"></label>
@@ -1050,6 +1050,9 @@ window.addEventListener("popstate", () => { const st = NAV.pop(); if (!st) retur
 const goBack = fallback => { if (NAV.length) history.back(); else { fallback(); render(); } };
 
 /* ================= actions ================= */
+// booking form: after each choice, glide to the next step (service → barber → day → time → details), below the sticky top bar
+function stepTo(id){ setTimeout(()=>{ const el = document.getElementById(id); if (!el) return; const top = el.getBoundingClientRect().top + window.scrollY - 80;
+  window.scrollTo({ top: Math.max(0, top), behavior: "smooth" }); }, 80); }
 const go = fn => { const r = fn(); render(); return r; };
 const A = {
   lang:v=>go(()=>{ LANG=v; try{localStorage.setItem("ss_lang",v);}catch(e){} }),
@@ -1093,11 +1096,11 @@ const A = {
     k.bill.sent = n; setTimeout(render, 300); updateDoc(doc(db,"salons",S.sid,"bookings",v),{"bill.sent":n}).catch(()=>{}); },
   cancelBk:async v=>{ const k = S.bookings.find(x=>x.id===v); if (!k) return; if (UI.sheet){ UI.sheet=null; render(); }
     try{ await updateDoc(doc(db,"salons",S.sid,"bookings",v),{status:"cancelled"}); await updateDoc(doc(db,"salons",S.sid,"days",k.date),{["slots."+slotKey(k.barberId,k.time)]:deleteField()}).catch(()=>{}); }catch(e){ toast(t("save_fail")); } },
-  bSvc:v=>{ go(()=>{ UI.book.svc=v; UI.book.time=UI.book.prefTime||null; UI.flashSvc=false; if (CUSTOMER_SID) loadDay(UI.book.date); }); setTimeout(()=>{ const el=document.getElementById("timeCard"); if (el) el.scrollIntoView({behavior:"smooth", block:"start"}); }, 60); },
+  bSvc:v=>{ go(()=>{ UI.book.svc=v; UI.book.time=UI.book.prefTime||null; UI.flashSvc=false; if (CUSTOMER_SID) loadDay(UI.book.date); }); stepTo("barberCard"); },
   toSvc:()=>{ UI.flashSvc=true; render(); const el=document.getElementById("svcCard"); if (el) el.scrollIntoView({behavior:"smooth", block:"start"}); setTimeout(()=>{ UI.flashSvc=false; render(); }, 1600); },
-  bBarber:v=>go(()=>{ UI.book.barber=v; UI.book.time=null; }),
-  bDate:v=>go(()=>{ UI.book.date=v; UI.book.time=null; if (CUSTOMER_SID) loadDay(v); }),
-  bTime:v=>go(()=>{ UI.book.time=v; UI.err=""; }),
+  bBarber:v=>{ go(()=>{ UI.book.barber=v; UI.book.time=null; }); stepTo("dateCard"); },
+  bDate:v=>{ go(()=>{ UI.book.date=v; UI.book.time=null; if (CUSTOMER_SID) loadDay(v); }); stepTo("timeCard"); },
+  bTime:v=>{ go(()=>{ UI.book.time=v; UI.err=""; }); stepTo("detailsCard"); },
   confirm: async ()=>{ const B = UI.book; const salon = CUSTOMER_SID ? C.salon : S.salon, sid = CUSTOMER_SID || S.sid;
     if (!B.svc){ A.toSvc(); return; }
     if (!B.time){ UI.err = t("pick_time"); render(); const el=document.getElementById("timeCard"); if (el) el.scrollIntoView({behavior:"smooth", block:"start"}); return; }
