@@ -309,3 +309,7 @@ table.led td{padding:8px 4px;border-bottom:1px dashed var(--line);font-variant-n
 .billrow .x:disabled{opacity:.35}
 .billtot{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);padding-top:10px;font-size:17px;font-weight:600}
 .billtot b{font-size:24px;font-variant-numeric:tabular-nums}
+/* family salon: Men / Women service groups */
+.svchead{margin:6px 0 -2px}
+.svchead:first-child{margin-top:0}
+.svclist+.svchead{margin-top:14px}

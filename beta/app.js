@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.24-1";
+const APP_VERSION = "2026.10.25-1";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version
@@ -41,6 +41,8 @@ const T = {
   s2_h:"Opening hours", opens:"Opens at", closes:"Closes at", open_days:"Open on",
   s3_h:"Services and prices", s3_p:"Tap a suggestion to add it, or type your own.", svc_name:"Service", price:"Price ₹", mins:"Minutes", add_service:"Add service",
   s4_h:"Your barbers", s4_p:"Add a photo, name and speciality for each barber. Customers see these when they book.", how_many:"How many barbers?",
+  g_for:"For", g_all:"Everyone", g_m:"Men", g_f:"Women", g_serves:"Works on", g_both:"Both", g_head_all:"For everyone", g_head_m:"Men", g_head_f:"Women",
+  g_nobody:"No barber here works on {who}. Customers will not find a time for this service.", g_note:"Family salon? Mark which services are for men or women, and whom each barber works on. Customers then see only the right barbers.",
   barber_name:"Name", speciality:"Speciality", spec_ph:"e.g. Beard expert, Hair colour", add_barber:"Add barber", tap_photo:"Tap the circle to add a photo",
   s5_h:"You're ready", s5_p:"Your free trial starts now, and a welcome gift is waiting for you in Rewards. Share your booking link and start taking bookings.",
   leave_h:"Leave", leave_p:"Tap the days this barber won't come. Customers can't book them on those days.", on_leave:"On leave", leave_warn:"This barber already has {n} booking(s) on leave days. Move them:", barber_off:"{name} is on leave on {date}. Please pick another barber.", leave_saved:"Leave saved",
@@ -127,6 +129,8 @@ const T = {
   s2_h:"खुलने का समय", opens:"खुलता है", closes:"बंद होता है", open_days:"किन दिनों खुला है",
   s3_h:"Services और दाम", s3_p:"Suggestion पर tap करके जोड़ें, या खुद लिखें।", svc_name:"Service", price:"दाम ₹", mins:"मिनट", add_service:"Service जोड़ें",
   s4_h:"आपके barbers", s4_p:"हर barber की photo, नाम और speciality डालें। Booking करते वक़्त ग्राहक को ये दिखेगा।", how_many:"कितने barbers हैं?",
+  g_for:"किसके लिए", g_all:"सबके लिए", g_m:"पुरुष", g_f:"महिला", g_serves:"किसका काम करते हैं", g_both:"दोनों", g_head_all:"सबके लिए", g_head_m:"पुरुष (Gents)", g_head_f:"महिला (Ladies)",
+  g_nobody:"कोई barber {who} का काम नहीं करता, इसलिए customer को इस service का कोई समय नहीं मिलेगा।", g_note:"Family सैलून है? बताइए कौन-सी service पुरुष या महिला की है, और कौन barber किसका काम करता है। Customer को सिर्फ़ सही barber दिखेंगे।",
   barber_name:"नाम", speciality:"Speciality", spec_ph:"जैसे Beard expert, Hair colour", add_barber:"Barber जोड़ें", tap_photo:"Photo लगाने के लिए गोले पर tap करें",
   s5_h:"सब तैयार है", s5_p:"आपका free trial अभी शुरू हो गया, और Rewards में आपके लिए एक Welcome Gift रखा है। Booking link share करें और bookings लेना शुरू करें।",
   leave_h:"छुट्टी", leave_p:"जिन दिनों ये barber नहीं आएगा, उन पर tap करें। उन दिनों customers इसके साथ booking नहीं कर पाएँगे।", on_leave:"छुट्टी पर", leave_warn:"छुट्टी वाले दिनों में इस barber की {n} booking पहले से हैं। इन्हें दूसरे समय या barber पर करें:", barber_off:"{name} {date} को छुट्टी पर है। कोई दूसरा barber चुनें।", leave_saved:"छुट्टी save हो गई",
@@ -278,6 +282,10 @@ function billText(s, k, bill){
 const billSentLbl = b => !b.sent ? t("bill_not_sent") : b.sent===1 ? t("bill_sent1") : t("bill_sent_n",{n:b.sent});
 const hourLbl = m => { const h = Math.floor(m/60)%24; return (h%12||12)+" "+(h>=12?"PM":"AM"); };
 const niceRange = (tm, dur) => { const a = nice(tm), b = nice(toHM(toMin(tm)+dur)); return a.slice(-2)===b.slice(-2) ? a.slice(0,-3)+" – "+b : a+" – "+b; };
+// family salons: a service can be for men (m) or women (f); a barber can work on men, women or both
+const svcFor = v => (v && (v.for==="m"||v.for==="f")) ? v.for : "all";
+const barberServes = b => (b && (b.serves==="m"||b.serves==="f")) ? b.serves : "both";
+const canDo = (v, b) => { const f = svcFor(v), g = barberServes(b); return f==="all" || g==="both" || f===g; };
 const onLeave = (s,bid,date) => ((s.leave||{})[bid]||[]).includes(date);
 function isFree(busy, b, start, dur){ return !busy.some(x => x.b===b && start < x.start+x.dur && x.start < start+dur); }
 // opt.dur: length to fit (default: the service's), opt.skip: {b,start} a booking to ignore (the one being moved)
@@ -286,7 +294,7 @@ function freeSlots(salon, date, svcId, barberPref, slotsMap, opt){
   const d = new Date(date+"T00:00"); if (!(salon.days||[]).includes(d.getDay())) return null;
   const open = toMin(salon.open||"10:00"), close = toMin(salon.close||"21:00"), dur = opt.dur || Number(svc.dur)||30;
   const now = new Date(); const nowM = date===ymd(now) ? now.getHours()*60+now.getMinutes() : -1;
-  const cands = (barberPref && barberPref!=="any" ? salon.barbers.filter(b=>b.id===barberPref) : salon.barbers).filter(b=>!onLeave(salon,b.id,date));
+  const cands = (barberPref && barberPref!=="any" ? salon.barbers.filter(b=>b.id===barberPref) : salon.barbers).filter(b=>!onLeave(salon,b.id,date) && (!svc || canDo(svc,b)));
   const busy = busyList(slotsMap).filter(x=>!(opt.skip && x.b===opt.skip.b && x.start===opt.skip.start)); const out = [];
   const step = dur < 30 ? 10 : 15;
   for (let m=open; m+dur<=close; m+=step){ if (m<=nowM) continue; const f = cands.find(b=>isFree(busy,b.id,m,dur)); if (f) out.push({time:toHM(m), barberId:f.id}); }
@@ -417,18 +425,21 @@ function servicesEditor(o){
     <label class="field"><span class="small">${t("price")}</span><input type="number" inputmode="numeric" id="sp_${s.id}" data-svc="${s.id}" data-k="price" value="${esc(s.price)}"></label>
     <label class="field"><span class="small">${t("mins")}</span><select id="sd_${s.id}" data-svc="${s.id}" data-k="dur">${[10,15,20,30,45,60,90,120].map(m=>`<option value="${m}" ${Number(s.dur)===m?"selected":""}>${m}</option>`).join("")}</select></label>
     <button class="x" data-a="delSvc" data-v="${s.id}" aria-label="${t("remove")}">×</button></div>
-    <label class="field"><span class="small">${t("svc_desc")} <em>(${t("optional")})</em></span><input type="text" maxlength="120" id="sx_${s.id}" data-svc="${s.id}" data-k="desc" value="${esc(s.desc||"")}" placeholder="${t("svc_desc_ph")}"></label></div>`).join("")}</div>
+    <label class="field"><span class="small">${t("svc_desc")} <em>(${t("optional")})</em></span><input type="text" maxlength="120" id="sx_${s.id}" data-svc="${s.id}" data-k="desc" value="${esc(s.desc||"")}" placeholder="${t("svc_desc_ph")}"></label>
+    <div class="field"><span class="small">${t("g_for")}</span><div class="chips" role="radiogroup" aria-label="${t("g_for")}">${["all","m","f"].map(g=>`<button class="chip ${svcFor(s)===g?"on":""}" role="radio" aria-checked="${svcFor(s)===g}" data-a="svcFor" data-v="${s.id}|${g}">${t("g_"+g)}</button>`).join("")}</div></div>
+    ${svcFor(s)!=="all" && o.barbers.some(b=>b.name&&b.name.trim()) && !o.barbers.some(b=>b.name&&b.name.trim()&&canDo(s,b))?`<p class="small" style="color:var(--danger)">⚠️ ${t("g_nobody",{who:t("g_"+svcFor(s))})}</p>`:""}</div>`).join("")}</div>
   <button class="btn" data-a="addSvc">+ ${t("add_service")}</button>`;
 }
 function barbersEditor(o){
   return `<div class="field"><span>${t("how_many")}</span><div class="chips">${[1,2,3,4,5,6].map(n=>`<button class="chip ${o.barbers.length===n?"on":""}" data-a="count" data-v="${n}">${n}</button>`).join("")}</div></div>
-  <p class="small muted">${t("tap_photo")}</p>
+  <p class="small muted">${t("tap_photo")}</p><p class="small muted">${t("g_note")}</p>
   <div class="stack">${o.barbers.map((b,i)=>`<div class="bedit">
     <div class="photo">${avatar(b,"lg")}<label for="ph_${b.id}" aria-label="Photo"></label><span class="cam" aria-hidden="true">＋</span>
       <input type="file" accept="image/*" id="ph_${b.id}" data-photo="${b.id}" hidden></div>
     <div class="stack">
       <label class="field"><span class="small">${t("barber_name")} ${i+1}</span><input type="text" id="bn_${b.id}" data-bar="${b.id}" data-k="name" value="${esc(b.name)}"></label>
       <label class="field"><span class="small">${t("speciality")} <em>(${t("optional")})</em></span><input type="text" id="bs_${b.id}" data-bar="${b.id}" data-k="spec" value="${esc(b.spec)}" placeholder="${t("spec_ph")}"></label>
+      <div class="field"><span class="small">${t("g_serves")}</span><div class="chips" role="radiogroup" aria-label="${t("g_serves")}">${["m","f","both"].map(g=>`<button class="chip ${barberServes(b)===g?"on":""}" role="radio" aria-checked="${barberServes(b)===g}" data-a="barServes" data-v="${b.id}|${g}">${t("g_"+g)}</button>`).join("")}</div></div>
       <label class="field"><span class="small">${t("barber_phone")} <em>(${t("optional")})</em></span><input type="tel" inputmode="tel" id="bp_${b.id}" data-bc="${b.id}" data-k="phone" value="${esc((contactsOf()[b.id]||{}).phone||"")}" placeholder="98XXXXXXXX"></label>
       <label class="field"><span class="small">${t("barber_email")} <em>(${t("optional")})</em></span><input type="email" inputmode="email" id="be_${b.id}" data-bc="${b.id}" data-k="email" value="${esc((contactsOf()[b.id]||{}).email||b.email||"")}" placeholder="barber@gmail.com"></label>
       <p class="small muted">${t("private_note")}</p>
@@ -474,8 +485,8 @@ function validate(o, n){
   if (n===4 && !o.barbers.some(b=>b.name.trim())) return t("need_barber");
   return "";
 }
-const cleanList = o => { o.services = o.services.filter(s=>s.name.trim()).map(s=>({id:s.id,name:s.name.trim(),price:Number(s.price)||0,dur:Number(s.dur)||30,desc:String(s.desc||"").trim().slice(0,120)}));
-  o.barbers = o.barbers.filter(b=>b.name.trim()).map(b=>({id:b.id,name:b.name.trim(),spec:(b.spec||"").trim(),photo:b.photo||""})); };
+const cleanList = o => { o.services = o.services.filter(s=>s.name.trim()).map(s=>({id:s.id,name:s.name.trim(),price:Number(s.price)||0,dur:Number(s.dur)||30,desc:String(s.desc||"").trim().slice(0,120), ...(svcFor(s)!=="all"?{for:svcFor(s)}:{})}));
+  o.barbers = o.barbers.filter(b=>b.name.trim()).map(b=>({id:b.id,name:b.name.trim(),spec:(b.spec||"").trim(),photo:b.photo||"", ...(barberServes(b)!=="both"?{serves:barberServes(b)}:{})})); };
 function cleanContacts(o){ const out = {}; (o.barbers||[]).forEach(b=>{ const c = (o===D ? D.contacts : S.contacts)||{}; const x = c[b.id]||{}; const em = String(x.email||b.email||"").trim().toLowerCase();
   out[b.id] = { phone: digits(x.phone).length===10 ? digits(x.phone) : "", email: isEmail(em) ? em : "" }; }); return out; }
 
@@ -604,7 +615,7 @@ function cfOpts(k, cf){
   const nd = bkDur(s,k)+cf.add, end = toMin(k.time)+nd, ndur = bkDur(s,next), close = toMin(s.close||"21:00");
   const map = ownerSlotsMap(k.date); map[slotKey(k.barberId,k.time)] = nd; delete map[slotKey(next.barberId,next.time)];
   const busy = busyList(map);
-  const other = s.barbers.find(b=>b.id!==next.barberId && isFree(busy,b.id,toMin(next.time),ndur));
+  const other = s.barbers.find(b=>b.id!==next.barberId && canDo(svcOf(s,next.serviceId),b) && !onLeave(s,b.id,next.date) && isFree(busy,b.id,toMin(next.time),ndur));
   const ns = Math.ceil(end/5)*5;
   return { next, other, shiftTo: ns+ndur<=close && isFree(busy,next.barberId,ns,ndur) ? toHM(ns) : null };
 }
@@ -639,7 +650,7 @@ function viewSheet(){
       <button class="btn ghost block" data-a="cfKeep">${t("cf_keep")}</button>`;
   } else if (sh.mode==="extend"){
     const have = new Set([k.serviceId].concat(k.extra||[]));
-    body = `<p class="label">${t("sh_add_svc")}</p><div class="chips">${s.services.filter(v=>!have.has(v.id)).map(v=>`<button class="chip" data-a="shSvc" data-v="${v.id}">+ ${esc(v.name)} · ${esc(v.dur)} ${t("min")}</button>`).join("")}</div>
+    body = `<p class="label">${t("sh_add_svc")}</p><div class="chips">${s.services.filter(v=>!have.has(v.id) && canDo(v,b)).map(v=>`<button class="chip" data-a="shSvc" data-v="${v.id}">+ ${esc(v.name)} · ${esc(v.dur)} ${t("min")}</button>`).join("")}</div>
       <p class="label">${t("sh_add_min")}</p><div class="row" style="gap:6px">${[10,15,30].map(n=>`<button class="btn sm" data-a="shMin" data-v="${n}">${t("sh_mins",{n})}</button>`).join("")}</div>`;
   } else if (sh.mode==="move"){
     const days = Array.from({length:7},(_,i)=>ymd(new Date(Date.now()+i*DAY)));
@@ -647,7 +658,7 @@ function viewSheet(){
     const sel = sh.mvTime && (slots||[]).find(x=>x.time===sh.mvTime);
     body = `<p class="label">${t("mv_date")}</p><div class="hscroll">${days.map(x=>{ const dt = new Date(x+"T00:00"), closed = !(s.days||[]).includes(dt.getDay());
         return `<button class="date ${sh.mvDate===x?"on":""}" data-a="mvDate" data-v="${x}" ${closed?"disabled":""}><small>${t("dw")[dt.getDay()]}</small><b>${dt.getDate()}</b><small>${t("mon")[dt.getMonth()]}</small></button>`; }).join("")}</div>
-      <p class="label">${t("mv_barber")}</p><div class="chips"><button class="chip ${sh.mvBarber==="any"?"on":""}" data-a="mvBarber" data-v="any">${t("any_barber")}</button>${s.barbers.map(x=>`<button class="chip ${sh.mvBarber===x.id?"on":""}" data-a="mvBarber" data-v="${x.id}">${esc(x.name)}</button>`).join("")}</div>
+      <p class="label">${t("mv_barber")}</p><div class="chips"><button class="chip ${sh.mvBarber==="any"?"on":""}" data-a="mvBarber" data-v="any">${t("any_barber")}</button>${s.barbers.filter(x=>canDo(svcOf(s,k.serviceId),x)).map(x=>`<button class="chip ${sh.mvBarber===x.id?"on":""}" data-a="mvBarber" data-v="${x.id}">${esc(x.name)}</button>`).join("")}</div>
       <p class="label">${t("mv_time")}</p>${slots===null?`<p class="muted">${t("closed_day")}</p>`:slots.length?slotGrid(slots, sh.mvTime, "mvTime", true):`<p class="muted">${t("mv_none")}</p>`}
       ${sel?`<button class="btn primary block mvgo" data-a="mvGo" ${UI.busy?"disabled":""}>${t("mv_go",{time:dayLabel(sh.mvDate)+" "+niceRange(sel.time,d)})} · ${esc((barberOf(s,sel.barberId)||{}).name||"")}</button>`:""}`;
   } else {
@@ -740,6 +751,11 @@ function viewCalendar(){
   </div></div>`;
 }
 
+// services split into Men / Women / Everyone only when the salon uses those tags
+function svcGroups(salon){
+  const list = salon.services||[]; if (!list.some(v=>svcFor(v)!=="all")) return [{head:"", list}];
+  return ["m","f","all"].map(g=>({ head:t("g_head_"+g), list:list.filter(v=>svcFor(v)===g) })).filter(x=>x.list.length);
+}
 function bookingForm(salon, slotsFor, ownerMode){
   const B = UI.book; const days = Array.from({length:7},(_,i)=>ymd(new Date(Date.now()+i*DAY)));
   if (!B.svc && salon.services.length===1) B.svc = salon.services[0].id;
@@ -748,13 +764,13 @@ function bookingForm(salon, slotsFor, ownerMode){
   if (map===undefined && CUSTOMER_SID) setTimeout(()=>loadDay(B.date),0);
   const slots = B.svc ? (map===undefined ? undefined : freeSlots(salon, B.date, B.svc, B.barber||"any", map)) : [];
   return `
-  <div class="card ${UI.flashSvc?"flash":""}" id="svcCard"><h3>${t("pick_svc")}</h3>${!salon.services.length?`<p class="muted">${t("no_services")}</p>`:""}<div class="svclist" role="radiogroup">${salon.services.map(s=>`<button class="svcopt ${B.svc===s.id?"on":""}" role="radio" aria-checked="${B.svc===s.id}" data-a="bSvc" data-v="${s.id}">
+  <div class="card ${UI.flashSvc?"flash":""}" id="svcCard"><h3>${t("pick_svc")}</h3>${!salon.services.length?`<p class="muted">${t("no_services")}</p>`:""}${svcGroups(salon).map(g=>`${g.head?`<p class="label svchead">${g.head}</p>`:""}<div class="svclist" role="radiogroup" ${g.head?`aria-label="${g.head}"`:""}>${g.list.map(s=>`<button class="svcopt ${B.svc===s.id?"on":""}" role="radio" aria-checked="${B.svc===s.id}" data-a="bSvc" data-v="${s.id}">
       <span class="tick" aria-hidden="true">${B.svc===s.id?"✓":""}</span>
       <span class="nm"><b>${esc(s.name)}</b><small>⏱ ${esc(s.dur)} ${t("min")}</small>${s.desc?`<span class="ds">${esc(s.desc)}</span>`:""}</span>
-      <span class="pr">₹${esc(s.price)}</span></button>`).join("")}</div></div>
+      <span class="pr">₹${esc(s.price)}</span></button>`).join("")}</div>`).join("")}</div>
   <div class="card" id="barberCard"><h3>${t("pick_barber")}</h3><div class="barbers">
     <button class="bcard ${(!B.barber||B.barber==="any")?"on":""}" data-a="bBarber" data-v="any"><span class="av lg" style="background:var(--surface2);color:var(--muted)" aria-hidden="true">✂</span><b>${t("any_barber")}</b><small>${t("any_sub")}</small></button>
-    ${salon.barbers.map(b=>{ const off = onLeave(salon,b.id,B.date); return `<button class="bcard ${B.barber===b.id?"on":""} ${off?"off":""}" data-a="bBarber" data-v="${b.id}">${avatar(b,"lg")}<b>${esc(b.name)}</b>${off?`<span class="pill bad">${t("on_leave")}</span>`:b.spec?`<small>${esc(b.spec)}</small>`:""}</button>`; }).join("")}</div>
+    ${salon.barbers.filter(b=>!B.svc || canDo(svcOf(salon,B.svc),b)).map(b=>{ const off = onLeave(salon,b.id,B.date); return `<button class="bcard ${B.barber===b.id?"on":""} ${off?"off":""}" data-a="bBarber" data-v="${b.id}">${avatar(b,"lg")}<b>${esc(b.name)}</b>${off?`<span class="pill bad">${t("on_leave")}</span>`:b.spec?`<small>${esc(b.spec)}</small>`:""}</button>`; }).join("")}</div>
     ${B.barber && B.barber!=="any" && onLeave(salon,B.barber,B.date)?`<div class="banner warn">${t("barber_off",{name:esc((barberOf(salon,B.barber)||{}).name||""), date:dayLabel(B.date)})}</div>`:""}</div>
   <div class="card" id="dateCard"><h3>${t("pick_date")}</h3><div class="hscroll">${days.map(d=>{const dt=new Date(d+"T00:00");const closed=!(salon.days||[]).includes(dt.getDay());
     return `<button class="date ${B.date===d?"on":""}" data-a="bDate" data-v="${d}" ${closed?"disabled":""}><small>${t("dw")[dt.getDay()]}</small><b>${dt.getDate()}</b><small>${t("mon")[dt.getMonth()]}</small></button>`}).join("")}</div></div>
@@ -1079,6 +1095,8 @@ const A = {
   addSvc:()=>{ const o = editTarget(); o.services.push({id:uid(),name:"",price:"",dur:30}); render(); },
   svcUp:v=>{ const o = editTarget(); const i = o.services.findIndex(s=>s.id===v); if (i>0){ [o.services[i-1],o.services[i]]=[o.services[i],o.services[i-1]]; render(); if (o===S.salon) queueSave(); } },
   svcDown:v=>{ const o = editTarget(); const i = o.services.findIndex(s=>s.id===v); if (i>=0 && i<o.services.length-1){ [o.services[i+1],o.services[i]]=[o.services[i],o.services[i+1]]; render(); if (o===S.salon) queueSave(); } },
+  svcFor:v=>{ const o = editTarget(); const [id,g] = v.split("|"); const x = o.services.find(q=>q.id===id); if (!x) return; if (g==="all") delete x.for; else x.for = g; render(); if (o===S.salon) queueSave(); },
+  barServes:v=>{ const o = editTarget(); const [id,g] = v.split("|"); const x = o.barbers.find(q=>q.id===id); if (!x) return; if (g==="both") delete x.serves; else x.serves = g; render(); if (o===S.salon) queueSave(); },
   delSvc:v=>{ const o = editTarget(); o.services=o.services.filter(s=>s.id!==v); render(); if (o===S.salon) queueSave(); },
   count:v=>{ const o = editTarget(); const n=Number(v); while(o.barbers.length<n) o.barbers.push({id:uid(),name:"",spec:"",photo:""}); if (o.barbers.length>n) o.barbers=o.barbers.slice(0,n); render(); if (o===S.salon) queueSave(); },
   addBarber:()=>{ const o = editTarget(); o.barbers.push({id:uid(),name:"",spec:"",photo:""}); render(); },
@@ -1096,7 +1114,7 @@ const A = {
     k.bill.sent = n; setTimeout(render, 300); updateDoc(doc(db,"salons",S.sid,"bookings",v),{"bill.sent":n}).catch(()=>{}); },
   cancelBk:async v=>{ const k = S.bookings.find(x=>x.id===v); if (!k) return; if (UI.sheet){ UI.sheet=null; render(); }
     try{ await updateDoc(doc(db,"salons",S.sid,"bookings",v),{status:"cancelled"}); await updateDoc(doc(db,"salons",S.sid,"days",k.date),{["slots."+slotKey(k.barberId,k.time)]:deleteField()}).catch(()=>{}); }catch(e){ toast(t("save_fail")); } },
-  bSvc:v=>{ go(()=>{ UI.book.svc=v; UI.book.time=UI.book.prefTime||null; UI.flashSvc=false; if (CUSTOMER_SID) loadDay(UI.book.date); }); stepTo("barberCard"); },
+  bSvc:v=>{ go(()=>{ UI.book.svc=v; { const sl = CUSTOMER_SID ? C.salon : S.salon, bb = UI.book.barber && UI.book.barber!=="any" && barberOf(sl,UI.book.barber); if (bb && !canDo(svcOf(sl,v),bb)) UI.book.barber = "any"; } UI.book.time=UI.book.prefTime||null; UI.flashSvc=false; if (CUSTOMER_SID) loadDay(UI.book.date); }); stepTo("barberCard"); },
   toSvc:()=>{ UI.flashSvc=true; render(); const el=document.getElementById("svcCard"); if (el) el.scrollIntoView({behavior:"smooth", block:"start"}); setTimeout(()=>{ UI.flashSvc=false; render(); }, 1600); },
   bBarber:v=>{ go(()=>{ UI.book.barber=v; UI.book.time=null; }); stepTo("dateCard"); },
   bDate:v=>{ go(()=>{ UI.book.date=v; UI.book.time=null; if (CUSTOMER_SID) loadDay(v); }); stepTo("timeCard"); },
