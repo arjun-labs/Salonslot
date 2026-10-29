@@ -44,6 +44,26 @@ service cloud.firestore {
         && (days == 0 || getAfter(/databases/$(database)/documents/salons/$(sid)).data.get('lastClaim', '') == oid);
     }
 
+    // pitch game leads: anyone can add one (only these fields), add the game result once within a day; only admin reads
+    match /leads/{lid} {
+      allow read, delete: if isAdmin();
+      allow create: if request.resource.data.keys().hasOnly(['name', 'salon', 'phone', 'lang', 'at', 'src'])
+        && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 60
+        && request.resource.data.salon is string && request.resource.data.salon.size() > 0 && request.resource.data.salon.size() <= 80
+        && request.resource.data.phone is string && request.resource.data.phone.matches('[6-9][0-9]{9}')
+        && request.resource.data.lang in ['en', 'hi']
+        && request.resource.data.src == 'pitch'
+        && request.resource.data.at is int;
+      allow update: if isAdmin() || (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['picks', 'lost', 'avg', 'doneAt'])
+        && resource.data.at > request.time.toMillis() - 86400000
+        && request.resource.data.picks is list && request.resource.data.picks.size() <= 3
+        && request.resource.data.lost is int && request.resource.data.lost >= 0 && request.resource.data.lost <= 30
+        && request.resource.data.avg is int && request.resource.data.avg >= 0 && request.resource.data.avg <= 5000
+        && request.resource.data.doneAt is int
+      );
+    }
+
     match /offers/{oid} {
       allow read: if request.auth != null;
       allow write: if isAdmin();

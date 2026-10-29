@@ -62,6 +62,19 @@ p{margin:0;text-wrap:pretty}
 .rule{display:flex;gap:12px;align-items:center;background:var(--ink2);border:1px solid #3A3631;border-radius:14px;padding:12px 14px;font-weight:600}
 .rule b{flex:none;width:32px;height:32px;border-radius:50%;background:var(--gold);color:var(--ink);display:grid;place-items:center;font-family:'Oswald',sans-serif;font-size:17px}
 
+/* lead form */
+.lead{margin-top:16px;background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:20px 18px;display:flex;flex-direction:column;gap:14px}
+.lead h2{font-size:22px}
+.fld{display:flex;flex-direction:column;gap:6px}
+.fld span{font-weight:700;font-size:16px}
+.fld input{font:inherit;font-size:18px;width:100%;min-height:52px;border:1.5px solid var(--line);border-radius:12px;padding:10px 14px;background:#fff;color:var(--ink)}
+.fld input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-soft)}
+.fld input[aria-invalid="true"]{border-color:var(--bad)}
+.ferr{color:var(--bad);font-weight:700;font-size:15px}
+.fnote{font-size:13.5px;color:var(--muted)}
+.who{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:600;color:var(--muted);margin-bottom:10px}
+.who b{color:var(--ink)}
+
 /* screen 1: problems */
 .head{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
 .head h2{font-size:28px;font-weight:700}
@@ -161,11 +174,20 @@ p{margin:0;text-wrap:pretty}
         <div class="rule"><b>3</b><span data-t="r3">अपना हिसाब और offer देखिए</span></div>
       </div>
     </div>
+    <form class="lead" id="leadForm" novalidate autocomplete="off">
+      <h2 data-t="f_h">शुरू करने से पहले</h2>
+      <label class="fld"><span data-t="f_name">आपका नाम</span><input type="text" id="f_name" maxlength="60" autocomplete="off" required></label>
+      <label class="fld"><span data-t="f_salon">सैलून का नाम</span><input type="text" id="f_salon" maxlength="80" autocomplete="off" required></label>
+      <label class="fld"><span data-t="f_phone">Mobile नंबर</span><input type="tel" id="f_phone" inputmode="numeric" maxlength="17" placeholder="98XXXXXXXX" autocomplete="off" required></label>
+      <p class="ferr" id="f_err" role="alert" hidden></p>
+      <p class="fnote" data-t="f_note">आपका नंबर सिर्फ़ SalonSlot के बारे में बात करने के लिए है, किसी और को नहीं दिया जाएगा।</p>
+    </form>
   </section>
 
   <!-- 1: pick problems -->
   <section id="s1" aria-labelledby="h1" hidden>
     <div class="head">
+      <p class="who" id="who1" hidden></p>
       <span class="kicker" data-t="k1">Step 1 · चुनिए</span>
       <h2 id="h1" data-t="h1">इनमें से आपके सैलून में क्या होता है?</h2>
       <p data-t="p1">जो सबसे ज़्यादा परेशान करती है, वो 1 से 3 दिक़्क़तें tap करें।</p>
@@ -243,6 +265,7 @@ p{margin:0;text-wrap:pretty}
   </div>
 </div>
 
+<script type="module" src="lead.js"></script>
 <script src="bank.js"></script>
 <script src="game.js"></script>
 </body>

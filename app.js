@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.25-1";
+const APP_VERSION = "2026.10.30-2";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version
@@ -114,6 +114,7 @@ const T = {
   adm_none:"No salons yet.", approve:"Approve", reject:"Reject", turn_off:"Switch off", turn_on:"Switch on", extend7:"+7 days trial",
   adm_paid:"Paid {plan} · UTR {utr}", adm_off:"Off", adm_check:"Check this UTR in your GPay before approving.",
   download:"Full backup (technical file)", download_p:"Saves every salon and booking as a file on this device. Do this once a week.",
+  lead_h:"Leads from the pitch game", lead_p:"Every salon owner who filled the form before the game, newest first.", lead_none:"No leads yet. Open the pitch game and fill the form at a salon.", lead_csv:"Download leads (Excel)", lead_today:"Today", lead_total:"Total", lead_picks:"Problems picked", lead_loss:"Loss they entered", lead_rules:"Leads can’t load. Publish the new Firestore rules in Firebase first.", lead_msg:"Hi {name}, this is Arjun from SalonSlot. Nice meeting you at {salon} today! Here is the demo: {link}", lead_more:"+ {n} more in the Excel download", lead_mo:"month",
   adj_days:"Change days", days:"days", adj_done:"Now ends on {date}", csv_h:"Salon list (Excel / Google Sheets)", csv_p:"Name, owner, WhatsApp, email, address, Maps link, plan and end date for every salon, in one sheet. Opens in Excel, Google Sheets or Numbers.", csv_btn:"Download salon list", csv_done:"{n} salons saved", booked_by:"Online booking by", approved:"Approved", rejected:"Payment request removed", switched:"Updated",
   dw:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], mon:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
   sugg:[["Haircut",200,30],["Beard trim",100,30],["Shave",80,30],["Hair colour",600,60],["Facial",800,60],["Head massage",250,30],["Hair spa",900,60],["Kids haircut",150,30],["Threading",50,10],["Upper lip",30,10],["Eyebrow shaping",80,20],["Clean-up",400,45]]
@@ -202,6 +203,7 @@ const T = {
   adm_none:"अभी कोई सैलून नहीं है।", approve:"Approve", reject:"Reject", turn_off:"OFF करें", turn_on:"ON करें", extend7:"+7 दिन trial",
   adm_paid:"{plan} का payment · UTR {utr}", adm_off:"OFF", adm_check:"Approve करने से पहले ये UTR अपने GPay में check करें।",
   download:"पूरा backup (technical file)", download_p:"सारे सैलून और bookings इस device में file बनकर save हो जाएंगे। हफ़्ते में एक बार करें।",
+  lead_h:"Pitch game के leads", lead_p:"Game से पहले form भरने वाले सारे सैलून मालिक, नए सबसे ऊपर।", lead_none:"अभी कोई lead नहीं। किसी सैलून पर pitch game खोलकर form भरवाइए।", lead_csv:"Leads download करें (Excel)", lead_today:"आज", lead_total:"कुल", lead_picks:"चुनी दिक़्क़तें", lead_loss:"बताया नुकसान", lead_rules:"Leads नहीं खुल रहे। पहले Firebase में नए Firestore rules publish करें।", lead_msg:"नमस्ते {name} जी, मैं Arjun, SalonSlot से। आज {salon} पर आपसे मिलकर अच्छा लगा! Demo यहाँ देखिए: {link}", lead_more:"+ {n} और, Excel download में", lead_mo:"महीना",
   adj_days:"दिन बदलें", days:"दिन", adj_done:"अब {date} को ख़त्म होगा", csv_h:"सैलून की list (Excel / Google Sheets)", csv_p:"हर सैलून का नाम, मालिक, WhatsApp, email, पता, Maps link, plan और ख़त्म होने की तारीख़, एक ही sheet में। Excel, Google Sheets या Numbers में खुलेगी।", csv_btn:"सैलून की list download करें", csv_done:"{n} सैलून save हो गए", booked_by:"Online booking by", approved:"Approve हो गया", rejected:"Payment request हटा दी", switched:"Update हो गया",
   dw:["रवि","सोम","मंगल","बुध","गुरु","शुक्र","शनि"], mon:["जन","फ़र","मार्च","अप्रै","मई","जून","जुला","अग","सितं","अक्टू","नवं","दिसं"],
   sugg:[["Haircut",200,30],["Beard trim",100,30],["Shave",80,30],["Hair colour",600,60],["Facial",800,60],["Head massage",250,30],["Hair spa",900,60],["Kids haircut",150,30],["Threading",50,10],["Upper lip",30,10],["Eyebrow shaping",80,20],["Clean-up",400,45]]
@@ -989,9 +991,28 @@ function viewAdmin(){
         <span class="row" style="gap:4px" role="group" aria-label="${t("adj_days")}">${[-7,-1,1,7].map(d=>`<button class="btn sm ${d<0?"ghost":""}" data-a="admAdjust" data-v="${x.id}|${d}" aria-label="${d>0?"+":""}${d} ${t("days")}">${d>0?"+":"−"}${Math.abs(d)} ${t("days")}</button>`).join("")}</span>
         ${x.phone?`<a class="btn sm" href="${waLink(x.phone,"")}" target="_blank" rel="noopener">${t("whatsapp")}</a>`:""}
         <a class="btn sm ghost" href="${esc(linkFor(x.id))}" target="_blank" rel="noopener">${t("open_link")}</a></div></div>`; }).join(""):`<p class="muted">${t("adm_none")}</p>`}</div>
+  ${leadsCard()}
   ${adminRewards()}
   <div class="card"><h3>📋 ${t("csv_h")}</h3><p class="small muted">${t("csv_p")}</p><button class="btn primary" data-a="admCsv" ${UI.busy?"disabled":""}>${t("csv_btn")}</button></div>
   <div class="card"><h3>${t("download")}</h3><p class="small muted">${t("download_p")}</p><button class="btn" data-a="admDownload" ${UI.busy?"disabled":""}>${t("download")}</button></div>`;
+}
+/* ---- admin: leads collected by the pitch game (/pitch/) ---- */
+const DEMO_LINK = "https://arjun-labs.github.io/Salonslot/?s=xWvAeZNfg8ZW6fHMV3xQJ8AHlqx1";
+function leadsCard(){
+  const L = S.leads; if (!L) return `<div class="card"><h3>${t("lead_h")}</h3><div class="spin"></div></div>`;
+  const td = ymd(new Date()), today = L.filter(x=>x.at && ymd(new Date(x.at))===td).length, show = L.slice(0,30);
+  const when = ms => { const d = new Date(ms); return longDate(ms)+", "+nice(pad(d.getHours())+":"+pad(d.getMinutes())); };
+  return `<div class="card"><h3>${t("lead_h")}</h3><p class="small muted">${t("lead_p")}</p>
+    ${S.leadsErr?`<div class="banner warn">${t("lead_rules")}</div>`:""}
+    <div class="stats"><div class="stat"><b>${today}</b><span>${t("lead_today")}</span></div><div class="stat"><b>${L.length}</b><span>${t("lead_total")}</span></div></div>
+    ${show.length?show.map(x=>`<div class="srow"><div class="row" style="gap:8px"><b class="grow">${esc(x.name||"—")} · ${esc(x.salon||"")}</b><span class="pill">${x.lang==="hi"?"हिं":"EN"}</span></div>
+      <span class="small muted">${x.at?when(x.at):""} · <a href="tel:+91${esc(x.phone)}">${esc(x.phone)}</a></span>
+      ${(x.picks||[]).length?`<span class="small"><b>${t("lead_picks")}:</b> ${(x.picks||[]).map(esc).join(" · ")}</span>`:""}
+      ${x.avg?`<span class="small"><b>${t("lead_loss")}:</b> ${esc(x.lost)} × ₹${esc(x.avg)} × 26 = ₹${((Number(x.lost)||0)*(Number(x.avg)||0)*26).toLocaleString("en-IN")} / ${t("lead_mo")}</span>`:""}
+      <div class="row" style="gap:6px"><a class="btn sm primary" href="${waLink(x.phone, t("lead_msg",{name:x.name||"", salon:x.salon||"", link:DEMO_LINK}))}" target="_blank" rel="noopener">${t("whatsapp")}</a><a class="btn sm" href="tel:+91${esc(x.phone)}">Call</a></div></div>`).join("")
+      :`<p class="muted">${t("lead_none")}</p>`}
+    ${L.length>show.length?`<p class="small muted">${t("lead_more",{n:L.length-show.length})}</p>`:""}
+    ${L.length?`<button class="btn" data-a="leadCsv">${t("lead_csv")}</button>`:""}</div>`;
 }
 function watchAdmin(){
   if (UI.view==="adminOnly") setTimeout(()=>{ if (UI.view==="adminOnly") render(); }, 1500);
@@ -1000,6 +1021,8 @@ function watchAdmin(){
     err => { console.error(err); S.allSalons = []; render(); });
   S.adminClaimsUnsub = onSnapshot(collectionGroup(db,"claims"), snap => { S.allClaims = snap.docs.map(d=>({sid:d.ref.parent.parent.id, ...d.data()})); if ((UI.tab==="admin" || UI.view==="adminOnly") && !typing()) render(); },
     err => { console.error(err); S.allClaims = []; });
+  S.adminLeadsUnsub = onSnapshot(collection(db,"leads"), snap => { S.leads = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.at||0)-(a.at||0)); S.leadsErr = false; if ((UI.tab==="admin" || UI.view==="adminOnly") && !typing()) render(); },
+    err => { console.error(err); S.leads = []; S.leadsErr = true; if (UI.tab==="admin" || UI.view==="adminOnly") render(); });
   watchOffers();
 }
 const typing = () => !!(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select,textarea"));
@@ -1213,6 +1236,15 @@ const A = {
     const cur = (x.sub||{}).expires||0; const base = d>0 ? Math.max(Date.now(), cur) : cur;
     const next = Math.max(0, base + d*DAY);
     try{ await updateDoc(doc(db,"salons",id),{ "sub.expires": next }); toast(t("adj_done",{date:longDate(next)})); }catch(e){ toast(t("save_fail")); } },
+  leadCsv: ()=>{
+    const cell = v => { const x = String(v==null?"":v).replace(/\r?\n/g," ").trim(); return /[",;]/.test(x) ? '"'+x.replace(/"/g,'""')+'"' : x; };
+    const head = ["Date","Time","Owner name","Salon","Mobile","Language","Problems picked","Clients lost per day","Average bill (Rs)","Monthly loss (Rs)"];
+    const rows = (S.leads||[]).map(x=>{ const d = x.at ? new Date(x.at) : null;
+      return [d?ymd(d):"", d?pad(d.getHours())+":"+pad(d.getMinutes()):"", x.name, x.salon, x.phone, x.lang==="hi"?"Hindi":"English", (x.picks||[]).join(" | "),
+        x.lost==null?"":x.lost, x.avg==null?"":x.avg, x.avg?(Number(x.lost)||0)*(Number(x.avg)||0)*26:""].map(cell).join(","); });
+    const blob = new Blob(["\ufeff"+[head.join(",")].concat(rows).join("\r\n")], {type:"text/csv;charset=utf-8"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "salonslot-leads-"+ymd(new Date())+".csv"; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000);
+    toast(t("csv_done",{n:rows.length})); },
   admCsv: ()=>{
     const cell = v => { const x = String(v==null?"":v).replace(/\r?\n/g," ").trim(); return /[",;]/.test(x) ? '"'+x.replace(/"/g,'""')+'"' : x; };
     const head = ["Salon name","Owner","WhatsApp","Email","Address","Area / city","Google Maps link","Status","Plan","Plan ends","Joined","Total paid (Rs)","Barbers","Booking link"];
@@ -1256,7 +1288,7 @@ app.addEventListener("change", e => { const el = e.target; const o = editTarget(
 
 /* ================= owner boot ================= */
 function stopOwner(){ S.unsub.forEach(f=>{try{f()}catch(e){}}); S.unsub=[]; if (S.adminUnsub){ S.adminUnsub(); S.adminUnsub=null; }
-  ["adminClaimsUnsub","offersUnsub"].forEach(k=>{ if (S[k]){ try{ S[k](); }catch(e){} S[k]=null; } });
+  ["adminClaimsUnsub","offersUnsub","adminLeadsUnsub"].forEach(k=>{ if (S[k]){ try{ S[k](); }catch(e){} S[k]=null; } });
   S.salon=null; S.bookings=[]; S.allSalons=null; S.contacts={}; S.offers=null; S.claims={}; S.allClaims=null; }
 function startOwner(sid){
   S.sid = sid; S.firstSnap = true;

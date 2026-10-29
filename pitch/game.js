@@ -20,7 +20,10 @@
          sc_all1:"Your problem is solved", sc_allN:"All your problems are solved", sc_tap:"Tap “Open the fix” on each problem",
          note:"{n} client{s} × {avg} × "+DAYS+" days", vs:"SalonSlot is ₹499 a month. Save just {need} client{s} a month and it has paid for itself.",
          vs0:"Nobody leaves? Great! SalonSlot still saves the time spent on calls, the diary and the accounts.",
-         others:"Others", big:"Big software", wa:"Hi Arjun, I want SalonSlot for my salon." },
+         others:"Others", big:"Big software", wa:"Hi Arjun, I want SalonSlot for my salon.",
+         f_h:"Before we start", f_name:"Your name", f_salon:"Salon name", f_phone:"Mobile number",
+         f_note:"Your number is only for talking about SalonSlot. It is never shared with anyone.",
+         fill:"Fill in the 3 details", e_name:"Please write your name", e_salon:"Please write the salon’s name", e_phone:"Please enter a 10-digit mobile number" },
     hi:{ k0:"30 सेकंड का खेल", h0:"आपके सैलून की सबसे बड़ी <em>दिक़्क़त</em> कौन-सी है?", p0:"नीचे से अपनी दिक़्क़त चुनिए, और देखिए SalonSlot उसे कैसे ख़त्म करता है।",
          r1:"अपनी 1 से 3 दिक़्क़तें चुनिए", r2:"हर दिक़्क़त का हल खोलिए", r3:"अपना हिसाब और offer देखिए",
          k1:"Step 1 · चुनिए", h1:"इनमें से आपके सैलून में क्या होता है?", p1:"जो सबसे ज़्यादा परेशान करती है, वो 1 से 3 दिक़्क़तें tap करें।", shuffle:"↻ दूसरी दिक़्क़तें दिखाएँ",
@@ -37,7 +40,10 @@
          sc_all1:"आपकी दिक़्क़त का हल मिल गया", sc_allN:"आपकी सारी दिक़्क़तों का हल मिल गया", sc_tap:"हर दिक़्क़त पर “हल खोलें” दबाएँ",
          note:"{n} client × {avg} × "+DAYS+" दिन", vs:"SalonSlot ₹499 महीना, यानी महीने में सिर्फ़ {need} client बचे तो पैसा वसूल।",
          vs0:"एक भी client नहीं जाता? बढ़िया! SalonSlot फिर भी फ़ोन, डायरी और हिसाब का समय बचाता है।",
-         others:"दूसरे", big:"बड़े software", wa:"नमस्ते Arjun, मुझे अपने सैलून के लिए SalonSlot चाहिए।" }
+         others:"दूसरे", big:"बड़े software", wa:"नमस्ते Arjun, मुझे अपने सैलून के लिए SalonSlot चाहिए।",
+         f_h:"शुरू करने से पहले", f_name:"आपका नाम", f_salon:"सैलून का नाम", f_phone:"Mobile नंबर",
+         f_note:"आपका नंबर सिर्फ़ SalonSlot के बारे में बात करने के लिए है, किसी और को नहीं दिया जाएगा।",
+         fill:"ऊपर की 3 जानकारी भरें", e_name:"अपना नाम लिखें", e_salon:"सैलून का नाम लिखें", e_phone:"10 अंकों का mobile नंबर डालें" }
   };
 
   var I = {
@@ -81,7 +87,33 @@
     try{ localStorage.setItem("ss_pitch_seen", JSON.stringify(seen)); }catch(e){}
     return out;
   }
-  function newRound(){ return { step:0, shown:shuffle(draw(SHOW)), pick:[], open:{}, lost:1, avg:200 }; }
+  /* ---- the 3 details before the game ---- */
+  var digits = function(v){ var d = String(v||"").replace(/\D/g,""); if (d.length===12 && d.slice(0,2)==="91") d = d.slice(2); if (d.length===11 && d[0]==="0") d = d.slice(1); return d; };
+  function form(){ return { name:$("f_name").value.trim(), salon:$("f_salon").value.trim(), phone:digits($("f_phone").value) }; }
+  function formOk(f){ return f.name.length>=2 && f.salon.length>=2 && /^[6-9]\d{9}$/.test(f.phone); }
+  function formErr(f){ return f.name.length<2 ? ["f_name","e_name"] : f.salon.length<2 ? ["f_salon","e_salon"] : !/^[6-9]\d{9}$/.test(f.phone) ? ["f_phone","e_phone"] : null; }
+  function leadStart(f){
+    if (window.SS_LEAD) return window.SS_LEAD.start({ name:f.name, salon:f.salon, phone:f.phone, lang:LANG });
+    // lead.js not loaded (offline): park it for lead.js to send next time
+    var id = "p"+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+    try{ var q = JSON.parse(localStorage.getItem("ss_pitch_queue")||"[]"); q.push({ id:id, baseSent:false, patch:null, base:{ name:f.name.slice(0,60), salon:f.salon.slice(0,80), phone:f.phone, lang:LANG, at:Date.now(), src:"pitch" } }); localStorage.setItem("ss_pitch_queue", JSON.stringify(q)); }catch(e){}
+    return id;
+  }
+  var finTimer = null;
+  function leadFinish(){
+    if (!st.lead) return; clearTimeout(finTimer);
+    finTimer = setTimeout(function(){
+      var picks = st.pick.map(function(id){ var p = byId(id); return p ? p.en.t : id; });
+      var data = { picks:picks, lost:st.lost, avg:st.avg };
+      if (window.SS_LEAD) window.SS_LEAD.finish(st.lead.id, data);
+      else try{ var q = JSON.parse(localStorage.getItem("ss_pitch_queue")||"[]"), it = q.filter(function(x){ return x.id===st.lead.id; })[0];
+        var patch = { picks:picks, lost:st.lost, avg:st.avg, doneAt:Date.now() };
+        if (it) it.patch = patch; else q.push({ id:st.lead.id, base:null, baseSent:true, patch:patch });
+        localStorage.setItem("ss_pitch_queue", JSON.stringify(q)); }catch(e){}
+    }, 1200);
+  }
+
+  function newRound(){ return { step:0, shown:shuffle(draw(SHOW)), pick:[], open:{}, lost:1, avg:200, lead:null }; }
   var st = newRound();
 
   /* ---- language ---- */
@@ -147,10 +179,11 @@
     var next = $("next");
     document.querySelector(".bar").hidden = n===3;
     $("back").hidden = n===0; $("hint").hidden = true; next.disabled = false;
-    if (n===0) next.textContent = u("start");
+    if (n===0){ var ok = formOk(form()); next.textContent = ok ? u("start") : u("fill"); }
+    var who = $("who1"); if (st.lead){ who.hidden = false; who.innerHTML = '<b>'+esc(st.lead.name)+'</b> · '+esc(st.lead.salon); } else who.hidden = true;
     if (n===1){ drawProbs(); syncPick(); }
     if (n===2){ drawSols(); syncOpen(); }
-    if (n===3) drawCalc();
+    if (n===3){ drawCalc(); if (!keepScroll) leadFinish(); }
     if (!keepScroll) window.scrollTo(0,0);
   }
 
@@ -164,7 +197,7 @@
       try{ navigator.vibrate && navigator.vibrate(30); }catch(x){} }
     else if (el.dataset.step){ var k = el.dataset.step, d = Number(el.dataset.d);
       if (k==="lost") st.lost = Math.max(0, Math.min(30, st.lost+d)); else st.avg = Math.max(50, Math.min(5000, st.avg+d));
-      drawCalc(); }
+      drawCalc(); leadFinish(); }
   });
   // swap the cards not picked for new ones from the bank; picked ones stay in place
   $("shuffle").addEventListener("click", function(){
@@ -173,8 +206,20 @@
     st.shown = st.shown.map(function(id){ return st.pick.indexOf(id)>=0 ? id : (fresh[k++] || id); });
     drawProbs();
   });
-  $("next").addEventListener("click", function(){ if (!this.disabled) go(Math.min(3, st.step+1)); });
+  $("next").addEventListener("click", function(){
+    if (this.disabled) return;
+    if (st.step===0){
+      var f = form(), bad = formErr(f), er = $("f_err");
+      ["f_name","f_salon","f_phone"].forEach(function(k){ $(k).removeAttribute("aria-invalid"); });
+      if (bad){ $(bad[0]).setAttribute("aria-invalid","true"); er.textContent = u(bad[1]); er.hidden = false; $(bad[0]).focus(); return; }
+      er.hidden = true; $("f_phone").value = f.phone;
+      if (!st.lead || st.lead.phone!==f.phone || st.lead.name!==f.name || st.lead.salon!==f.salon) st.lead = { id:leadStart(f), name:f.name, salon:f.salon, phone:f.phone };
+    }
+    go(Math.min(3, st.step+1));
+  });
+  $("leadForm").addEventListener("input", function(){ $("f_err").hidden = true; ["f_name","f_salon","f_phone"].forEach(function(k){ $(k).removeAttribute("aria-invalid"); }); if (st.step===0) $("next").textContent = formOk(form()) ? u("start") : u("fill"); });
+  $("leadForm").addEventListener("submit", function(e){ e.preventDefault(); $("next").click(); });
   $("back").addEventListener("click", function(){ go(Math.max(0, st.step-1)); });
-  $("again").addEventListener("click", function(){ st = newRound(); go(0); });
+  $("again").addEventListener("click", function(){ st = newRound(); ["f_name","f_salon","f_phone"].forEach(function(k){ $(k).value = ""; }); go(0); });
   applyLang();
 })();
