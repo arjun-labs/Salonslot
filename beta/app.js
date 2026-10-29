@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.25-1";
+const APP_VERSION = "2026.10.30-1";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version
@@ -93,7 +93,7 @@ const T = {
   barber_h:"Barber view", barber_p:"Pick a barber to see their bookings. Send each one on WhatsApp.", your_day:"Bookings",
   plan_h:"Your plan", status:"Status", active:"Active", trial:"Free trial", ends:"Ends on", ended:"Ended",
   choose_plan:"Choose a plan", monthly:"Monthly", halfyearly:"6 months", yearly:"Yearly", per_month:"per month", per_half:"for 6 months", per_year:"per year", save:"Save ₹989", save_half:"Save ₹295",
-  pay_h:"Pay with Google Pay or any UPI app", pay_steps:"Scan the QR with GPay, PhonePe or Paytm. The amount fills in automatically.", upi_id:"UPI ID",
+  pay_h:"Pay with Google Pay or any UPI app", pay_steps:"Two ways: scan this QR from another phone with GPay, PhonePe or Paytm, or tap Copy, open GPay → \"Pay UPI ID or number\" → paste the UPI ID. Type the amount yourself.", pay_amt:"Amount to pay: ₹{amt}", upi_id:"UPI ID",
   utr_h:"After paying", utr_p:"Enter the transaction ID (UTR) from GPay. Your plan switches on once the payment is checked, usually within a few hours.", utr:"Transaction ID / UTR", submit_pay:"I have paid",
   pending:"₹{amt} payment sent for checking (UTR {utr}). Your plan switches on once it's checked.",
   activated:"Plan active until {date}",
@@ -181,7 +181,7 @@ const T = {
   barber_h:"Barber की screen", barber_p:"Barber चुनें और उसकी bookings देखें। हर booking WhatsApp पर भेज सकते हैं।", your_day:"Bookings",
   plan_h:"आपका plan", status:"Status", active:"चालू", trial:"Free trial", ends:"ख़त्म होगा", ended:"ख़त्म",
   choose_plan:"Plan चुनें", monthly:"Monthly", halfyearly:"6 महीने", yearly:"Yearly", per_month:"हर महीना", per_half:"6 महीने के लिए", per_year:"हर साल", save:"₹989 की बचत", save_half:"₹295 की बचत",
-  pay_h:"Google Pay या किसी भी UPI app से pay करें", pay_steps:"GPay, PhonePe या Paytm से QR scan करें। Amount अपने आप भर जाएगा।", upi_id:"UPI ID",
+  pay_h:"Google Pay या किसी भी UPI app से pay करें", pay_steps:"दो तरीके: दूसरे फ़ोन से GPay, PhonePe या Paytm में ये QR scan करें, या Copy दबाएँ, GPay खोलें → \"UPI ID या नंबर पर pay करें\" → UPI ID paste करें। Amount ख़ुद डालें।", pay_amt:"इतना pay करें: ₹{amt}", upi_id:"UPI ID",
   utr_h:"Pay करने के बाद", utr_p:"GPay वाला transaction ID (UTR) डालें। Payment check होते ही plan चालू हो जाएगा, आमतौर पर कुछ घंटों में।", utr:"Transaction ID / UTR", submit_pay:"मैंने pay कर दिया",
   pending:"₹{amt} का payment check के लिए भेजा गया (UTR {utr})। Check होते ही plan चालू हो जाएगा।",
   activated:"Plan {date} तक चालू है",
@@ -817,7 +817,9 @@ function viewBarber(){
     ${leaveCard(b)}<hr>
     <h3>${t("your_day")}</h3>${mine.length?`<div>${mine.map(k=>{const h=k.date!==last?`<p class="label" style="margin-top:6px">${dayLabel(k.date)}</p>`:"";last=k.date;return h+bookingRow(k,{barber:true});}).join("")}</div>`:`<p class="muted">${t("no_bk")}</p>`}</div>`:""}`;
 }
-const upiUri = amt => "upi://pay?pa="+ADMIN_UPI+"&pn="+encodeURIComponent(ADMIN_NAME)+"&am="+amt+"&cu=INR&tn="+encodeURIComponent("SalonSlot "+(S.salon?S.salon.name:""));
+// Personal UPI ID: GPay blocks pre-filled amount links/QRs to personal IDs with a fake "bank limit" error.
+// So the QR carries only the UPI ID; the payer types the amount. With a merchant (business) UPI ID, am/mc/tr can come back.
+const upiUri = () => "upi://pay?pa="+ADMIN_UPI+"&pn="+encodeURIComponent(ADMIN_NAME)+"&cu=INR";
 function viewPlan(){
   const i = subInfo(), p = PLANS[UI.planPick], pr = S.salon.payReq;
   const status = !i.on?`<span class="pill bad">${t("adm_off")}</span>`:!i.active?`<span class="pill bad">${t("ended")}</span>`:i.kind==="trial"?`<span class="pill warn">${t("trial")}</span>`:`<span class="pill ok">${t("active")} · ${t(S.salon.sub.plan)}</span>`;
@@ -828,9 +830,9 @@ function viewPlan(){
   <div class="card"><h3>${t("choose_plan")}</h3><div class="plans">
     ${["monthly","halfyearly","yearly"].map(k=>`<button class="plan ${UI.planPick===k?"on":""}" data-a="planPick" data-v="${k}"><span class="label">${t(k)}</span><b>₹${PLANS[k].price.toLocaleString("en-IN")}</b><span class="small muted">${t(k==="monthly"?"per_month":k==="yearly"?"per_year":"per_half")}</span>${k!=="monthly"?`<span class="pill ok" style="align-self:flex-start;margin-top:4px">${t(k==="yearly"?"save":"save_half")}</span>`:""}</button>`).join("")}</div></div>
   <div class="card"><h3>${t("pay_h")} · ₹${p.price.toLocaleString("en-IN")}</h3><p class="small muted">${t("pay_steps")}</p>
-    <div class="qr" data-qr="${esc(upiUri(p.price))}" role="img" aria-label="UPI QR"></div>
-    <div class="copy"><span class="small muted">${t("upi_id")}</span><code>${ADMIN_UPI}</code><button class="btn sm" data-a="copy" data-v="${ADMIN_UPI}">${t("copy")}</button></div>
-    <a class="btn saffron block" href="${upiUri(p.price)}">Pay ₹${p.price.toLocaleString("en-IN")} · GPay / UPI</a></div>
+    <div class="banner warn"><b>${t("pay_amt",{amt:p.price.toLocaleString("en-IN")})}</b></div>
+    <div class="qr" data-qr="${esc(upiUri())}" role="img" aria-label="UPI QR"></div>
+    <div class="copy"><span class="small muted">${t("upi_id")}</span><code>${ADMIN_UPI}</code><button class="btn saffron sm" data-a="copy" data-v="${ADMIN_UPI}">${t("copy")}</button></div></div>
   <div class="card"><h3>${t("utr_h")}</h3><p class="small muted">${t("utr_p")}</p>
     <label class="field"><span>${t("utr")}</span><input type="text" id="utr" inputmode="numeric" value="${esc(UI.utr||"")}" data-ui="utr"></label>
     ${UI.err?`<div class="banner bad" role="alert">${UI.err}</div>`:""}
