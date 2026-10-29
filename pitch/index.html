@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="hi">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -31,6 +31,11 @@ p{margin:0;text-wrap:pretty}
 .word{font-family:'Oswald',sans-serif;font-weight:700;font-size:22px;letter-spacing:2px;line-height:1}
 .word b{color:#fff}.word span{color:var(--gold)}
 .dots{display:flex;gap:6px}
+.lang{display:flex;border:1px solid #4A4540;border-radius:999px;padding:2px}
+.lang button{border:0;background:none;color:#CFC7B7;font-weight:700;font-size:15px;min-width:44px;min-height:36px;border-radius:999px;padding:0 10px}
+.lang button[aria-pressed="true"]{background:var(--gold);color:var(--ink)}
+@media (max-width:480px){.dots i{width:14px}.dots{gap:4px}.top .in{gap:8px;padding:12px 14px}.word{font-size:20px;letter-spacing:1.5px}.lang button{min-width:40px;padding:0 8px}}
+@media (max-width:400px){.dots{display:none}}
 .dots i{width:28px;height:6px;border-radius:3px;background:#4A4540}
 .dots i.on{background:var(--gold)}
 .wrap{max-width:720px;margin:0 auto;padding:22px 18px 120px}
@@ -137,7 +142,8 @@ p{margin:0;text-wrap:pretty}
 <header class="top">
   <div class="in">
     <span class="word"><b>SALON</b><span>SLOT</span></span>
-    <div class="dots" aria-hidden="true"><i id="d0"></i><i id="d1"></i><i id="d2"></i><i id="d3"></i></div>
+    <div style="display:flex;align-items:center;gap:14px"><div class="dots" aria-hidden="true"><i id="d0"></i><i id="d1"></i><i id="d2"></i><i id="d3"></i></div>
+    <div class="lang" role="group" aria-label="Language / भाषा"><button type="button" data-lang="en" aria-pressed="true">EN</button><button type="button" data-lang="hi" aria-pressed="false">हिं</button></div></div>
   </div>
 </header>
 
@@ -146,13 +152,13 @@ p{margin:0;text-wrap:pretty}
   <!-- 0: start -->
   <section id="s0" aria-labelledby="h0">
     <div class="hero">
-      <span class="kicker" style="color:var(--gold)">30 सेकंड का खेल</span>
-      <h1 id="h0">आपके सैलून की सबसे बड़ी <em>दिक़्क़त</em> कौन-सी है?</h1>
-      <p>6 आम दिक़्क़तें हैं। अपनी चुनिए, और देखिए SalonSlot उसे कैसे ख़त्म करता है।</p>
+      <span class="kicker" style="color:var(--gold)" data-t="k0">30 सेकंड का खेल</span>
+      <h1 id="h0" data-th="h0">आपके सैलून की सबसे बड़ी <em>दिक़्क़त</em> कौन-सी है?</h1>
+      <p data-t="p0">6 आम दिक़्क़तें हैं। अपनी चुनिए, और देखिए SalonSlot उसे कैसे ख़त्म करता है।</p>
       <div class="rules">
-        <div class="rule"><b>1</b>अपनी 1 से 3 दिक़्क़तें चुनिए</div>
-        <div class="rule"><b>2</b>हर दिक़्क़त का हल खोलिए</div>
-        <div class="rule"><b>3</b>अपना हिसाब और offer देखिए</div>
+        <div class="rule"><b>1</b><span data-t="r1">अपनी 1 से 3 दिक़्क़तें चुनिए</span></div>
+        <div class="rule"><b>2</b><span data-t="r2">हर दिक़्क़त का हल खोलिए</span></div>
+        <div class="rule"><b>3</b><span data-t="r3">अपना हिसाब और offer देखिए</span></div>
       </div>
     </div>
   </section>
@@ -160,18 +166,19 @@ p{margin:0;text-wrap:pretty}
   <!-- 1: pick problems -->
   <section id="s1" aria-labelledby="h1" hidden>
     <div class="head">
-      <span class="kicker">Step 1 · चुनिए</span>
-      <h2 id="h1">इनमें से आपके सैलून में क्या होता है?</h2>
-      <p>जो सबसे ज़्यादा परेशान करती है, वो 1 से 3 दिक़्क़तें tap करें।</p>
+      <span class="kicker" data-t="k1">Step 1 · चुनिए</span>
+      <h2 id="h1" data-t="h1">इनमें से आपके सैलून में क्या होता है?</h2>
+      <p data-t="p1">जो सबसे ज़्यादा परेशान करती है, वो 1 से 3 दिक़्क़तें tap करें।</p>
     </div>
     <div class="probs" id="probs"></div>
+    <button type="button" class="btn outline block" id="shuffle" style="margin-top:14px" data-t="shuffle">↻ दूसरी दिक़्क़तें दिखाएँ</button>
   </section>
 
   <!-- 2: reveal -->
   <section id="s2" aria-labelledby="h2" hidden>
     <div class="head">
-      <span class="kicker">Step 2 · हल देखिए</span>
-      <h2 id="h2">आपकी दिक़्क़त, SalonSlot का हल</h2>
+      <span class="kicker" data-t="k2">Step 2 · हल देखिए</span>
+      <h2 id="h2" data-t="h2">आपकी दिक़्क़त, SalonSlot का हल</h2>
     </div>
     <div class="score" id="score" role="status"><span class="n" id="scoreN">0/0</span><span id="scoreT">हल खोलिए</span></div>
     <div class="sols" id="sols"></div>
@@ -180,29 +187,29 @@ p{margin:0;text-wrap:pretty}
   <!-- 3: math + offer -->
   <section id="s3" aria-labelledby="h3" hidden>
     <div class="head">
-      <span class="kicker">Step 3 · आपका हिसाब</span>
-      <h2 id="h3">गड़बड़ी से हर महीने कितना जाता है?</h2>
-      <p>अपने सैलून के हिसाब से नंबर बदलिए।</p>
+      <span class="kicker" data-t="k3">Step 3 · आपका हिसाब</span>
+      <h2 id="h3" data-t="h3">गड़बड़ी से हर महीने कितना जाता है?</h2>
+      <p data-t="p3">अपने सैलून के हिसाब से नंबर बदलिए।</p>
     </div>
     <div class="calc">
       <div class="stepper">
-        <label id="l_lost">रोज़ कितने client लाइन या गड़बड़ी की वजह से वापस चले जाते हैं?</label>
+        <label id="l_lost" data-t="l_lost">रोज़ कितने client लाइन या गड़बड़ी की वजह से वापस चले जाते हैं?</label>
         <div class="ctl" role="group" aria-labelledby="l_lost">
-          <button type="button" data-step="lost" data-d="-1" aria-label="कम करें">−</button>
+          <button type="button" data-step="lost" data-d="-1" aria-label="कम करें" data-ta="less">−</button>
           <output id="o_lost" aria-live="polite">1</output>
-          <button type="button" data-step="lost" data-d="1" aria-label="बढ़ाएँ">+</button>
+          <button type="button" data-step="lost" data-d="1" aria-label="बढ़ाएँ" data-ta="more">+</button>
         </div>
       </div>
       <div class="stepper">
-        <label id="l_avg">एक client का औसत bill (₹)</label>
+        <label id="l_avg" data-t="l_avg">एक client का औसत bill (₹)</label>
         <div class="ctl" role="group" aria-labelledby="l_avg">
-          <button type="button" data-step="avg" data-d="-50" aria-label="कम करें">−</button>
+          <button type="button" data-step="avg" data-d="-50" aria-label="कम करें" data-ta="less">−</button>
           <output id="o_avg" aria-live="polite">₹200</output>
-          <button type="button" data-step="avg" data-d="50" aria-label="बढ़ाएँ">+</button>
+          <button type="button" data-step="avg" data-d="50" aria-label="बढ़ाएँ" data-ta="more">+</button>
         </div>
       </div>
       <div class="loss" role="status" aria-live="polite">
-        <span>महीने का नुकसान (26 दिन)</span>
+        <span data-t="loss_h">महीने का नुकसान (26 दिन)</span>
         <b id="lossAmt">₹5,200</b>
         <small id="lossNote">1 client × ₹200 × 26 दिन</small>
       </div>
@@ -210,157 +217,33 @@ p{margin:0;text-wrap:pretty}
     </div>
 
     <div class="offer">
-      <span class="free">Welcome offer: 10 दिन FREE</span>
-      <h2>आपकी सारी दिक़्क़तों का हल, <em>₹499</em> महीना</h2>
-      <p class="yr">या ₹4,999 साल का (≈ ₹417 महीना)। हर महीने वाले plan में कोई lock नहीं, जब चाहें बंद।</p>
+      <span class="free" data-t="free">Welcome offer: 10 दिन FREE</span>
+      <h2 data-th="offer_h">आपकी सारी दिक़्क़तों का हल, <em>₹499</em> महीना</h2>
+      <p class="yr" data-t="yr">या ₹4,999 साल का (≈ ₹417 महीना)। हर महीने वाले plan में कोई lock नहीं, जब चाहें बंद।</p>
       <div class="cmp" id="cmp"></div>
-      <p class="foot">* बड़े salon software के दाम public ads और जानकारी पर अंदाज़ा हैं; हर कंपनी के plan अलग होते हैं।</p>
+      <p class="foot" data-t="foot">* बड़े salon software के दाम public ads और जानकारी पर अंदाज़ा हैं; हर कंपनी के plan अलग होते हैं।</p>
     </div>
 
     <div class="ctas">
-      <a class="btn gold" href="https://arjun-labs.github.io/Salonslot/?s=xWvAeZNfg8ZW6fHMV3xQJ8AHlqx1" target="_blank" rel="noopener">अपने फ़ोन से demo booking करें</a>
-      <a class="btn dark" href="https://arjun-labs.github.io/Salonslot/" target="_blank" rel="noopener">अभी अपना सैलून चालू करें</a>
-      <a class="btn wa" href="https://wa.me/918850865540?text=%E0%A4%A8%E0%A4%AE%E0%A4%B8%E0%A5%8D%E0%A4%A4%E0%A5%87%20Arjun%2C%20%E0%A4%AE%E0%A5%81%E0%A4%9D%E0%A5%87%20SalonSlot%20%E0%A4%9A%E0%A4%BE%E0%A4%B9%E0%A4%BF%E0%A4%8F%E0%A5%A4" target="_blank" rel="noopener">Arjun से WhatsApp पर बात</a>
-      <a class="btn outline" href="../info/" target="_blank" rel="noopener">पूरी जानकारी देखें</a>
+      <a class="btn gold" href="https://arjun-labs.github.io/Salonslot/?s=xWvAeZNfg8ZW6fHMV3xQJ8AHlqx1" target="_blank" rel="noopener" data-t="c_demo">अपने फ़ोन से demo booking करें</a>
+      <a class="btn dark" href="https://arjun-labs.github.io/Salonslot/" target="_blank" rel="noopener" data-t="c_start">अभी अपना सैलून चालू करें</a>
+      <a class="btn wa" href="https://wa.me/918850865540?text=%E0%A4%A8%E0%A4%AE%E0%A4%B8%E0%A5%8D%E0%A4%A4%E0%A5%87%20Arjun%2C%20%E0%A4%AE%E0%A5%81%E0%A4%9D%E0%A5%87%20SalonSlot%20%E0%A4%9A%E0%A4%BE%E0%A4%B9%E0%A4%BF%E0%A4%8F%E0%A5%A4" target="_blank" rel="noopener" data-t="c_wa">Arjun से WhatsApp पर बात</a>
+      <a class="btn outline" href="../info/" target="_blank" rel="noopener" data-t="c_info">पूरी जानकारी देखें</a>
     </div>
-    <button type="button" class="again" id="again">अगले सैलून के लिए फिर से शुरू करें</button>
+    <button type="button" class="again" id="again" data-t="again">अगले सैलून के लिए फिर से शुरू करें</button>
   </section>
 
 </main>
 
 <div class="bar">
   <div class="in">
-    <button type="button" class="btn outline" id="back" hidden>← पीछे</button>
+    <button type="button" class="btn outline" id="back" hidden data-t="back">← पीछे</button>
     <span class="hint" id="hint" hidden></span>
     <button type="button" class="btn gold" id="next">खेल शुरू करें →</button>
   </div>
 </div>
 
-<script>
-(function(){
-  var TICK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>';
-  var I = {
-    phone:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/>',
-    diary:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M9 8l6 6M15 8l-6 6"/>',
-    line:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M10 2h4"/>',
-    barber:'<circle cx="9" cy="7" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2"/><path d="M17 11l2 2 4-4"/>',
-    bill:'<path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h4"/>',
-    family:'<circle cx="8" cy="7" r="3"/><circle cx="17" cy="7" r="3"/><path d="M2 21v-2a5 5 0 0 1 10 0v2M12 21v-2a5 5 0 0 1 10 0v2"/>'
-  };
-  var ico = function(k, s){ s = s||22; return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+I[k]+'</svg>'; };
-
-  var P = [
-    { id:"phone", t:"काम के बीच booking का फ़ोन", s:"कैंची हाथ में है और फ़ोन बज रहा है",
-      h:"Client ख़ुद booking करता है",
-      pts:["Counter के QR या WhatsApp link से, 24 घंटे, बिना app और बिना login","Service, barber और time client ख़ुद चुनता है","नई booking आते ही आपके फ़ोन पर आवाज़ के साथ दिखती है"],
-      them:"फ़ोन / डायरी: दुकान खुली हो और आप फ़्री हों तभी booking", us:"24 घंटे booking, client का कोई app नहीं, हिंदी + English" },
-    { id:"diary", t:"डायरी की गड़बड़", s:"एक time पर दो नाम, या पन्ना ही नहीं मिलता",
-      h:"Double booking हो ही नहीं सकती",
-      pts:["Client को सिर्फ़ ख़ाली time दिखते हैं","एक slot पर एक ही booking","आज, कल और पूरे हफ़्ते की booking एक screen पर"],
-      them:"डायरी: ₹0, पर हर गड़बड़ का नुकसान", us:"हर booking पक्की, phone पर" },
-    { id:"line", t:"Client लाइन में थककर चला जाता है", s:"इंतज़ार लंबा हुआ तो दूसरी दुकान",
-      h:"Client अपने time पर सीधा कुर्सी पर",
-      pts:["Client पहले से time book करके आता है","Booking से 20 मिनट पहले app आपको याद दिलाता है, client को reminder एक tap में","10 मिनट के छोटे slots, ताकि threading या trim पर आधा घंटा न जाए"],
-      them:"बड़े software: demo call, training, लंबा setup", us:"5 मिनट में चालू, मैं दुकान पर आकर करता हूँ" },
-    { id:"barber", t:"कौन barber कब ख़ाली, पता नहीं", s:"हर barber को उसका schedule बार-बार बताना",
-      h:"हर barber का अपना कॉलम",
-      pts:["आज की timeline में हर barber की bookings अलग-अलग","एक tap में हर barber को उसका दिन WhatsApp पर","Barber की छुट्टी mark करो, उस दिन उसके साथ booking अपने आप बंद"],
-      them:"बहुत options, सीखना पड़ता है", us:"सिर्फ़ ज़रूरी चीज़ें, चलाना आसान" },
-    { id:"bill", t:"Client को bill नहीं, कमाई का हिसाब नहीं", s:"शाम को पता नहीं आज कितना बना",
-      h:"WhatsApp पर bill, अपने आप हिसाब",
-      pts:["“Done” दबाते ही दाम भरे मिलते हैं, discount और Cash / UPI","Bill सीधे client के WhatsApp पर, नीचे अगली booking का link","दिन की कमाई Home पर, महीने का हिसाब Calendar में"],
-      them:"₹99 के बाद ₹499 महीना, पर साल का एक साथ (≈ ₹5,988)*", us:"₹499 हर महीना, कोई lock नहीं, जब चाहें बंद" },
-    { id:"family", t:"Ladies-Gents के लिए सही barber", s:"Family सैलून में ग़लत barber को booking",
-      h:"Family सैलून के लिए बना",
-      pts:["हर service पर पुरुष, महिला या सबके लिए","हर barber पर: पुरुष, महिला या दोनों का काम","Ladies service पर सिर्फ़ ladies का काम करने वाले दिखते हैं, “कोई भी” भी सही barber देता है"],
-      them:"बड़े software: ज़्यादातर English में setup", us:"हिंदी में, हर service और barber पर 1 tap" }
-  ];
-
-  var MAX = 3, st = { step:0, pick:[], open:{}, lost:1, avg:200 };
-  var $ = function(id){ return document.getElementById(id); };
-  var byId = function(id){ for (var i=0;i<P.length;i++) if (P[i].id===id) return P[i]; };
-  var rs = function(n){ return "₹"+Math.round(n).toLocaleString("en-IN"); };
-  var esc = function(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); };
-
-  function drawProbs(){
-    var full = st.pick.length>=MAX;
-    $("probs").innerHTML = P.map(function(p){
-      var on = st.pick.indexOf(p.id)>=0, dis = full && !on;
-      return '<button type="button" class="prob'+(on?' on':'')+'" data-p="'+p.id+'" aria-pressed="'+on+'"'+(dis?' aria-disabled="true"':'')+'>'+
-        '<span class="ck" aria-hidden="true">'+(on?TICK:'')+'</span><span class="ic">'+ico(p.id)+'</span><b>'+esc(p.t)+'</b><small>'+esc(p.s)+'</small></button>';
-    }).join("");
-  }
-  function drawSols(){
-    var n = 0;
-    $("sols").innerHTML = st.pick.map(function(id){
-      var p = byId(id), open = !!st.open[id]; if (open) n++;
-      return '<div class="sol'+(open?'':' locked')+(st.justOpened===id?' pop':'')+'">'+
-        '<div class="q"><span class="ic">'+ico(p.id,20)+'</span><div><small>आपकी दिक़्क़त</small><b>'+esc(p.t)+'</b></div></div>'+
-        '<button type="button" class="open" data-o="'+p.id+'">हल खोलें →</button>'+
-        '<div class="a"><span class="tag">SalonSlot का हल</span><h3>'+esc(p.h)+'</h3><ul>'+p.pts.map(function(x){ return '<li>'+TICK+'<span>'+esc(x)+'</span></li>'; }).join("")+'</ul>'+
-        '<a class="demo" href="https://arjun-labs.github.io/Salonslot/?s=xWvAeZNfg8ZW6fHMV3xQJ8AHlqx1" target="_blank" rel="noopener">Demo में देखें</a></div></div>';
-    }).join("");
-    st.justOpened = null;
-    $("scoreN").textContent = n+"/"+st.pick.length;
-    $("scoreT").textContent = n===st.pick.length ? (n===1?"आपकी दिक़्क़त का हल मिल गया":"आपकी सारी दिक़्क़तों का हल मिल गया") : "हर दिक़्क़त पर “हल खोलें” दबाएँ";
-  }
-  function drawCalc(){
-    var loss = st.lost*st.avg*26;
-    $("o_lost").textContent = st.lost;
-    $("o_avg").textContent = rs(st.avg);
-    $("lossAmt").textContent = rs(loss);
-    $("lossNote").textContent = st.lost+" client × "+rs(st.avg)+" × 26 दिन";
-    var need = Math.max(1, Math.ceil(499/st.avg));
-    $("vsLine").textContent = loss>0
-      ? "SalonSlot ₹499 महीना, यानी महीने में सिर्फ़ "+need+" client बचे तो पैसा वसूल।"
-      : "एक भी client नहीं जाता? बढ़िया! SalonSlot फिर भी फ़ोन, डायरी और हिसाब का समय बचाता है।";
-    // one point tied to the first problem picked, plus the price point
-    var price = byId("bill"), first = byId(st.pick[0]) || byId("phone");
-    var rows = first.id==="bill" ? [price, byId("phone")] : [first, price];
-    $("cmp").innerHTML = rows.map(function(x){
-      return '<div class="them"><b>'+(x.id==="bill"?"बड़े software":"दूसरे")+'</b><strong>'+esc(x.them)+'</strong></div><div class="us"><b>SalonSlot</b><strong>'+esc(x.us)+'</strong></div>';
-    }).join("");
-  }
-
-  function go(n){
-    st.step = n;
-    for (var i=0;i<4;i++){ $("s"+i).hidden = i!==n; $("d"+i).className = i<=n?"on":""; }
-    var next = $("next"), back = $("back"), hint = $("hint");
-    back.hidden = n===0 || n===3; hint.hidden = true; next.hidden = false;
-    if (n===0){ next.textContent = "खेल शुरू करें →"; next.disabled = false; }
-    if (n===1){ drawProbs(); syncPick(); }
-    if (n===2){ drawSols(); syncOpen(); }
-    document.querySelector(".bar").hidden = n===3;
-    if (n===3){ drawCalc(); }
-    window.scrollTo(0,0);
-  }
-  function syncPick(){
-    var next = $("next"), hint = $("hint"), k = st.pick.length;
-    next.disabled = k===0;
-    next.textContent = k ? "हल देखें ("+k+") →" : "कम से कम 1 चुनें";
-    hint.hidden = k<MAX; hint.textContent = "ज़्यादा से ज़्यादा 3";
-  }
-  function syncOpen(){
-    var all = st.pick.every(function(id){ return st.open[id]; }), next = $("next");
-    next.disabled = !all; next.textContent = all ? "अपना हिसाब देखें →" : "पहले हल खोलें";
-  }
-
-  document.addEventListener("click", function(e){
-    var el = e.target.closest("[data-p],[data-o],[data-step]"); if (!el) return;
-    if (el.dataset.p){ var id = el.dataset.p, i = st.pick.indexOf(id);
-      if (i>=0) st.pick.splice(i,1); else if (st.pick.length<MAX) st.pick.push(id); else return;
-      drawProbs(); syncPick(); var b = document.querySelector('[data-p="'+id+'"]'); if (b) b.focus(); }
-    else if (el.dataset.o){ st.open[el.dataset.o] = true; st.justOpened = el.dataset.o; drawSols(); syncOpen();
-      try{ navigator.vibrate && navigator.vibrate(30); }catch(x){} }
-    else if (el.dataset.step){ var k = el.dataset.step, d = Number(el.dataset.d);
-      if (k==="lost") st.lost = Math.max(0, Math.min(30, st.lost+d)); else st.avg = Math.max(50, Math.min(5000, st.avg+d));
-      drawCalc(); }
-  });
-  $("next").addEventListener("click", function(){ if (!this.disabled) go(Math.min(3, st.step+1)); });
-  $("back").addEventListener("click", function(){ go(Math.max(0, st.step-1)); });
-  $("again").addEventListener("click", function(){ st = { step:0, pick:[], open:{}, lost:1, avg:200 }; go(0); });
-  go(0);
-})();
-</script>
+<script src="bank.js"></script>
+<script src="game.js"></script>
 </body>
 </html>
