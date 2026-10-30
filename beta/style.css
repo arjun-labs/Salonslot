@@ -346,4 +346,8 @@ table.led td{padding:8px 4px;border-bottom:1px dashed var(--line);font-variant-n
 @media (prefers-reduced-motion:reduce){.livepill i{animation:none}}
 @media (max-width:360px){.ccol{width:78px}.csec{width:64px}.citem.on{font-size:40px}}
 
-.ownhead{margin-top:14px}.ownpick{display:flex;flex-direction:column;gap:6px;background:var(--surface2);border-radius:14px;padding:12px}.ownpick .hscroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}.ownpick .hscroll>*{flex:none;min-width:56px;text-align:center}.slot.busy{opacity:.4;text-decoration:line-through;padding:9px 0;border:1px solid var(--line);border-radius:8px}
+.ownpick{margin-top:14px;display:flex;flex-direction:column;gap:10px;background:#24211F;color:#F6F2EA;border-radius:22px;padding:18px 16px}
+.ownt{margin:0;font-family:Oswald,sans-serif;font-size:16px;letter-spacing:.12em;color:#D4AE63}.ownl{margin:0;font-size:12px;color:#D9D1C4}
+.ownpick .hscroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}.ochip{flex:none;min-width:56px;text-align:center;padding:10px 14px;border-radius:12px;background:#3A3530;color:#F6F2EA;font-weight:600;border:0;font-variant-numeric:tabular-nums}
+.ochip.on{background:#D4AE63;color:#24211F;font-weight:700}.ochip.busy{background:#2A2623;color:#7A7266;text-decoration:line-through}
+.ownok{background:#1F3A2B;border:2px solid #7FC29B;border-radius:14px;padding:12px 14px;font-size:15px;font-weight:600}

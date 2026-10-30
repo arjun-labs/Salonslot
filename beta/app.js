@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.30-9";
+const APP_VERSION = "2026.10.30-10";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version
@@ -56,7 +56,7 @@ const T = {
   cf_shift:"Move {name} to {time}", cf_shift_none:"Can't push it back: the time after is also booked. Use Change time.", cf_keep:"Keep both as they are",
   mv_date:"New day", mv_barber:"Barber", mv_time:"New time", mv_go:"Move to {time}", mv_none:"No free time this day.",
   moved_msg:"Hi {name}, your booking at {salon} is now on {date} at {time}. Sorry for the change, see you!", moved_done:"Booking moved. Let the customer know:", send_wa:"Send on WhatsApp",
-  ext_done:"Time updated", sel_slot:"Your slot", own_h2:"Or pick your own time", own_h:"HOUR", own_m:"MINUTE (greyed = taken)",
+  ext_done:"Time updated", sel_slot:"Your slot", own_h2:"Choose your own time", own_h:"Hour (scroll sideways)", own_m:"Minutes (5 by 5)", own_free:"free",
   bill_h:"Bill", bill_p:"Prices come from your services. Change them if you charged differently.", bill_add:"Add to bill", bill_disc:"Discount (₹)", bill_pay:"Paid by", pay_cash:"Cash", pay_upi:"UPI", bill_total:"Total",
   bill_send:"Done + send bill on WhatsApp", bill_later:"Just mark done (bill later)", bill_resave_send:"Save and send again", bill_resave:"Save changes", bill_resend:"Send bill again", bill_make:"Send bill", bill_edit:"Edit bill",
   bill_no:"Bill #{n}", bill_sent_n:"Sent {n} times", bill_sent1:"Sent once", bill_not_sent:"Not sent yet", bill_sent:"Bill ready. Press Send in WhatsApp.", bill_saved:"Saved", bill_empty:"Add at least one service", bill_edit_note:"If you change the amount after sending, the bill is marked as revised.", bill_rm:"Remove",
@@ -147,7 +147,7 @@ const T = {
   cf_shift:"{name} को {time} पर करें", cf_shift_none:"आगे नहीं खिसक सकता, उसके बाद भी booking है। \"समय बदलें\" से करें।", cf_keep:"दोनों को ऐसे ही रहने दें",
   mv_date:"नया दिन", mv_barber:"Barber", mv_time:"नया समय", mv_go:"{time} पर करें", mv_none:"इस दिन कोई समय ख़ाली नहीं।",
   moved_msg:"नमस्ते {name}, {salon} में आपकी booking अब {date} को {time} बजे है। बदलाव के लिए माफ़ी, मिलते हैं!", moved_done:"Booking का समय बदल गया। Customer को बता दें:", send_wa:"WhatsApp पर भेजें",
-  ext_done:"समय बढ़ गया", sel_slot:"आपका slot", own_h2:"या अपना समय चुनें", own_h:"घंटा", own_m:"मिनट (धुंधले = भरे हुए)",
+  ext_done:"समय बढ़ गया", sel_slot:"आपका slot", own_h2:"अपना समय चुनें", own_h:"घंटा (बगल में स्क्रॉल करें)", own_m:"मिनट (5-5 के गैप में)", own_free:"खाली है",
   bill_h:"Bill", bill_p:"दाम आपकी services से भरे हैं। अलग लिया हो तो बदल दें।", bill_add:"Bill में जोड़ें", bill_disc:"Discount (₹)", bill_pay:"Payment", pay_cash:"Cash", pay_upi:"UPI", bill_total:"कुल",
   bill_send:"Done + WhatsApp पर bill भेजें", bill_later:"सिर्फ़ Done (bill बाद में)", bill_resave_send:"Save करके फिर भेजें", bill_resave:"बदलाव save करें", bill_resend:"Bill फिर भेजें", bill_make:"Bill भेजें", bill_edit:"Bill बदलें",
   bill_no:"Bill #{n}", bill_sent_n:"{n} बार भेजा", bill_sent1:"1 बार भेजा", bill_not_sent:"अभी नहीं भेजा", bill_sent:"Bill तैयार, WhatsApp में Send दबाएँ", bill_saved:"Save हो गया", bill_empty:"कम से कम एक service जोड़ें", bill_edit_note:"भेजने के बाद रकम बदली तो bill पर “बदला हुआ” लिखा जाएगा।", bill_rm:"हटाएँ",
@@ -390,6 +390,7 @@ function render(){
   document.body.classList.toggle("owner", !CUSTOMER_SID && UI.view==="main");
   app.innerHTML = html; window.scrollTo(0,y);
   drawQRs(); initScratch(); initWheels();
+  document.querySelectorAll(".ownpick .hscroll").forEach(r=>{ const on = r.querySelector(".ochip.on"); if (on) r.scrollLeft = Math.max(0, on.offsetLeft - 16); });
 }
 function navBar(){
   const ic = {
@@ -604,8 +605,9 @@ function ownPick(salon, B, free5){
   const hrs = [...new Set(free5.map(x=>Math.floor(toMin(x.time)/60)))];
   let h = UI.ownH; if (!hrs.includes(h)) h = B.time && free.has(B.time) ? Math.floor(toMin(B.time)/60) : hrs[0];
   const mins = []; for (let m=0;m<60;m+=5) mins.push(toHM(h*60+m));
-  return `<div class="ownpick"><p class="label">${t("own_h")}</p><div class="hscroll">${hrs.map(x=>`<button class="chip ${x===h?"on":""}" data-a="ownH" data-v="${x}">${hourLbl(x*60)}</button>`).join("")}</div>
-    <p class="label">${t("own_m")}</p><div class="hscroll">${mins.map(m=>free.has(m)?`<button class="slot ${B.time===m?"on":""}" data-a="bTime" data-v="${m}">${nice(m).slice(0,-3)}</button>`:`<span class="slot busy" aria-hidden="true">${nice(m).slice(0,-3)}</span>`).join("")}</div></div>`;
+  return `<div class="ownpick"><p class="ownt">${t("own_h2")}</p><p class="ownl">${t("own_h")}</p><div class="hscroll">${hrs.map(x=>`<button class="ochip ${x===h?"on":""}" data-a="ownH" data-v="${x}">${hourLbl(x*60).toLowerCase()}</button>`).join("")}</div>
+    <p class="ownl">${t("own_m")}</p><div class="hscroll">${mins.map(m=>free.has(m)?`<button class="ochip ${B.time===m?"on":""}" data-a="bTime" data-v="${m}">${nice(m).slice(0,-3)}</button>`:`<span class="ochip busy" aria-hidden="true">${nice(m).slice(0,-3)}</span>`).join("")}</div>
+    ${B.time && free.has(B.time)?`<div class="ownok" role="status">${t("sel_slot")}: ${niceRange(B.time, Number((svcOf(salon,B.svc)||{}).dur)||30).toLowerCase()} · ${t("own_free")}</div>`:""}</div>`;
 }
 function selBox(salon, B, slots){
   const sl = B.time && slots.find(s=>s.time===B.time); if (!sl) return "";
@@ -874,7 +876,7 @@ function bookingForm(salon, slotsFor, ownerMode){
     return `<button class="date ${B.date===d?"on":""}" data-a="bDate" data-v="${d}" ${closed?"disabled":""}><small>${t("dw")[dt.getDay()]}</small><b>${dt.getDate()}</b><small>${t("mon")[dt.getMonth()]}</small></button>`}).join("")}</div></div>
   <div class="card" id="timeCard"><h3>${t("pick_time")}</h3>${ownerMode ? `<p class="small muted">${t("ck_help")}</p>${clockPicker("wkBook", B.time||nowHM(), !B.time)}${!B.svc?`<button class="btn block" data-a="toSvc">↑ ${t("pick_svc_first")}</button>`:(()=>{ const b = pickBarberFor(salon,B.svc,B.date,B.barber), dur = Number((svcOf(salon,B.svc)||{}).dur)||30;
       return customBox(salon, B.date, B.time||nowHM(), B.svc, b, dur, null) + ((!B.barber||B.barber==="any") && b ? `<p class="small muted">${t("ct_pickb",{name:esc(b.name)})}</p>` : ""); })()}` :
-    !B.svc?`<button class="btn block" data-a="toSvc">↑ ${t("pick_svc_first")}</button>`:slots===undefined?`<div class="spin"></div>`:slots===null?`<p class="muted">${t("closed_day")}</p>`:slots.length?slotGrid(slots, B.time, "bTime")+(()=>{ const f5 = freeSlots(salon, B.date, B.svc, B.barber||"any", map, {step:5})||[]; return `<p class="label ownhead">${t("own_h2")}</p>`+ownPick(salon,B,f5)+selBox(salon,B,f5); })():`<p class="muted">${t("no_slots")}</p>`}</div>
+    !B.svc?`<button class="btn block" data-a="toSvc">↑ ${t("pick_svc_first")}</button>`:slots===undefined?`<div class="spin"></div>`:slots===null?`<p class="muted">${t("closed_day")}</p>`:slots.length?slotGrid(slots, B.time, "bTime")+(()=>{ const f5 = freeSlots(salon, B.date, B.svc, B.barber||"any", map, {step:5})||[]; return ``+ownPick(salon,B,f5); })():`<p class="muted">${t("no_slots")}</p>`}</div>
   <div class="card" id="detailsCard"><h3>${t("your_details")}</h3>
     <label class="field"><span>${t("cust_name")}</span><input type="text" id="c_name" autocomplete="name" data-book="name" value="${esc(B.name||"")}"></label>
     <label class="field"><span>${t("cust_phone")}</span><input type="tel" inputmode="tel" autocomplete="tel" id="c_phone" data-book="phone" value="${esc(B.phone||"")}" placeholder="98XXXXXXXX"></label>
