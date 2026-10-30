@@ -345,3 +345,5 @@ table.led td{padding:8px 4px;border-bottom:1px dashed var(--line);font-variant-n
 @keyframes blink{to{visibility:hidden}}
 @media (prefers-reduced-motion:reduce){.livepill i{animation:none}}
 @media (max-width:360px){.ccol{width:78px}.csec{width:64px}.citem.on{font-size:40px}}
+
+.ownhead{margin-top:14px}.ownpick{display:flex;flex-direction:column;gap:6px;background:var(--surface2);border-radius:14px;padding:12px}.ownpick .hscroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}.ownpick .hscroll>*{flex:none;min-width:56px;text-align:center}.slot.busy{opacity:.4;text-decoration:line-through;padding:9px 0;border:1px solid var(--line);border-radius:8px}
