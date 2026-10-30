@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.30-5";
+const APP_VERSION = "2026.10.30-6";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version
@@ -42,6 +42,7 @@ const T = {
   s3_h:"Services and prices", s3_p:"Tap a suggestion to add it, or type your own.", svc_name:"Service", price:"Price ₹", mins:"Minutes", add_service:"Add service",
   s4_h:"Your barbers", s4_p:"Add a photo, name and speciality for each barber. Customers see these when they book.", how_many:"How many barbers?",
   g_for:"For", g_all:"Everyone", g_m:"Men", g_f:"Women", g_serves:"Works on", g_both:"Both", g_head_all:"For everyone", g_head_m:"Men", g_head_f:"Women",
+  pk_h:"Which services", pk_all:"All services", pk_pick:"Only selected services", pk_count:"{n} selected. Customers see this barber only for these services.", pk_zero:"Tick at least one service, or choose All services.", pk_nobody:"No barber does this service, so customers won't find a time for it.",
   g_nobody:"No barber here works on {who}. Customers will not find a time for this service.", g_note:"Family salon? Mark which services are for men or women, and whom each barber works on. Customers then see only the right barbers.",
   barber_name:"Name", speciality:"Speciality", spec_ph:"e.g. Beard expert, Hair colour", add_barber:"Add barber", tap_photo:"Tap the circle to add a photo",
   s5_h:"You're ready", s5_p:"Your free trial starts now, and a welcome gift is waiting for you in Rewards. Share your booking link and start taking bookings.",
@@ -131,6 +132,7 @@ const T = {
   s3_h:"Services और दाम", s3_p:"Suggestion पर tap करके जोड़ें, या खुद लिखें।", svc_name:"Service", price:"दाम ₹", mins:"मिनट", add_service:"Service जोड़ें",
   s4_h:"आपके barbers", s4_p:"हर barber की photo, नाम और speciality डालें। Booking करते वक़्त ग्राहक को ये दिखेगा।", how_many:"कितने barbers हैं?",
   g_for:"किसके लिए", g_all:"सबके लिए", g_m:"पुरुष", g_f:"महिला", g_serves:"किसका काम करते हैं", g_both:"दोनों", g_head_all:"सबके लिए", g_head_m:"पुरुष (Gents)", g_head_f:"महिला (Ladies)",
+  pk_h:"कौन-सी services करते हैं", pk_all:"सारी services", pk_pick:"सिर्फ़ चुनी हुई services", pk_count:"{n} services चुनी हैं। Customer को ये barber सिर्फ़ इन्हीं services में दिखेगा।", pk_zero:"कम से कम एक service पर tick करें, या \"सारी services\" चुनें।", pk_nobody:"कोई barber ये service नहीं करता, इसलिए customer को इसका कोई समय नहीं मिलेगा।",
   g_nobody:"कोई barber {who} का काम नहीं करता, इसलिए customer को इस service का कोई समय नहीं मिलेगा।", g_note:"Family सैलून है? बताइए कौन-सी service पुरुष या महिला की है, और कौन barber किसका काम करता है। Customer को सिर्फ़ सही barber दिखेंगे।",
   barber_name:"नाम", speciality:"Speciality", spec_ph:"जैसे Beard expert, Hair colour", add_barber:"Barber जोड़ें", tap_photo:"Photo लगाने के लिए गोले पर tap करें",
   s5_h:"सब तैयार है", s5_p:"आपका free trial अभी शुरू हो गया, और Rewards में आपके लिए एक Welcome Gift रखा है। Booking link share करें और bookings लेना शुरू करें।",
@@ -287,7 +289,9 @@ const niceRange = (tm, dur) => { const a = nice(tm), b = nice(toHM(toMin(tm)+dur
 // family salons: a service can be for men (m) or women (f); a barber can work on men, women or both
 const svcFor = v => (v && (v.for==="m"||v.for==="f")) ? v.for : "all";
 const barberServes = b => (b && (b.serves==="m"||b.serves==="f")) ? b.serves : "both";
-const canDo = (v, b) => { const f = svcFor(v), g = barberServes(b); return f==="all" || g==="both" || f===g; };
+const genderOk = (v, b) => { const f = svcFor(v), g = barberServes(b); return f==="all" || g==="both" || f===g; };
+// b.svcs (optional) = the only services this barber does; no list = every service that fits men / women / both
+const canDo = (v, b) => !v || !b || (genderOk(v,b) && (!Array.isArray(b.svcs) || b.svcs.includes(v.id)));
 const onLeave = (s,bid,date) => ((s.leave||{})[bid]||[]).includes(date);
 function isFree(busy, b, start, dur){ return !busy.some(x => x.b===b && start < x.start+x.dur && x.start < start+dur); }
 // opt.dur: length to fit (default: the service's), opt.skip: {b,start} a booking to ignore (the one being moved)
@@ -429,7 +433,7 @@ function servicesEditor(o){
     <button class="x" data-a="delSvc" data-v="${s.id}" aria-label="${t("remove")}">×</button></div>
     <label class="field"><span class="small">${t("svc_desc")} <em>(${t("optional")})</em></span><input type="text" maxlength="120" id="sx_${s.id}" data-svc="${s.id}" data-k="desc" value="${esc(s.desc||"")}" placeholder="${t("svc_desc_ph")}"></label>
     <div class="field"><span class="small">${t("g_for")}</span><div class="chips" role="radiogroup" aria-label="${t("g_for")}">${["all","m","f"].map(g=>`<button class="chip ${svcFor(s)===g?"on":""}" role="radio" aria-checked="${svcFor(s)===g}" data-a="svcFor" data-v="${s.id}|${g}">${t("g_"+g)}</button>`).join("")}</div></div>
-    ${svcFor(s)!=="all" && o.barbers.some(b=>b.name&&b.name.trim()) && !o.barbers.some(b=>b.name&&b.name.trim()&&canDo(s,b))?`<p class="small" style="color:var(--danger)">⚠️ ${t("g_nobody",{who:t("g_"+svcFor(s))})}</p>`:""}</div>`).join("")}</div>
+    ${s.name && o.barbers.some(b=>b.name&&b.name.trim()) && !o.barbers.some(b=>b.name&&b.name.trim()&&canDo(s,b))?`<p class="small" style="color:var(--danger)">⚠️ ${svcFor(s)!=="all" && !o.barbers.some(b=>b.name&&b.name.trim()&&genderOk(s,b)) ? t("g_nobody",{who:t("g_"+svcFor(s))}) : t("pk_nobody")}</p>`:""}</div>`).join("")}</div>
   <button class="btn" data-a="addSvc">+ ${t("add_service")}</button>`;
 }
 function barbersEditor(o){
@@ -442,12 +446,22 @@ function barbersEditor(o){
       <label class="field"><span class="small">${t("barber_name")} ${i+1}</span><input type="text" id="bn_${b.id}" data-bar="${b.id}" data-k="name" value="${esc(b.name)}"></label>
       <label class="field"><span class="small">${t("speciality")} <em>(${t("optional")})</em></span><input type="text" id="bs_${b.id}" data-bar="${b.id}" data-k="spec" value="${esc(b.spec)}" placeholder="${t("spec_ph")}"></label>
       <div class="field"><span class="small">${t("g_serves")}</span><div class="chips" role="radiogroup" aria-label="${t("g_serves")}">${["m","f","both"].map(g=>`<button class="chip ${barberServes(b)===g?"on":""}" role="radio" aria-checked="${barberServes(b)===g}" data-a="barServes" data-v="${b.id}|${g}">${t("g_"+g)}</button>`).join("")}</div></div>
+      ${pickField(o,b)}
       <label class="field"><span class="small">${t("barber_phone")} <em>(${t("optional")})</em></span><input type="tel" inputmode="tel" id="bp_${b.id}" data-bc="${b.id}" data-k="phone" value="${esc((contactsOf()[b.id]||{}).phone||"")}" placeholder="98XXXXXXXX"></label>
       <label class="field"><span class="small">${t("barber_email")} <em>(${t("optional")})</em></span><input type="email" inputmode="email" id="be_${b.id}" data-bc="${b.id}" data-k="email" value="${esc((contactsOf()[b.id]||{}).email||b.email||"")}" placeholder="barber@gmail.com"></label>
       <p class="small muted">${t("private_note")}</p>
       <button class="btn ghost sm" style="align-self:flex-start" data-a="delBarber" data-v="${b.id}">${t("remove")}</button>
     </div></div>`).join("")}</div>
   <button class="btn" data-a="addBarber">+ ${t("add_barber")}</button>`;
+}
+function pickField(o, b){
+  const picking = Array.isArray(b.svcs), list = (o.services||[]).filter(s=>s.name && String(s.name).trim() && genderOk(s,b));
+  const n = picking ? list.filter(s=>b.svcs.includes(s.id)).length : 0;
+  return `<div class="field"><span class="small">${t("pk_h")}</span><div class="chips" role="radiogroup" aria-label="${t("pk_h")}">
+      <button class="chip ${!picking?"on":""}" role="radio" aria-checked="${!picking}" data-a="barPick" data-v="${b.id}|all">${t("pk_all")}</button>
+      <button class="chip ${picking?"on":""}" role="radio" aria-checked="${picking}" data-a="barPick" data-v="${b.id}|pick">${t("pk_pick")}</button></div>
+    ${picking?`<div class="pklist">${list.length?list.map(s=>`<label class="pk"><input type="checkbox" data-a="barSvc" data-v="${b.id}|${s.id}" ${b.svcs.includes(s.id)?"checked":""}><span>${esc(s.name)}${svcFor(s)!=="all"?` <em>· ${t("g_"+svcFor(s))}</em>`:""}</span></label>`).join(""):`<p class="small muted">${t("no_services")}</p>`}</div>
+      <p class="small ${n?"muted":""}" ${n?"":'style="color:var(--danger)"'}>${n?t("pk_count",{n}):"⚠️ "+t("pk_zero")}</p>`:""}</div>`;
 }
 function salonFields(o){
   return `<label class="field"><span>${t("salon_name")}</span><input type="text" id="f_name" data-salon="name" value="${esc(o.name)}"></label>
@@ -488,7 +502,7 @@ function validate(o, n){
   return "";
 }
 const cleanList = o => { o.services = o.services.filter(s=>s.name.trim()).map(s=>({id:s.id,name:s.name.trim(),price:Number(s.price)||0,dur:Number(s.dur)||30,desc:String(s.desc||"").trim().slice(0,120), ...(svcFor(s)!=="all"?{for:svcFor(s)}:{})}));
-  o.barbers = o.barbers.filter(b=>b.name.trim()).map(b=>({id:b.id,name:b.name.trim(),spec:(b.spec||"").trim(),photo:b.photo||"", ...(barberServes(b)!=="both"?{serves:barberServes(b)}:{})})); };
+  o.barbers = o.barbers.filter(b=>b.name.trim()).map(b=>({id:b.id,name:b.name.trim(),spec:(b.spec||"").trim(),photo:b.photo||"", ...(barberServes(b)!=="both"?{serves:barberServes(b)}:{}), ...(Array.isArray(b.svcs)?{svcs:b.svcs.filter(id=>o.services.some(v=>v.id===id))}:{})})); };
 function cleanContacts(o){ const out = {}; (o.barbers||[]).forEach(b=>{ const c = (o===D ? D.contacts : S.contacts)||{}; const x = c[b.id]||{}; const em = String(x.email||b.email||"").trim().toLowerCase();
   out[b.id] = { phone: digits(x.phone).length===10 ? digits(x.phone) : "", email: isEmail(em) ? em : "" }; }); return out; }
 
@@ -1125,6 +1139,11 @@ const A = {
   svcUp:v=>{ const o = editTarget(); const i = o.services.findIndex(s=>s.id===v); if (i>0){ [o.services[i-1],o.services[i]]=[o.services[i],o.services[i-1]]; render(); if (o===S.salon) queueSave(); } },
   svcDown:v=>{ const o = editTarget(); const i = o.services.findIndex(s=>s.id===v); if (i>=0 && i<o.services.length-1){ [o.services[i+1],o.services[i]]=[o.services[i],o.services[i+1]]; render(); if (o===S.salon) queueSave(); } },
   svcFor:v=>{ const o = editTarget(); const [id,g] = v.split("|"); const x = o.services.find(q=>q.id===id); if (!x) return; if (g==="all") delete x.for; else x.for = g; render(); if (o===S.salon) queueSave(); },
+  barPick:v=>{ const o = editTarget(); const [id,m] = v.split("|"); const x = o.barbers.find(q=>q.id===id); if (!x) return;
+    if (m==="all") delete x.svcs; else if (!Array.isArray(x.svcs)) x.svcs = (o.services||[]).filter(s=>s.name && genderOk(s,x)).map(s=>s.id);
+    render(); if (o===S.salon) queueSave(); },
+  barSvc:v=>{ const o = editTarget(); const [id,sid] = v.split("|"); const x = o.barbers.find(q=>q.id===id); if (!x || !Array.isArray(x.svcs)) return;
+    x.svcs = x.svcs.includes(sid) ? x.svcs.filter(q=>q!==sid) : x.svcs.concat(sid); render(); if (o===S.salon) queueSave(); },
   barServes:v=>{ const o = editTarget(); const [id,g] = v.split("|"); const x = o.barbers.find(q=>q.id===id); if (!x) return; if (g==="both") delete x.serves; else x.serves = g; render(); if (o===S.salon) queueSave(); },
   delSvc:v=>{ const o = editTarget(); o.services=o.services.filter(s=>s.id!==v); render(); if (o===S.salon) queueSave(); },
   count:v=>{ const o = editTarget(); const n=Number(v); while(o.barbers.length<n) o.barbers.push({id:uid(),name:"",spec:"",photo:""}); if (o.barbers.length>n) o.barbers=o.barbers.slice(0,n); render(); if (o===S.salon) queueSave(); },

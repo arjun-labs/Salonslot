@@ -318,3 +318,8 @@ table.led td{padding:8px 4px;border-bottom:1px dashed var(--line);font-variant-n
 .shsearch:focus{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px var(--gold-soft)}
 #shChips .chip.hit{background:var(--gold-soft);border-color:var(--gold);font-weight:700;color:var(--ink)}
 #shChips .chip.dim{opacity:.4}
+/* barber: only selected services */
+.pklist{display:flex;flex-direction:column;gap:2px;border:1px solid var(--line);border-radius:10px;padding:6px 10px;background:#fff;max-height:260px;overflow-y:auto}
+.pk{display:flex;align-items:center;gap:10px;min-height:40px;font-size:15px;cursor:pointer}
+.pk input{width:20px;height:20px;flex:none;accent-color:var(--ink)}
+.pk em{font-style:normal;color:var(--muted);font-size:13px}
