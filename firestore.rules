@@ -47,7 +47,8 @@ service cloud.firestore {
     // pitch game leads: anyone can add one (only these fields), add the game result once within a day; only admin reads
     match /leads/{lid} {
       allow read, delete: if isAdmin();
-      allow create: if request.resource.data.keys().hasOnly(['name', 'salon', 'phone', 'lang', 'at', 'src'])
+      allow create: if request.resource.data.keys().hasOnly(['name', 'salon', 'area', 'phone', 'lang', 'at', 'src'])
+        && (!('area' in request.resource.data) || (request.resource.data.area is string && request.resource.data.area.size() <= 60))
         && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 60
         && request.resource.data.salon is string && request.resource.data.salon.size() > 0 && request.resource.data.salon.size() <= 80
         && request.resource.data.phone is string && request.resource.data.phone.matches('[6-9][0-9]{9}')

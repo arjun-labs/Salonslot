@@ -52,7 +52,7 @@ window.SS_LEAD = {
   // returns the lead id at once; the write happens in the background
   start(d){
     const id = doc(collection(db, "leads")).id;
-    const base = { name:String(d.name).trim().slice(0,60), salon:String(d.salon).trim().slice(0,80), phone:String(d.phone), lang:d.lang==="hi"?"hi":"en", at:Date.now(), src:"pitch" };
+    const base = { name:String(d.name).trim().slice(0,60), salon:String(d.salon).trim().slice(0,80), area:String(d.area||"").trim().slice(0,60), phone:String(d.phone), lang:d.lang==="hi"?"hi":"en", at:Date.now(), src:"pitch" };
     const q = readQ(); q.push({ id, base, patch:null, baseSent:false }); writeQ(q);
     flush();
     return id;

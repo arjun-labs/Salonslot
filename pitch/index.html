@@ -66,7 +66,10 @@ p{margin:0;text-wrap:pretty}
 .lead{margin-top:16px;background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:20px 18px;display:flex;flex-direction:column;gap:14px}
 .lead h2{font-size:22px}
 .fld{display:flex;flex-direction:column;gap:6px}
-.fld span{font-weight:700;font-size:16px}
+.fld span,.fld>label{font-weight:700;font-size:16px}
+.achips{display:flex;flex-wrap:wrap;gap:6px}
+.achip{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 12px;min-height:36px;font-size:14.5px;font-weight:600}
+.achip.on{background:var(--ink);border-color:var(--ink);color:#fff}
 .fld input{font:inherit;font-size:18px;width:100%;min-height:52px;border:1.5px solid var(--line);border-radius:12px;padding:10px 14px;background:#fff;color:var(--ink)}
 .fld input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-soft)}
 .fld input[aria-invalid="true"]{border-color:var(--bad)}
@@ -178,6 +181,8 @@ p{margin:0;text-wrap:pretty}
       <h2 data-t="f_h">शुरू करने से पहले</h2>
       <label class="fld"><span data-t="f_name">आपका नाम</span><input type="text" id="f_name" maxlength="60" autocomplete="off" required></label>
       <label class="fld"><span data-t="f_salon">सैलून का नाम</span><input type="text" id="f_salon" maxlength="80" autocomplete="off" required></label>
+      <div class="fld"><label for="f_area" data-t="f_area">इलाका / Area</label><input type="text" id="f_area" maxlength="60" autocomplete="off" required placeholder="Thane, Mumbra, Kalwa…">
+        <div class="achips" role="group" aria-label="Area"><button type="button" class="achip" data-area="Thane">Thane</button><button type="button" class="achip" data-area="Mumbra">Mumbra</button><button type="button" class="achip" data-area="Kalwa">Kalwa</button><button type="button" class="achip" data-area="Diva">Diva</button><button type="button" class="achip" data-area="Kolshet">Kolshet</button><button type="button" class="achip" data-area="Majiwada">Majiwada</button><button type="button" class="achip" data-area="Ghodbunder">Ghodbunder</button><button type="button" class="achip" data-area="Dombivli">Dombivli</button><button type="button" class="achip" data-area="Kalyan">Kalyan</button><button type="button" class="achip" data-area="Bhiwandi">Bhiwandi</button></div></div>
       <label class="fld"><span data-t="f_phone">Mobile नंबर</span><input type="tel" id="f_phone" inputmode="numeric" maxlength="17" placeholder="98XXXXXXXX" autocomplete="off" required></label>
       <p class="ferr" id="f_err" role="alert" hidden></p>
       <p class="fnote" data-t="f_note">आपका नंबर सिर्फ़ SalonSlot के बारे में बात करने के लिए है, किसी और को नहीं दिया जाएगा।</p>

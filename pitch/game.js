@@ -21,9 +21,9 @@
          note:"{n} client{s} × {avg} × "+DAYS+" days", vs:"SalonSlot is ₹499 a month. Save just {need} client{s} a month and it has paid for itself.",
          vs0:"Nobody leaves? Great! SalonSlot still saves the time spent on calls, the diary and the accounts.",
          others:"Others", big:"Big software", wa:"Hi Arjun, I want SalonSlot for my salon.",
-         f_h:"Before we start", f_name:"Your name", f_salon:"Salon name", f_phone:"Mobile number",
+         f_h:"Before we start", f_name:"Your name", f_salon:"Salon name", f_area:"Area / locality", f_phone:"Mobile number",
          f_note:"Your number is only for talking about SalonSlot. It is never shared with anyone.",
-         fill:"Fill in the 3 details", e_name:"Please write your name", e_salon:"Please write the salon’s name", e_phone:"Please enter a 10-digit mobile number" },
+         fill:"Fill in the 4 details", e_name:"Please write your name", e_salon:"Please write the salon’s name", e_area:"Please write the area, or tap one below", e_phone:"Please enter a 10-digit mobile number" },
     hi:{ k0:"30 सेकंड का खेल", h0:"आपके सैलून की सबसे बड़ी <em>दिक़्क़त</em> कौन-सी है?", p0:"नीचे से अपनी दिक़्क़त चुनिए, और देखिए SalonSlot उसे कैसे ख़त्म करता है।",
          r1:"अपनी 1 से 3 दिक़्क़तें चुनिए", r2:"हर दिक़्क़त का हल खोलिए", r3:"अपना हिसाब और offer देखिए",
          k1:"Step 1 · चुनिए", h1:"इनमें से आपके सैलून में क्या होता है?", p1:"जो सबसे ज़्यादा परेशान करती है, वो 1 से 3 दिक़्क़तें tap करें।", shuffle:"↻ दूसरी दिक़्क़तें दिखाएँ",
@@ -41,9 +41,9 @@
          note:"{n} client × {avg} × "+DAYS+" दिन", vs:"SalonSlot ₹499 महीना, यानी महीने में सिर्फ़ {need} client बचे तो पैसा वसूल।",
          vs0:"एक भी client नहीं जाता? बढ़िया! SalonSlot फिर भी फ़ोन, डायरी और हिसाब का समय बचाता है।",
          others:"दूसरे", big:"बड़े software", wa:"नमस्ते Arjun, मुझे अपने सैलून के लिए SalonSlot चाहिए।",
-         f_h:"शुरू करने से पहले", f_name:"आपका नाम", f_salon:"सैलून का नाम", f_phone:"Mobile नंबर",
+         f_h:"शुरू करने से पहले", f_name:"आपका नाम", f_salon:"सैलून का नाम", f_area:"इलाका / Area", f_phone:"Mobile नंबर",
          f_note:"आपका नंबर सिर्फ़ SalonSlot के बारे में बात करने के लिए है, किसी और को नहीं दिया जाएगा।",
-         fill:"ऊपर की 3 जानकारी भरें", e_name:"अपना नाम लिखें", e_salon:"सैलून का नाम लिखें", e_phone:"10 अंकों का mobile नंबर डालें" }
+         fill:"ऊपर की 4 जानकारी भरें", e_name:"अपना नाम लिखें", e_salon:"सैलून का नाम लिखें", e_area:"इलाका लिखें, या नीचे से चुनें", e_phone:"10 अंकों का mobile नंबर डालें" }
   };
 
   var I = {
@@ -89,14 +89,19 @@
   }
   /* ---- the 3 details before the game ---- */
   var digits = function(v){ var d = String(v||"").replace(/\D/g,""); if (d.length===12 && d.slice(0,2)==="91") d = d.slice(2); if (d.length===11 && d[0]==="0") d = d.slice(1); return d; };
-  function form(){ return { name:$("f_name").value.trim(), salon:$("f_salon").value.trim(), phone:digits($("f_phone").value) }; }
-  function formOk(f){ return f.name.length>=2 && f.salon.length>=2 && /^[6-9]\d{9}$/.test(f.phone); }
-  function formErr(f){ return f.name.length<2 ? ["f_name","e_name"] : f.salon.length<2 ? ["f_salon","e_salon"] : !/^[6-9]\d{9}$/.test(f.phone) ? ["f_phone","e_phone"] : null; }
+  var FIELDS = ["f_name","f_salon","f_area","f_phone"];
+  function form(){ return { name:$("f_name").value.trim(), salon:$("f_salon").value.trim(), area:$("f_area").value.trim(), phone:digits($("f_phone").value) }; }
+  function formOk(f){ return f.name.length>=2 && f.salon.length>=2 && f.area.length>=2 && /^[6-9]\d{9}$/.test(f.phone); }
+  function formErr(f){ return f.name.length<2 ? ["f_name","e_name"] : f.salon.length<2 ? ["f_salon","e_salon"] : f.area.length<2 ? ["f_area","e_area"] : !/^[6-9]\d{9}$/.test(f.phone) ? ["f_phone","e_phone"] : null; }
+  // the area of the last salon is kept, since a day's visits are usually in one area
+  function markArea(){ var v = $("f_area").value.trim().toLowerCase(); document.querySelectorAll("[data-area]").forEach(function(b){ var on = b.dataset.area.toLowerCase()===v; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); }); }
+  try{ $("f_area").value = localStorage.getItem("ss_pitch_area") || ""; }catch(e){}
+  markArea();
   function leadStart(f){
-    if (window.SS_LEAD) return window.SS_LEAD.start({ name:f.name, salon:f.salon, phone:f.phone, lang:LANG });
+    if (window.SS_LEAD) return window.SS_LEAD.start({ name:f.name, salon:f.salon, area:f.area, phone:f.phone, lang:LANG });
     // lead.js not loaded (offline): park it for lead.js to send next time
     var id = "p"+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
-    try{ var q = JSON.parse(localStorage.getItem("ss_pitch_queue")||"[]"); q.push({ id:id, baseSent:false, patch:null, base:{ name:f.name.slice(0,60), salon:f.salon.slice(0,80), phone:f.phone, lang:LANG, at:Date.now(), src:"pitch" } }); localStorage.setItem("ss_pitch_queue", JSON.stringify(q)); }catch(e){}
+    try{ var q = JSON.parse(localStorage.getItem("ss_pitch_queue")||"[]"); q.push({ id:id, baseSent:false, patch:null, base:{ name:f.name.slice(0,60), salon:f.salon.slice(0,80), area:f.area.slice(0,60), phone:f.phone, lang:LANG, at:Date.now(), src:"pitch" } }); localStorage.setItem("ss_pitch_queue", JSON.stringify(q)); }catch(e){}
     return id;
   }
   var finTimer = null;
@@ -180,7 +185,7 @@
     document.querySelector(".bar").hidden = n===3;
     $("back").hidden = n===0; $("hint").hidden = true; next.disabled = false;
     if (n===0){ var ok = formOk(form()); next.textContent = ok ? u("start") : u("fill"); }
-    var who = $("who1"); if (st.lead){ who.hidden = false; who.innerHTML = '<b>'+esc(st.lead.name)+'</b> · '+esc(st.lead.salon); } else who.hidden = true;
+    var who = $("who1"); if (st.lead){ who.hidden = false; who.innerHTML = '<b>'+esc(st.lead.name)+'</b> · '+esc(st.lead.salon)+' · '+esc(st.lead.area); } else who.hidden = true;
     if (n===1){ drawProbs(); syncPick(); }
     if (n===2){ drawSols(); syncOpen(); }
     if (n===3){ drawCalc(); if (!keepScroll) leadFinish(); }
@@ -210,16 +215,18 @@
     if (this.disabled) return;
     if (st.step===0){
       var f = form(), bad = formErr(f), er = $("f_err");
-      ["f_name","f_salon","f_phone"].forEach(function(k){ $(k).removeAttribute("aria-invalid"); });
+      FIELDS.forEach(function(k){ $(k).removeAttribute("aria-invalid"); });
       if (bad){ $(bad[0]).setAttribute("aria-invalid","true"); er.textContent = u(bad[1]); er.hidden = false; $(bad[0]).focus(); return; }
       er.hidden = true; $("f_phone").value = f.phone;
-      if (!st.lead || st.lead.phone!==f.phone || st.lead.name!==f.name || st.lead.salon!==f.salon) st.lead = { id:leadStart(f), name:f.name, salon:f.salon, phone:f.phone };
+      try{ localStorage.setItem("ss_pitch_area", f.area); }catch(e){}
+      if (!st.lead || st.lead.phone!==f.phone || st.lead.name!==f.name || st.lead.salon!==f.salon || st.lead.area!==f.area) st.lead = { id:leadStart(f), name:f.name, salon:f.salon, area:f.area, phone:f.phone };
     }
     go(Math.min(3, st.step+1));
   });
-  $("leadForm").addEventListener("input", function(){ $("f_err").hidden = true; ["f_name","f_salon","f_phone"].forEach(function(k){ $(k).removeAttribute("aria-invalid"); }); if (st.step===0) $("next").textContent = formOk(form()) ? u("start") : u("fill"); });
+  $("leadForm").addEventListener("click", function(e){ var b = e.target.closest("[data-area]"); if (!b) return; $("f_area").value = b.dataset.area; markArea(); $("f_area").dispatchEvent(new Event("input", {bubbles:true})); });
+  $("leadForm").addEventListener("input", function(){ markArea(); $("f_err").hidden = true; FIELDS.forEach(function(k){ $(k).removeAttribute("aria-invalid"); }); if (st.step===0) $("next").textContent = formOk(form()) ? u("start") : u("fill"); });
   $("leadForm").addEventListener("submit", function(e){ e.preventDefault(); $("next").click(); });
   $("back").addEventListener("click", function(){ go(Math.max(0, st.step-1)); });
-  $("again").addEventListener("click", function(){ st = newRound(); ["f_name","f_salon","f_phone"].forEach(function(k){ $(k).value = ""; }); go(0); });
+  $("again").addEventListener("click", function(){ st = newRound(); ["f_name","f_salon","f_phone"].forEach(function(k){ $(k).value = ""; }); markArea(); go(0); });
   applyLang();
 })();
