@@ -5,30 +5,30 @@
 window.SS_BANK = [
   { id:"phone", ic:"phone",
     en:{ t:"Booking calls in the middle of work", s:"Scissors in hand, phone ringing", h:"Clients book themselves",
-         pts:["From the counter QR or a WhatsApp link, 24 hours, no app, no login","The client picks the service, barber and time","A new booking shows on your phone with a sound"],
+         pts:["Through the QR at your counter or a WhatsApp link, 24 hours a day, with no app and no login","The client picks the service, barber and time","A new booking shows on your phone with a sound"],
          them:"Phone / diary: bookings only when the shop is open and you are free", us:"24-hour booking, no app for the client, English + Hindi" },
     hi:{ t:"काम के बीच booking का फ़ोन", s:"कैंची हाथ में है और फ़ोन बज रहा है", h:"Client ख़ुद booking करता है",
          pts:["Counter के QR या WhatsApp link से, 24 घंटे, बिना app और बिना login","Service, barber और time client ख़ुद चुनता है","नई booking आते ही आपके फ़ोन पर आवाज़ के साथ दिखती है"],
          them:"फ़ोन / डायरी: दुकान खुली हो और आप फ़्री हों तभी booking", us:"24 घंटे booking, client का कोई app नहीं, हिंदी + English" } },
 
   { id:"diary", ic:"diary",
-    en:{ t:"Diary mix-ups", s:"Two names on one time, or the page is missing", h:"Double booking cannot happen",
+    en:{ t:"Diary mix-ups", s:"Two names in one slot, or a missing page", h:"Double booking can’t happen",
          pts:["Clients only see free times","One slot, one booking","Today, tomorrow and the whole week on one screen"],
-         them:"Diary: costs ₹0, but every mistake costs a client", us:"Every booking confirmed, on your phone" },
+         them:"Diary: costs ₹0, but every mistake costs a client", us:"Every booking confirmed on your phone" },
     hi:{ t:"डायरी की गड़बड़", s:"एक time पर दो नाम, या पन्ना ही नहीं मिलता", h:"Double booking हो ही नहीं सकती",
          pts:["Client को सिर्फ़ ख़ाली time दिखते हैं","एक slot पर एक ही booking","आज, कल और पूरे हफ़्ते की booking एक screen पर"],
          them:"डायरी: ₹0, पर हर गड़बड़ का नुकसान", us:"हर booking पक्की, phone पर" } },
 
   { id:"line", ic:"line",
-    en:{ t:"Clients get tired of waiting and leave", s:"Long wait, and they walk to the next salon", h:"Clients come at their time, straight to the chair",
-         pts:["Clients book a time before they come","The app reminds you 20 minutes before each booking","Short 10-minute slots, so a threading does not block half an hour"],
+    en:{ t:"Clients get tired of waiting and leave", s:"After a long wait, they walk to the next salon", h:"Clients arrive at their time and go straight to the chair",
+         pts:["Clients book a time before they come","The app reminds you 20 minutes before each booking","Short 10-minute slots, so threading doesn’t block half an hour"],
          them:"Big software: demo calls, training, long setup", us:"Live in 5 minutes, I set it up at your shop" },
     hi:{ t:"Client लाइन में थककर चला जाता है", s:"इंतज़ार लंबा हुआ तो दूसरी दुकान", h:"Client अपने time पर सीधा कुर्सी पर",
          pts:["Client पहले से time book करके आता है","हर booking से 20 मिनट पहले app आपको याद दिलाता है","10 मिनट के छोटे slots, ताकि threading पर आधा घंटा न जाए"],
          them:"बड़े software: demo call, training, लंबा setup", us:"5 मिनट में चालू, मैं दुकान पर आकर करता हूँ" } },
 
   { id:"barber", ic:"barber",
-    en:{ t:"Not sure which barber is free when", s:"Telling every barber his schedule again and again", h:"Each barber gets his own column",
+    en:{ t:"Not sure which barber is free, and when", s:"Telling every barber his schedule again and again", h:"Each barber gets his own column",
          pts:["Today’s timeline shows every barber’s bookings side by side","One tap sends each barber his day on WhatsApp","Tap an empty spot on the timeline to add a walk-in there"],
          them:"Big software: lots of options to learn", us:"Only what you need, easy to run" },
     hi:{ t:"कौन barber कब ख़ाली, पता नहीं", s:"हर barber को उसका schedule बार-बार बताना", h:"हर barber का अपना कॉलम",
@@ -36,7 +36,7 @@ window.SS_BANK = [
          them:"बड़े software: बहुत options, सीखना पड़ता है", us:"सिर्फ़ ज़रूरी चीज़ें, चलाना आसान" } },
 
   { id:"bill", ic:"bill",
-    en:{ t:"No bill for the client, no record of earnings", s:"By evening you don’t know what you made today", h:"Bill on WhatsApp, totals done for you",
+    en:{ t:"No bill for the client, no record of earnings", s:"By evening, you don’t know what you earned today", h:"Bill on WhatsApp, totals done for you",
          pts:["Tap “Done” and the prices are already filled in, with discount and Cash / UPI","The bill goes straight to the client’s WhatsApp, with your booking link at the bottom","Today’s earnings on Home, the month’s totals in Calendar"],
          them:"Diary: adding up totals by hand every evening", us:"Day and month totals add up by themselves" },
     hi:{ t:"Client को bill नहीं, कमाई का हिसाब नहीं", s:"शाम को पता नहीं आज कितना बना", h:"WhatsApp पर bill, अपने आप हिसाब",
@@ -45,14 +45,14 @@ window.SS_BANK = [
 
   { id:"family", ic:"family",
     en:{ t:"The right barber for ladies and gents", s:"In a family salon, bookings go to the wrong person", h:"Made for family salons",
-         pts:["Mark each service as for men, for women or for everyone","Mark whom each barber works on: men, women or both","A ladies service shows only the people who do ladies work, and “any barber” picks from them"],
+         pts:["Mark each service as for men, for women or for everyone","Mark whom each barber works on: men, women or both","For a ladies service, clients see only the staff who do ladies’ work, and “any barber” picks from them too"],
          them:"Big software: setup mostly in English", us:"English + Hindi, one tap per service and barber" },
     hi:{ t:"Ladies-Gents के लिए सही barber", s:"Family सैलून में ग़लत barber को booking", h:"Family सैलून के लिए बना",
          pts:["हर service पर: पुरुष, महिला या सबके लिए","हर barber पर: पुरुष, महिला या दोनों का काम","Ladies service पर सिर्फ़ ladies का काम करने वाले दिखते हैं, “कोई भी” भी उन्हीं में से चुनता है"],
          them:"बड़े software: setup ज़्यादातर English में", us:"हिंदी + English, हर service और barber पर 1 tap" } },
 
   { id:"noshow", ic:"bell",
-    en:{ t:"Clients book and then forget to come", s:"The slot stays empty and someone else was turned away", h:"Reminders before every booking",
+    en:{ t:"Clients book and then forget to come", s:"The slot stays empty, and you turned someone else away", h:"Reminders before every booking",
          pts:["The app reminds you 20 minutes before each booking","Send the client a WhatsApp reminder in one tap","The client can add the booking to Google Calendar"],
          them:"Diary: no reminder at all", us:"A reminder before every booking" },
     hi:{ t:"Client booking करके भूल जाता है", s:"Slot ख़ाली रहा, और किसी और को मना कर दिया था", h:"हर booking से पहले याद दिलाना",
@@ -60,7 +60,7 @@ window.SS_BANK = [
          them:"डायरी: कोई reminder नहीं", us:"हर booking से पहले reminder" } },
 
   { id:"night", ic:"moon",
-    en:{ t:"Clients want to book at night or on holidays", s:"The shop is closed, nobody picks up the phone", h:"Your shop takes bookings even when closed",
+    en:{ t:"Clients want to book at night or on holidays", s:"The shop is closed and nobody answers the phone", h:"Your shop takes bookings even when closed",
          pts:["Your booking link works 24 hours, 7 days","Clients only see times when you are open","In the morning, every booking is waiting on your screen"],
          them:"Phone: closed shop means a lost booking", us:"Bookings come in even at night" },
     hi:{ t:"Client रात को या छुट्टी के दिन booking चाहता है", s:"दुकान बंद है, फ़ोन कोई नहीं उठाता", h:"दुकान बंद हो, booking फिर भी चालू",
@@ -68,7 +68,7 @@ window.SS_BANK = [
          them:"फ़ोन: दुकान बंद तो booking गई", us:"रात में भी booking आती है" } },
 
   { id:"extra", ic:"plus",
-    en:{ t:"A client adds a service in the middle", s:"“Do the beard too” and the next booking gets late", h:"“+ Add work” sorts it out",
+    en:{ t:"A client adds a service in the middle", s:"“Do the beard too,” and the next booking runs late", h:"“+ Add work” sorts it out",
          pts:["Add the service or extra minutes to the booking in one tap","If it runs into the next booking, the app offers to give that next client to a free barber","Or it moves the next booking later and writes the WhatsApp message for you"],
          them:"Diary: the whole day gets pushed and nobody is told", us:"The app shows the way out in one screen" },
     hi:{ t:"Client बीच में और काम जुड़वाता है", s:"“दाढ़ी भी कर दो” और अगली booking लेट", h:"“+ काम जोड़ें” से हल",
@@ -85,14 +85,14 @@ window.SS_BANK = [
 
   { id:"move", ic:"move",
     en:{ t:"Changing a client’s time takes many calls", s:"Calling back and forth to find a new slot", h:"“Change time” in two taps",
-         pts:["Pick a new day and a free time, any barber who can do it","The WhatsApp message to the client is written for you","The old slot opens up for others straight away"],
+         pts:["Pick a new day and a free time with any barber who can do the job","The WhatsApp message to the client is written for you","The old slot opens up for others straight away"],
          them:"Phone: three calls to move one booking", us:"Two taps, message ready" },
     hi:{ t:"Client का time बदलना मतलब कई फ़ोन", s:"नया slot ढूँढने के लिए बार-बार call", h:"“समय बदलें” दो tap में",
          pts:["नया दिन और ख़ाली time चुनो, उस काम के लायक कोई भी barber","Client के लिए WhatsApp message अपने आप तैयार","पुराना slot तुरंत दूसरों के लिए ख़ाली"],
          them:"फ़ोन: एक booking के लिए तीन call", us:"दो tap, message तैयार" } },
 
   { id:"short", ic:"line",
-    en:{ t:"Small jobs block big chunks of time", s:"A 10-minute threading takes a half-hour slot", h:"Every service at its real length",
+    en:{ t:"Small jobs block big chunks of time", s:"A 10-minute threading job takes up a half-hour slot", h:"Every service at its real length",
          pts:["Set each service from 10 to 120 minutes","Short services get 10-minute slots","More clients fit in the same day"],
          them:"Diary: everything in half-hour blocks", us:"Slots that match the work" },
     hi:{ t:"छोटे काम पर बड़ा time block", s:"10 मिनट की threading, आधे घंटे का slot", h:"हर service का असली time",
@@ -109,7 +109,7 @@ window.SS_BANK = [
 
   { id:"find", ic:"map",
     en:{ t:"New clients can’t find the shop", s:"“Where exactly is it?” calls before every visit", h:"Address and map with every booking",
-         pts:["Your address shows on the booking page","An “Open in Google Maps” button takes them to your door","The booking confirmation on WhatsApp carries the map link too"],
+         pts:["Your address shows on the booking page","An “Open in Google Maps” button takes them to your door","The booking confirmation on WhatsApp includes the map link too"],
          them:"Phone: explaining the way again and again", us:"Map link with every booking" },
     hi:{ t:"नया client दुकान ढूँढ नहीं पाता", s:"हर बार “कहाँ पर है?” वाला call", h:"हर booking के साथ पता और map",
          pts:["Booking page पर आपकी दुकान का पता","“Google Maps में खोलें” से सीधा दुकान तक","WhatsApp वाले booking message में भी map का link"],
@@ -117,7 +117,7 @@ window.SS_BANK = [
 
   { id:"walkin", ic:"walk",
     en:{ t:"Walk-ins clash with booked clients", s:"A walk-in sits down and the booked client arrives", h:"Walk-ins go on the same screen",
-         pts:["Add a walk-in in two taps from Home","That time is blocked for online booking straight away","Booked and walk-in clients side by side on the timeline"],
+         pts:["Add a walk-in in two taps from Home","That time is blocked for online booking straight away","Booked and walk-in clients appear side by side on the timeline"],
          them:"Diary: walk-ins never get written down", us:"Every client in one place" },
     hi:{ t:"Walk-in और booking वाले client टकराते हैं", s:"Walk-in बैठा, और booking वाला भी आ गया", h:"Walk-in भी उसी screen पर",
          pts:["Home से दो tap में walk-in entry","वो time online booking के लिए तुरंत बंद","Booking और walk-in, दोनों timeline में अगल-बगल"],
@@ -134,6 +134,6 @@ window.SS_BANK = [
 
 /* The price point, always shown next to the problem's own point */
 window.SS_PRICE = {
-  en:{ them:"₹99 trial, then ₹499 a month but billed for the year at once (≈ ₹5,988)*", us:"₹499 every month, no lock-in, stop any time" },
+  en:{ them:"₹99 trial, then ₹499 a month, but billed yearly in one go (≈ ₹5,988)*", us:"₹499 a month, no lock-in; stop any time" },
   hi:{ them:"₹99 के बाद ₹499 महीना, पर साल का एक साथ (≈ ₹5,988)*", us:"₹499 हर महीना, कोई lock नहीं, जब चाहें बंद" }
 };
