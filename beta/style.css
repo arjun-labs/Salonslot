@@ -323,3 +323,17 @@ table.led td{padding:8px 4px;border-bottom:1px dashed var(--line);font-variant-n
 .pk{display:flex;align-items:center;gap:10px;min-height:40px;font-size:15px;cursor:pointer}
 .pk input{width:20px;height:20px;flex:none;accent-color:var(--ink)}
 .pk em{font-style:normal;color:var(--muted);font-size:13px}
+
+/* owner: scroll wheel for any time */
+.wheel{position:relative;display:flex;justify-content:center;align-items:center;gap:4px;height:240px;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.wheel::before,.wheel::after{content:"";position:absolute;left:0;right:0;height:84px;z-index:2;pointer-events:none}
+.wheel::before{top:0;background:linear-gradient(#fff,rgba(255,255,255,0))}
+.wheel::after{bottom:0;background:linear-gradient(rgba(255,255,255,0),#fff)}
+.wband{position:absolute;left:12px;right:12px;top:96px;height:48px;border-radius:10px;background:var(--gold-soft);border:1px solid #E6D3A6;pointer-events:none}
+.wcol{position:relative;z-index:1;height:240px;width:84px;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;outline:none;overscroll-behavior:contain}
+.wcol::-webkit-scrollbar{display:none}
+.wcol:focus-visible{box-shadow:inset 0 0 0 2px var(--gold);border-radius:10px}
+.wpad{height:96px}
+.witem{height:48px;display:flex;align-items:center;justify-content:center;scroll-snap-align:center;font-family:var(--display);font-size:22px;color:#9A9186;cursor:pointer;user-select:none}
+.witem.on{color:var(--ink);font-size:30px;font-weight:600}
+.wsep{position:relative;z-index:1;font-family:var(--display);font-size:28px;font-weight:600}
