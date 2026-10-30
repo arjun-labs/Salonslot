@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.30-4";
+const APP_VERSION = "2026.10.30-5";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version
@@ -49,7 +49,7 @@ const T = {
   nav_calendar:"Calendar", cal_h:"Calendar", cal_p:"Tap any day to see who came. Totals are for the whole month.", cal_total:"Bookings", cal_done:"Done", cal_cancel:"Cancelled", cal_earn:"Earned (done)",
   cal_by_barber:"By barber this month", cal_now:"This month", cal_none:"No bookings this day.", cal_pick:"Tap a day to see its bookings.",
   tl_h:"Day timeline", tl_p:"Tap an empty space to add a booking there. Tap a booking to add work or change its time.",
-  sh_extend:"+ Add work", sh_move:"Change time", sh_close:"Close", sh_add_svc:"Add a service", sh_add_min:"Or just add time", sh_mins:"+{n} min",
+  sh_extend:"+ Add work", sh_move:"Change time", sh_close:"Close", sh_add_svc:"Add a service", sh_search:"Search a service", sh_none:"No service matches. Try a shorter word.", sh_add_min:"Or just add time", sh_mins:"+{n} min",
   cf_h:"This runs into {name}'s booking at {time}.", cf_other:"Give {name} to {barber}", cf_other_none:"No other barber is free at that time.",
   cf_shift:"Move {name} to {time}", cf_shift_none:"Can't push it back: the time after is also booked. Use Change time.", cf_keep:"Keep both as they are",
   mv_date:"New day", mv_barber:"Barber", mv_time:"New time", mv_go:"Move to {time}", mv_none:"No free time this day.",
@@ -138,7 +138,7 @@ const T = {
   nav_calendar:"Calendar", cal_h:"Calendar", cal_p:"किसी भी दिन पर tap करें और देखें कौन आया। ऊपर पूरे महीने का हिसाब है।", cal_total:"Bookings", cal_done:"Done", cal_cancel:"Cancel हुईं", cal_earn:"कमाई (done)",
   cal_by_barber:"इस महीने barber के हिसाब से", cal_now:"इस महीने पर जाएं", cal_none:"इस दिन कोई booking नहीं।", cal_pick:"Bookings देखने के लिए किसी दिन पर tap करें।",
   tl_h:"दिन की timeline", tl_p:"ख़ाली जगह पर tap करें तो वहीं booking जुड़ेगी। किसी booking पर tap करके काम जोड़ें या समय बदलें।",
-  sh_extend:"+ काम जोड़ें", sh_move:"समय बदलें", sh_close:"बंद करें", sh_add_svc:"Service जोड़ें", sh_add_min:"या सिर्फ़ समय बढ़ाएं", sh_mins:"+{n} मिनट",
+  sh_extend:"+ काम जोड़ें", sh_move:"समय बदलें", sh_close:"बंद करें", sh_add_svc:"Service जोड़ें", sh_search:"Service ढूँढें", sh_none:"ऐसी कोई service नहीं मिली। छोटा शब्द लिखकर देखें।", sh_add_min:"या सिर्फ़ समय बढ़ाएं", sh_mins:"+{n} मिनट",
   cf_h:"इससे {name} की {time} वाली booking से टकराव होगा।", cf_other:"{name} को {barber} के पास भेजें", cf_other_none:"उस समय कोई दूसरा barber ख़ाली नहीं है।",
   cf_shift:"{name} को {time} पर करें", cf_shift_none:"आगे नहीं खिसक सकता, उसके बाद भी booking है। \"समय बदलें\" से करें।", cf_keep:"दोनों को ऐसे ही रहने दें",
   mv_date:"नया दिन", mv_barber:"Barber", mv_time:"नया समय", mv_go:"{time} पर करें", mv_none:"इस दिन कोई समय ख़ाली नहीं।",
@@ -652,7 +652,10 @@ function viewSheet(){
       <button class="btn ghost block" data-a="cfKeep">${t("cf_keep")}</button>`;
   } else if (sh.mode==="extend"){
     const have = new Set([k.serviceId].concat(k.extra||[]));
-    body = `<p class="label">${t("sh_add_svc")}</p><div class="chips">${s.services.filter(v=>!have.has(v.id) && canDo(v,b)).map(v=>`<button class="chip" data-a="shSvc" data-v="${v.id}">+ ${esc(v.name)} · ${esc(v.dur)} ${t("min")}</button>`).join("")}</div>
+    body = `<p class="label">${t("sh_add_svc")}</p>
+      <input type="search" id="shSearch" class="shsearch" data-shs="1" autocomplete="off" placeholder="🔍 ${t("sh_search")}" aria-label="${t("sh_search")}">
+      <div class="chips" id="shChips">${s.services.filter(v=>!have.has(v.id) && canDo(v,b)).map(v=>`<button class="chip" data-a="shSvc" data-v="${v.id}" data-name="${esc(String(v.name||"").toLowerCase())}">+ ${esc(v.name)} · ${esc(v.dur)} ${t("min")}</button>`).join("")}</div>
+      <p class="small muted" id="shNone" hidden>${t("sh_none")}</p>
       <p class="label">${t("sh_add_min")}</p><div class="row" style="gap:6px">${[10,15,30].map(n=>`<button class="btn sm" data-a="shMin" data-v="${n}">${t("sh_mins",{n})}</button>`).join("")}</div>`;
   } else if (sh.mode==="move"){
     const days = Array.from({length:7},(_,i)=>ymd(new Date(Date.now()+i*DAY)));
@@ -1269,7 +1272,14 @@ const A = {
 };
 
 app.addEventListener("click", e => { const el = e.target.closest("[data-a]"); if (!el || el.disabled) return; const f = A[el.dataset.a]; if (f){ if (el.tagName!=="A") e.preventDefault(); f(el.dataset.v, e, el); } });
-app.addEventListener("input", e => { const el = e.target, d = el.dataset; const o = editTarget();
+// add-work search: matching services jump to the top and light up, the rest fade
+function filterShChips(q){
+  q = String(q||"").trim().toLowerCase(); let hits = 0;
+  document.querySelectorAll("#shChips .chip").forEach(c=>{ const m = !q || (c.dataset.name||"").includes(q);
+    if (m && q) hits++; c.classList.toggle("hit", !!q && m); c.classList.toggle("dim", !!q && !m); c.style.order = q && m ? "0" : "1"; });
+  const none = document.getElementById("shNone"); if (none) none.hidden = !q || hits>0;
+}
+app.addEventListener("input", e => { const el = e.target, d = el.dataset; if (d.shs){ filterShChips(el.value); return; } const o = editTarget();
   if (d.salon && o){ o[d.salon] = el.value; if (o===S.salon) queueSave(); }
   else if (d.svc && o){ const s = o.services.find(x=>x.id===d.svc); if (s){ s[d.k] = el.value; if (o===S.salon) queueSave(); } }
   else if (d.bar && o){ const b = o.barbers.find(x=>x.id===d.bar); if (b){ b[d.k] = el.value; if (o===S.salon) queueSave(); } }

@@ -313,3 +313,8 @@ table.led td{padding:8px 4px;border-bottom:1px dashed var(--line);font-variant-n
 .svchead{margin:6px 0 -2px}
 .svchead:first-child{margin-top:0}
 .svclist+.svchead{margin-top:14px}
+/* add-work: service search */
+.shsearch{width:100%;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 12px;min-height:44px;font:inherit}
+.shsearch:focus{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px var(--gold-soft)}
+#shChips .chip.hit{background:var(--gold-soft);border-color:var(--gold);font-weight:700;color:var(--ink)}
+#shChips .chip.dim{opacity:.4}
