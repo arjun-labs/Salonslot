@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.03-1";
+const APP_VERSION = "2026.11.03-2";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -81,7 +81,7 @@ const T = {
   link_h:"Your booking link", link_p:"Share this link on WhatsApp, Instagram and Google. Customers book from their own phone, no app needed.", copy:"Copy", copied:"Copied", share_wa:"Share on WhatsApp", open_link:"Open booking page", qr_p:"Print this QR and keep it on the counter.",
   share_msg:"Book your appointment at {salon} online: {link}",
   book_h:"Book an appointment", book_owner:"Add a booking for a walk-in or phone customer.",
-  pick_svc:"1. Choose a service", pick_barber:"2. Choose a barber", add_h:"Add another service?", add_p:"Optional. Tap to add more, then choose your barber.", add_tot:"Total", add_next:"Next: choose barber", any_barber:"Any barber", any_sub:"First one free",
+  pick_svc:"1. Choose a service", pick_barber:"2. Choose a barber", add_h:"Add another service?", add_p:"Optional. Tap to add more, then choose your barber.", add_tot:"Total", add_next:"Next: choose barber", cl_h:"Clients", cl_p:"Everyone who booked in the last 13 months, by phone number. Tap a name for their history.", cl_total:"Clients", cl_repeat:"Came 2+ times", cl_lost30:"Not back in 30 days", fu_h:"Call them back", fu_p:"Clients who haven't come back and have no booking ahead. Send a WhatsApp with your booking link.", fu_chip:"{n}+ days", fu_count:"{n} clients", fu_none:"No one away for {n}+ days. Great!", fu_send:"Send WhatsApp", fu_sent:"sent {date}", cl_days:"{n} days ago", cl_today:"today", cl_v1:"1 visit", cl_vn:"{n} visits", cl_next:"booked {date}", cl_hist:"History", cl_all:"All clients", cl_search:"Name or phone", cl_empty:"No clients yet. They appear here after bookings with a phone number.", cl_reload:"Refresh", cl_nohist:"No visits found for this number.", ch_visits:"Visits", ch_spent:"Spent", ch_avg:"Per visit", ch_first:"First visit {date}", ch_last:"last {n} days ago", ch_fav:"usually with {name}", ch_next:"Next booking: {date}, {time}", ch_call:"Call", ch_book:"New booking", ch_list:"All visits", ch_notdone:"Not marked done", dc_h:"Day closing", dc_p:"Money from work marked Done, split Cash and UPI. Send it to yourself or your partner.", dc_clients:"Clients done", dc_nobill:"No bill made", dc_nobill_p:"For work done without a bill, the service price is counted.", dc_disc:"Discount", dc_total:"Total", dc_pending:"Not done yet", dc_pend_warn:"{n} bookings of this day are not marked Done yet, so they are not in this total.", dc_send:"Send on WhatsApp", dc_none:"No work done this day.", dc_by_barber:"Barber-wise (this day)", home_closing:"Day closing", home_clients:"Clients", any_barber:"Any barber", any_sub:"First one free",
   pick_date:"3. Choose a day", pick_time:"4. Choose a time", your_details:"5. Your details", cust_name:"Name", cust_phone:"Mobile number", cust_email:"Email (for Google Calendar reminder)", bad_email:"That email doesn't look right. Check it or leave it empty.", barber_email:"Gmail (for Google Calendar)", barber_phone:"WhatsApp number", private_note:"Only you see this. Customers never see barber numbers.", no_phone:"No WhatsApp number saved. Add it in Settings → Barbers.", send_each:"Send each barber their day", send_all_p:"Each barber gets all of today's bookings in one message on their own WhatsApp. Tap the big button, send, come back, and the next barber is ready.",
   send:"Send", sent:"Sent", send_all:"Start: send to {name}", send_next:"Next: send to {name}", all_sent:"All barbers have today's schedule.", send_again:"Send again from the start",
   cal_note:"Customer and barber emails are already added as guests. Tap Save in Google Calendar, then Send, so they get the invite.", cal_note_c:"The salon is already added as a guest. Tap Save in Google Calendar, then Send.",
@@ -172,7 +172,7 @@ const T = {
   link_h:"आपका booking link", link_p:"ये link WhatsApp, Instagram और Google पर share करें। ग्राहक अपने फ़ोन से booking करेंगे, कोई app नहीं चाहिए।", copy:"Copy", copied:"Copy हो गया", share_wa:"WhatsApp पर share करें", open_link:"Booking page खोलें", qr_p:"ये QR print करके counter पर लगाएं।",
   share_msg:"{salon} में अपनी appointment online book करें: {link}",
   book_h:"Appointment बुक करें", book_owner:"Walk-in या फ़ोन वाले ग्राहक की booking जोड़ें।",
-  pick_svc:"1. Service चुनें", pick_barber:"2. Barber चुनें", add_h:"और कोई service जोड़नी है?", add_p:"ज़रूरी नहीं। जितनी चाहिए tap करके जोड़ें, फिर barber चुनें।", add_tot:"कुल", add_next:"आगे: Barber चुनें", any_barber:"कोई भी barber", any_sub:"जो पहले free हो",
+  pick_svc:"1. Service चुनें", pick_barber:"2. Barber चुनें", add_h:"और कोई service जोड़नी है?", add_p:"ज़रूरी नहीं। जितनी चाहिए tap करके जोड़ें, फिर barber चुनें।", add_tot:"कुल", add_next:"आगे: Barber चुनें", cl_h:"Clients", cl_p:"पिछले 13 महीने में booking करने वाले सब, phone number के हिसाब से। नाम पर tap करके पूरा history देखें।", cl_total:"Clients", cl_repeat:"2+ बार आए", cl_lost30:"30 दिन से नहीं आए", fu_h:"वापस बुलाएँ", fu_p:"जो clients काफ़ी दिन से नहीं आए और आगे कोई booking भी नहीं है। WhatsApp पर booking link भेजें।", fu_chip:"{n}+ दिन", fu_count:"{n} clients", fu_none:"{n}+ दिन से कोई दूर नहीं। बढ़िया!", fu_send:"WhatsApp भेजें", fu_sent:"भेजा {date}", cl_days:"{n} दिन पहले", cl_today:"आज", cl_v1:"1 बार आए", cl_vn:"{n} बार आए", cl_next:"{date} की booking", cl_hist:"History", cl_all:"सारे clients", cl_search:"नाम या phone", cl_empty:"अभी कोई client नहीं। Phone number वाली booking के बाद यहाँ दिखेंगे।", cl_reload:"Refresh", cl_nohist:"इस number की कोई visit नहीं मिली।", ch_visits:"Visits", ch_spent:"कुल ख़र्च", ch_avg:"हर बार", ch_first:"पहली बार {date}", ch_last:"आख़िरी {n} दिन पहले", ch_fav:"ज़्यादातर {name} से", ch_next:"अगली booking: {date}, {time}", ch_call:"Call", ch_book:"नई booking", ch_list:"सारी visits", ch_notdone:"Done नहीं हुआ", dc_h:"दिन का हिसाब", dc_p:"Done हुए काम की कमाई, Cash और UPI अलग। ख़ुद को या partner को WhatsApp पर भेजें।", dc_clients:"Clients (Done)", dc_nobill:"Bill नहीं बना", dc_nobill_p:"जिस काम का bill नहीं बना, उसमें service का दाम गिना है।", dc_disc:"Discount", dc_total:"कुल", dc_pending:"अभी Done नहीं", dc_pend_warn:"इस दिन की {n} booking अभी Done नहीं हुईं, इसलिए वो इस हिसाब में नहीं हैं।", dc_send:"WhatsApp पर भेजें", dc_none:"इस दिन कोई काम Done नहीं हुआ।", dc_by_barber:"Barber के हिसाब से (इस दिन)", home_closing:"दिन का हिसाब", home_clients:"Clients", any_barber:"कोई भी barber", any_sub:"जो पहले free हो",
   pick_date:"3. दिन चुनें", pick_time:"4. समय चुनें", your_details:"5. आपकी जानकारी", cust_name:"नाम", cust_phone:"मोबाइल नंबर", cust_email:"Email (Google Calendar reminder के लिए)", bad_email:"Email सही नहीं लग रहा। Check करें या खाली छोड़ दें।", barber_email:"Gmail (Google Calendar के लिए)", barber_phone:"WhatsApp नंबर", private_note:"ये सिर्फ़ आपको दिखेगा। Customers को barber का नंबर कभी नहीं दिखता।", no_phone:"WhatsApp नंबर save नहीं है। Settings → Barbers में डालें।", send_each:"हर barber को उसका दिन भेजें", send_all_p:"हर barber को आज की सारी bookings एक ही message में उसके अपने WhatsApp पर जाती हैं। बड़ा button दबाएं, Send करें, वापस आएं, अगला barber तैयार मिलेगा।",
   send:"भेजें", sent:"भेजा", send_all:"शुरू करें: {name} को भेजें", send_next:"अगला: {name} को भेजें", all_sent:"सारे barbers को आज का schedule मिल गया।", send_again:"फिर से शुरू से भेजें",
   cal_note:"Customer और barber के email पहले से guest में जुड़ जाते हैं। Google Calendar में Save दबाएं, फिर Send, ताकि उन्हें invite मिले।", cal_note_c:"सैलून पहले से guest में जुड़ा है। Google Calendar में Save दबाएं, फिर Send।",
@@ -393,7 +393,7 @@ function render(){
     else if (UI.view==="login") html += viewLogin();
     else if (UI.view==="setup") html += viewSetup();
     else if (UI.view==="adminOnly") html += `<button class="btn sm" data-a="adminBack">← ${t("back")}</button>` + viewAdmin();
-    else html += ({home:viewHome, calendar:viewCalendar, book:viewBook, barber:viewBarber, rewards:viewRewards, plan:viewPlan, settings:viewSettings, admin:viewAdmin}[UI.tab]||viewHome)();
+    else html += ({home:viewHome, calendar:viewCalendar, book:viewBook, barber:viewBarber, rewards:viewRewards, plan:viewPlan, settings:viewSettings, admin:viewAdmin, clients:viewClients, closing:viewClosing}[UI.tab]||viewHome)();
     html += "</main>";
     if (UI.view==="main") html += navBar() + viewSheet();
   }
@@ -532,7 +532,7 @@ function bookingRow(k, o){
   const pill = k.status==="done"?`<span class="pill ok">${t("st_done")}</span>`:k.status==="cancelled"?`<span class="pill bad">${t("st_cancelled")}</span>`:`<span class="pill warn">${t("st_booked")}</span>`;
   const manage = !o.view && S.bookings.some(x=>x.id===k.id);
   return `<div class="bk"><div class="t">${nice(k.time).replace(" ","<small>")}</small></div><div class="body">
-    <div class="row" style="gap:8px"><b class="grow">${esc(k.cust)}</b>${k.src==="online"?`<span class="pill">${t("online")}</span>`:""}${k.bill?`<span class="pill">${t("bill_no",{n:k.bill.no})}</span>`:""}${pill}</div>
+    <div class="row" style="gap:8px">${digits(k.phone).length===10?`<button class="cname grow" data-a="cHist" data-v="${digits(k.phone)}"><b>${esc(k.cust)}</b></button>`:`<b class="grow">${esc(k.cust)}</b>`}${k.src==="online"?`<span class="pill">${t("online")}</span>`:""}${k.bill?`<span class="pill">${t("bill_no",{n:k.bill.no})}</span>`:""}${pill}</div>
     <div class="row small muted" style="gap:6px">${avatar(b,"sm")}<span>${niceRange(k.time,bkDur(s,k))} · ${esc(b.name)} · ${esc(svc.name)} · ${rs(bkEarn(s,k))}${k.bill?" "+(k.bill.pay==="upi"?"UPI":"Cash"):""} · ${esc(k.phone)}${k.email?" · "+esc(k.email):""}</span></div>
     ${k.status==="done" && manage?`<div class="row" style="gap:6px">
       ${k.bill?`<a class="btn sm primary" data-a="billResent" data-v="${k.id}" href="${waLink(k.phone, billText(s,k,{...k.bill, edited:!!k.bill.edited}))}" target="_blank" rel="noopener">${t("bill_resend")}</a><button class="btn sm" data-a="billOpen" data-v="${k.id}">${t("bill_edit")}</button><span class="small muted">${billSentLbl(k.bill)}</span>`
@@ -585,6 +585,7 @@ function viewHome(){
   <div class="stats"><div class="stat"><b>${today.filter(k=>k.status!=="cancelled").length}</b><span>${t("today_bk")}</span></div>
     <div class="stat"><b>${up}</b><span>${t("upcoming")}</span></div><div class="stat"><b>${rs(earned)}</b><span>${t("earned")}</span></div></div>
   <button class="btn primary block" data-a="walkin">+ ${t("add_walkin")}</button>
+  <div class="homebtns"><button class="btn" data-a="tab" data-v="closing">📊 ${t("home_closing")}</button><button class="btn" data-a="tab" data-v="clients">👥 ${t("home_clients")}${S.allBk?(n=>n?` <span class="pill warn">${n}</span>`:"")(lostOf(clientsOf(allBkList()),30).length):""}</button></div>
   <div class="cols"><div class="colA">
   <div class="card"><div class="row" style="gap:6px"><h2 class="grow">${t("tl_h")}</h2>
       <button class="btn sm ghost" data-a="tlDay" data-v="-1" ${tlDate<=tlMin?"disabled":""} aria-label="${t("back")}">‹</button><b style="min-width:96px;text-align:center">${dayLabel(tlDate)}</b>
@@ -764,6 +765,118 @@ async function doExtend(k, add, svcId, force){
 }
 const movedMsg = (k, date, time) => t("moved_msg",{name:k.cust, salon:S.salon.name, date:dayLabel(date), time:nice(time)});
 
+/* ---- clients: past visits grouped by phone number (history + lost-client follow-up) ---- */
+// loads ~13 months of bookings once per session (one read per booking); "Refresh" loads again
+async function loadAllBk(force){
+  if ((S.allBk!==undefined && !force) || S.allBkLoading) return; S.allBkLoading = true; if (force) render();
+  const since = ymd(new Date(Date.now()-400*DAY));
+  try{ const q = await getDocs(query(collection(db,"salons",S.sid,"bookings"), where("date",">=",since))); S.allBk = q.docs.map(d=>({id:d.id,...d.data()})); }
+  catch(e){ console.error(e); if (S.allBk===undefined) S.allBk = null; }
+  if (S.fu===undefined){ try{ const d = await getDoc(doc(db,"salons",S.sid,"private","followups")); S.fu = d.exists() ? (d.data().p||{}) : {}; }catch(e){ S.fu = {}; } }
+  S.allBkLoading = false; render();
+}
+function allBkList(){ if (!S.allBk) return S.allBk; const mp = new Map(S.allBk.map(k=>[k.id,k])); S.bookings.forEach(k=>mp.set(k.id,k)); return [...mp.values()]; }
+const daysAgo = ds => Math.round((new Date(ymd(new Date())+"T00:00") - new Date(ds+"T00:00"))/DAY);
+// one entry per 10-digit phone: visits (done, or past bookings never marked done), next booking, money spent (done only)
+function clientsOf(list){
+  const td = ymd(new Date()), m = new Map();
+  (list||[]).forEach(k=>{ const p = digits(k.phone); if (p.length!==10 || k.status==="cancelled") return;
+    let c = m.get(p); if (!c){ c = { phone:p, name:"", at:"", visits:[], next:null }; m.set(p,c); }
+    if (k.status==="booked" && k.date>=td){ if (!c.next || (k.date+k.time)<(c.next.date+c.next.time)) c.next = k; }
+    else c.visits.push(k);
+    if ((k.date+k.time) > c.at){ c.at = k.date+k.time; c.name = String(k.cust||"").trim() || c.name; } });
+  return [...m.values()].map(c=>{ c.visits.sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
+    c.last = c.visits[0] || null; c.days = c.last ? daysAgo(c.last.date) : null;
+    c.spent = c.visits.filter(k=>k.status==="done").reduce((a,k)=>a+bkEarn(S.salon,k),0); return c; });
+}
+const lostOf = (cl, n) => cl.filter(c=>c.last && !c.next && c.days>=n).sort((a,b)=>a.days-b.days);
+function fuText(s, c){
+  const when = longDate(new Date(c.last.date+"T00:00").getTime());
+  return LANG==="hi"
+    ? `नमस्ते ${c.name||""}! ${s.name} में आपको काफ़ी दिन से नहीं देखा। आख़िरी बार आप ${when} को आए थे।\nजब भी समय हो, यहाँ से अपना समय बुक कर लीजिए: ${linkFor(S.sid)}\n${s.name}${s.phone?" · "+s.phone:""}`
+    : `Hi ${c.name||""}! We haven't seen you at ${s.name} for a while. Your last visit was on ${when}.\nWhenever you're free, book your time here: ${linkFor(S.sid)}\n${s.name}${s.phone?" · "+s.phone:""}`;
+}
+const fuLbl = p => { const at = (S.fu||{})[p]; return at ? t("fu_sent",{date:longDate(at)}) : ""; };
+function clientRow(c, lost){
+  const s = S.salon, sent = fuLbl(c.phone);
+  return `<div class="crow" data-q="${esc((c.name+" "+c.phone).toLowerCase())}"><div class="row" style="gap:8px;align-items:flex-start">
+      <button class="cname grow" data-a="cHist" data-v="${c.phone}"><b>${esc(c.name||c.phone)}</b><small>${esc(c.phone)}</small></button>
+      ${c.last?`<span class="pill ${lost?"warn":""}">${c.days===0?t("cl_today"):t("cl_days",{n:c.days})}</span>`:""}</div>
+    <p class="small muted">${c.visits.length===1?t("cl_v1"):t("cl_vn",{n:c.visits.length})}${c.spent?" · "+rs(c.spent):""}${c.last?" · "+esc(bkNames(s,c.last)):""}${c.next?" · "+t("cl_next",{date:dayLabel(c.next.date)}):""}</p>
+    ${lost?`<div class="row" style="gap:6px"><a class="btn sm primary" data-a="fuSent" data-v="${c.phone}" href="${waLink(c.phone, fuText(s,c))}" target="_blank" rel="noopener">${t("fu_send")}</a>
+      <button class="btn sm" data-a="cHist" data-v="${c.phone}">${t("cl_hist")}</button>${sent?`<span class="small muted">✓ ${sent}</span>`:""}</div>`:""}</div>`;
+}
+function viewClients(){
+  const all = allBkList();
+  if (all===undefined){ setTimeout(()=>loadAllBk(),0); return `<div><h1>${t("cl_h")}</h1></div><div class="center"><div class="spin"></div></div>`; }
+  if (all===null) return `<div><h1>${t("cl_h")}</h1></div><div class="banner bad">${t("save_fail")}</div><button class="btn" data-a="clReload">${t("cl_reload")}</button>`;
+  const cl = clientsOf(all);
+  if (UI.cHist) return viewClientHist(cl.find(c=>c.phone===UI.cHist));
+  const n = UI.lostN || 30, lost = lostOf(cl, n), sorted = cl.slice().sort((a,b)=>b.at.localeCompare(a.at));
+  return `<div><h1>${t("cl_h")}</h1><p class="small muted" style="margin-top:4px">${t("cl_p")}</p></div>
+  <div class="stats"><div class="stat"><b>${cl.length}</b><span>${t("cl_total")}</span></div><div class="stat"><b>${cl.filter(c=>c.visits.length>=2).length}</b><span>${t("cl_repeat")}</span></div><div class="stat"><b>${lostOf(cl,30).length}</b><span>${t("cl_lost30")}</span></div></div>
+  <div class="cols"><div class="colA">
+  <div class="card" id="lostCard"><h2>${t("fu_h")}</h2><p class="small muted">${t("fu_p")}</p>
+    <div class="chips" role="radiogroup">${[30,45,60,90].map(x=>`<button class="chip ${n===x?"on":""}" role="radio" aria-checked="${n===x}" data-a="lostN" data-v="${x}">${t("fu_chip",{n:x})}</button>`).join("")}</div>
+    ${lost.length?`<p class="label">${t("fu_count",{n:lost.length})}</p><div>${lost.map(c=>clientRow(c,true)).join("")}</div>`:`<p class="muted">${t("fu_none",{n})}</p>`}</div>
+  </div><div class="colB">
+  <div class="card"><h2>${t("cl_all")}</h2>
+    <input type="search" class="shsearch" data-cls="1" autocomplete="off" placeholder="🔍 ${t("cl_search")}" aria-label="${t("cl_search")}">
+    ${sorted.length?`<div id="clList">${sorted.map(c=>clientRow(c,false)).join("")}</div><p class="small muted" id="clNone" hidden>${t("sh_none")}</p>`:`<p class="muted">${t("cl_empty")}</p>`}
+    <button class="btn sm ghost" data-a="clReload" ${S.allBkLoading?"disabled":""}>⟲ ${t("cl_reload")}</button></div>
+  </div></div>`;
+}
+function viewClientHist(c){
+  const s = S.salon, back = `<button class="btn sm" data-a="clBack">← ${t("back")}</button>`;
+  if (!c) return back + `<div class="card"><p class="muted">${t("cl_nohist")}</p></div>`;
+  const done = c.visits.filter(k=>k.status==="done"), first = c.visits[c.visits.length-1];
+  const fav = {}; c.visits.forEach(k=>{ fav[k.barberId] = (fav[k.barberId]||0)+1; });
+  const favB = barberOf(s, Object.keys(fav).sort((a,b)=>fav[b]-fav[a])[0]);
+  const hi = LANG==="hi", hello = hi ? `नमस्ते ${c.name}! ${s.name} से।` : `Hi ${c.name}! From ${s.name}.`;
+  return `${back}
+  <div class="card"><h1 style="margin:0">${esc(c.name||c.phone)}</h1><p class="muted">${esc(c.phone)}</p>
+    <div class="stats"><div class="stat"><b>${c.visits.length}</b><span>${t("ch_visits")}</span></div><div class="stat"><b>${rs(c.spent)}</b><span>${t("ch_spent")}</span></div><div class="stat"><b>${done.length?rs(Math.round(c.spent/done.length)):"—"}</b><span>${t("ch_avg")}</span></div></div>
+    <p class="small">${first?t("ch_first",{date:longDate(new Date(first.date+"T00:00").getTime())}):""}${c.last?" · "+t("ch_last",{n:c.days}):""}${favB?" · "+t("ch_fav",{name:esc(favB.name)}):""}</p>
+    ${c.next?`<div class="banner ok">${t("ch_next",{date:dayLabel(c.next.date), time:nice(c.next.time)})}</div>`:""}
+    <div class="row" style="gap:6px"><a class="btn sm primary" href="${waLink(c.phone, hello)}" target="_blank" rel="noopener">${t("whatsapp")}</a><a class="btn sm" href="tel:${c.phone}">${t("ch_call")}</a><button class="btn sm" data-a="clBook" data-v="${c.phone}">+ ${t("ch_book")}</button></div></div>
+  <div class="card"><h2>${t("ch_list")}</h2>${c.visits.length?c.visits.map(k=>{ const b = barberOf(s,k.barberId)||{name:""};
+    return `<div class="hrow2"><div class="row" style="gap:8px"><b class="grow">${longDate(new Date(k.date+"T00:00").getTime())}</b><span class="small muted">${nice(k.time)}</span>${k.status==="done"?`<b>${rs(bkEarn(s,k))}</b>`:`<span class="pill warn">${t("ch_notdone")}</span>`}</div>
+      <p class="small muted">${esc(k.bill?(k.bill.items||[]).map(x=>x.n).join(" + "):bkNames(s,k))}${b.name?" · "+esc(b.name):""}${k.bill?" · "+(k.bill.pay==="upi"?"UPI":"Cash")+" · "+t("bill_no",{n:k.bill.no}):""}${k.bill&&k.bill.disc?" · "+t("dc_disc")+" "+rs(k.bill.disc):""}</p></div>`; }).join(""):`<p class="muted">${t("cl_nohist")}</p>`}</div>`;
+}
+
+/* ---- day closing: done work of one day split Cash / UPI / no bill, per barber; one tap to WhatsApp ---- */
+function closingData(date){
+  const s = S.salon, old = ymd(new Date(Date.now()-DAY));
+  let list; if (date>=old) list = S.bookings.filter(k=>k.date===date);
+  else { const ml = monthList(date.slice(0,7)); if (ml===undefined){ setTimeout(()=>loadMonth(date.slice(0,7)),0); return null; } list = ml.filter(k=>k.date===date); }
+  const done = list.filter(k=>k.status==="done"), r = { date, done, pending:list.filter(k=>k.status==="booked"), canc:list.filter(k=>k.status==="cancelled").length, cash:0, upi:0, nobill:0, disc:0, per:{} };
+  done.forEach(k=>{ const v = bkEarn(s,k); if (!k.bill) r.nobill += v; else if (k.bill.pay==="upi") r.upi += v; else r.cash += v; r.disc += Number((k.bill||{}).disc)||0;
+    const p = r.per[k.barberId] = r.per[k.barberId] || {n:0, v:0}; p.n++; p.v += v; });
+  r.total = r.cash + r.upi + r.nobill; return r;
+}
+function closingText(s, r){
+  const L = [`*${s.name}* · ${t("dc_h")}`, longDate(new Date(r.date+"T00:00").getTime()), "———————", `${t("dc_clients")}: ${r.done.length}`, `Cash: ${rs(r.cash)}`, `UPI: ${rs(r.upi)}`];
+  if (r.nobill) L.push(`${t("dc_nobill")}: ${rs(r.nobill)}`); if (r.disc) L.push(`${t("dc_disc")}: −${rs(r.disc)}`);
+  L.push(`*${t("dc_total")}: ${rs(r.total)}*`, "———————");
+  s.barbers.filter(b=>r.per[b.id]).forEach(b=>L.push(`${b.name}: ${r.per[b.id].n} · ${rs(r.per[b.id].v)}`));
+  if (r.pending.length || r.canc) L.push("", [r.pending.length?`${t("dc_pending")}: ${r.pending.length}`:"", r.canc?`${t("cal_cancel")}: ${r.canc}`:""].filter(Boolean).join(" · "));
+  return L.join("\n");
+}
+function viewClosing(){
+  const s = S.salon, td = ymd(new Date()), date = UI.clDate || td, r = closingData(date);
+  const head = `<div><h1>${t("dc_h")}</h1><p class="small muted" style="margin-top:4px">${t("dc_p")}</p></div>
+  <div class="card"><div class="row" style="gap:6px"><button class="btn sm ghost" data-a="clDay" data-v="-1" aria-label="${t("back")}">‹</button><b class="grow" style="text-align:center">${dayLabel(date)}</b><button class="btn sm ghost" data-a="clDay" data-v="1" ${date>=td?"disabled":""} aria-label="${t("next")}">›</button></div></div>`;
+  if (!r) return head + `<div class="center"><div class="spin"></div></div>`;
+  const line = (lbl, v, cls) => `<div class="dcl ${cls||""}"><span>${lbl}</span><b>${v}</b></div>`;
+  return head + `<div class="cols"><div class="colA"><div class="card dcard">
+    ${line(t("dc_clients"), r.done.length)}${line("Cash", rs(r.cash))}${line("UPI", rs(r.upi))}${r.nobill?line(t("dc_nobill"), rs(r.nobill)):""}${r.disc?line(t("dc_disc"), "−"+rs(r.disc), "muted"):""}
+    ${line(t("dc_total"), rs(r.total), "tot")}
+    ${r.nobill?`<p class="small muted">${t("dc_nobill_p")}</p>`:""}
+    ${r.pending.length?`<div class="banner warn">${t("dc_pend_warn",{n:r.pending.length})}</div>`:""}
+    <a class="btn saffron block" href="https://wa.me/?text=${encodeURIComponent(closingText(s,r))}" target="_blank" rel="noopener">${t("dc_send")}</a></div></div>
+  <div class="colB"><div class="card"><h3>${t("dc_by_barber")}</h3>${s.barbers.filter(b=>r.per[b.id]).length?s.barbers.filter(b=>r.per[b.id]).map(b=>`<div class="row" style="gap:8px">${avatar(b,"sm")}<b class="grow">${esc(b.name)}</b><span class="small">${r.per[b.id].n===1?t("bk_count1"):t("bk_count",{n:r.per[b.id].n})} · ${rs(r.per[b.id].v)}</span></div>`).join(""):`<p class="muted">${t("dc_none")}</p>`}</div></div></div>`;
+}
+
 /* ---- calendar: any month, bookings per day, month totals ---- */
 async function loadMonth(ym){
   S.month = S.month||{}; if (S.month[ym]!==undefined || S["ml_"+ym]) return; S["ml_"+ym] = true;
@@ -798,7 +911,7 @@ function viewCalendar(){
   ${list===undefined?"":`<div class="stats"><div class="stat"><b>${live.length}</b><span>${t("cal_total")}</span></div><div class="stat"><b>${done.length}</b><span>${t("cal_done")}</span></div><div class="stat"><b>₹${done.reduce((a,k)=>a+bkEarn(s,k),0).toLocaleString("en-IN")}</b><span>${t("cal_earn")}</span></div></div>
   ${canc.length?`<p class="small muted" style="text-align:center">${t("cal_cancel")}: ${canc.length}</p>`:""}
   </div><div class="colB">
-  ${dayList?`<div class="card"><h2>${dayLabel(UI.calDay)}</h2>${dayList.length?`<div>${dayList.map(k=>bookingRow(k,{cancel:true, view:k.date<old})).join("")}</div>`:`<p class="muted">${t("cal_none")}</p>`}</div>`:`<p class="small muted" style="text-align:center">${t("cal_pick")}</p>`}
+  ${dayList?`<div class="card"><div class="row" style="gap:8px"><h2 class="grow">${dayLabel(UI.calDay)}</h2><button class="btn sm" data-a="closingOn" data-v="${UI.calDay}">📊 ${t("home_closing")}</button></div>${dayList.length?`<div>${dayList.map(k=>bookingRow(k,{cancel:true, view:k.date<old})).join("")}</div>`:`<p class="muted">${t("cal_none")}</p>`}</div>`:`<p class="small muted" style="text-align:center">${t("cal_pick")}</p>`}
   ${live.length?`<div class="card"><h3>${t("cal_by_barber")}</h3>${s.barbers.map(b=>{ const mine = live.filter(k=>k.barberId===b.id), earn = mine.filter(k=>k.status==="done").reduce((a,k)=>a+bkEarn(s,k),0);
     return `<div class="row" style="gap:8px">${avatar(b,"sm")}<b class="grow">${esc(b.name)}</b><span class="small">${mine.length===1?t("bk_count1"):t("bk_count",{n:mine.length})} · ₹${earn.toLocaleString("en-IN")}</span></div>`; }).join("")}</div>`:""}`}
   </div></div>`;
@@ -1207,7 +1320,7 @@ async function saveSalon(){
 
 /* ================= back button ================= */
 const NAV = [];
-function pushNav(){ NAV.push({view:UI.view, tab:UI.tab, step:UI.step, barberId:UI.barberId, bookedData:UI.bookedData}); try{ history.pushState({n:NAV.length}, ""); }catch(e){} }
+function pushNav(){ NAV.push({view:UI.view, tab:UI.tab, step:UI.step, barberId:UI.barberId, bookedData:UI.bookedData, cHist:UI.cHist||null, clDate:UI.clDate||null}); try{ history.pushState({n:NAV.length}, ""); }catch(e){} }
 window.addEventListener("popstate", () => { const st = NAV.pop(); if (!st) return; Object.assign(UI, st); UI.err=""; if (UI.view==="adminOnly"||UI.tab==="admin") watchAdmin(); render(); window.scrollTo(0,0); });
 const goBack = fallback => { if (NAV.length) history.back(); else { fallback(); render(); } };
 
@@ -1226,7 +1339,16 @@ const A = {
   logout: async ()=>{ await signOut(auth); },
   adminOnly:()=>go(()=>{ pushNav(); UI.view="adminOnly"; watchAdmin(); window.scrollTo(0,0); }),
   adminBack:()=>goBack(()=>{ UI.view="setup"; }),
-  tab:v=>go(()=>{ if (v!==UI.tab) pushNav(); UI.tab=v; UI.err=""; if (v!=="book") UI.bookedData=null; if (v==="admin") watchAdmin(); window.scrollTo(0,0); }),
+  tab:v=>go(()=>{ if (v!==UI.tab) pushNav(); UI.tab=v; UI.err=""; if (v==="clients") UI.cHist=null; if (v==="closing") UI.clDate=null; if (v!=="book") UI.bookedData=null; if (v==="admin") watchAdmin(); window.scrollTo(0,0); }),
+  cHist:v=>go(()=>{ pushNav(); UI.tab="clients"; UI.cHist=v; UI.sheet=null; window.scrollTo(0,0); }),
+  clBack:()=>goBack(()=>{ UI.cHist=null; }),
+  clReload:()=>loadAllBk(true),
+  lostN:v=>go(()=>{ UI.lostN = Number(v)||30; }),
+  fuSent:v=>{ const at = Date.now(); S.fu = S.fu||{}; S.fu[v] = at; setTimeout(render, 400);
+    setDoc(doc(db,"salons",S.sid,"private","followups"), { p:{ [v]:at } }, { merge:true }).catch(e=>console.error(e)); },
+  clBook:v=>go(()=>{ const c = clientsOf(allBkList()||[]).find(x=>x.phone===v); pushNav(); UI.tab="book"; UI.bookedData=null; UI.book={ name:(c&&c.name)||"", phone:v }; window.scrollTo(0,0); }),
+  clDay:v=>go(()=>{ const cur = new Date((UI.clDate||ymd(new Date()))+"T00:00"); cur.setDate(cur.getDate()+Number(v)); const d = ymd(cur); UI.clDate = d>ymd(new Date()) ? ymd(new Date()) : d; }),
+  closingOn:v=>go(()=>{ pushNav(); UI.tab="closing"; UI.clDate=v; window.scrollTo(0,0); }),
   walkin:()=>go(()=>{ pushNav(); UI.tab="book"; UI.bookedData=null; UI.book={}; window.scrollTo(0,0); }),
   prev:()=>{ UI.err=""; goBack(()=>{ if (UI.step>1) UI.step--; }); },
   nextStep: async ()=>{ const e = validate(D, UI.step); UI.err = e; if (e){ render(); return; }
@@ -1422,7 +1544,8 @@ function filterShChips(q){
     if (m && q) hits++; c.classList.toggle("hit", !!q && m); c.classList.toggle("dim", !!q && !m); c.style.order = q && m ? "0" : "1"; });
   const none = document.getElementById("shNone"); if (none) none.hidden = !q || hits>0;
 }
-app.addEventListener("input", e => { const el = e.target, d = el.dataset; if (d.shs){ filterShChips(el.value); return; } const o = editTarget();
+app.addEventListener("input", e => { const el = e.target, d = el.dataset; if (d.shs){ filterShChips(el.value); return; }
+  if (d.cls){ const q = el.value.trim().toLowerCase(), qd = q.replace(/\D/g,""); let n = 0; document.querySelectorAll("#clList .crow").forEach(r=>{ const ok = !q || r.dataset.q.includes(q) || (qd.length>=3 && r.dataset.q.includes(qd)); r.hidden = !ok; if (ok) n++; }); const no = document.getElementById("clNone"); if (no) no.hidden = n>0; return; } const o = editTarget();
   if (d.salon && o){ o[d.salon] = el.value; if (o===S.salon) queueSave(); }
   else if (d.svc && o){ const s = o.services.find(x=>x.id===d.svc); if (s){ s[d.k] = el.value; if (o===S.salon) queueSave(); } }
   else if (d.bar && o){ const b = o.barbers.find(x=>x.id===d.bar); if (b){ b[d.k] = el.value; if (o===S.salon) queueSave(); } }
