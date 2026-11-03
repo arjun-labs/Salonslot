@@ -161,6 +161,18 @@ table.led td{padding:8px 4px;border-bottom:1px dashed var(--line);font-variant-n
 .bcard .pill{margin-top:2px}
 .card.flash{box-shadow:0 0 0 3px var(--gold);transition:box-shadow .2s}
 #svcCard,#timeCard{scroll-margin-top:96px}
+/* add-on services (booking): optional extra services under the first pick */
+.addcard{border:1.5px dashed var(--gold)}
+.addlist{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.addopt{display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:center;text-align:left;width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 12px}
+.addopt .tick{width:22px;height:22px;border-radius:6px;border:2px solid var(--line);display:grid;place-items:center;font-size:14px;font-weight:700;color:var(--muted)}
+.addopt.on{border-color:var(--gold);box-shadow:0 0 0 1.5px var(--gold);background:#FFFBF2}
+.addopt.on .tick{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.addopt .nm{display:flex;flex-direction:column;gap:1px;min-width:0}
+.addopt .nm small{color:var(--muted);font-size:12.5px}
+.addopt .pr{font-family:var(--display);font-weight:600;font-size:16px;white-space:nowrap}
+.addsum{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-size:14px;background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.addtot{font-weight:700;white-space:nowrap}
 /* service list (booking) */
 .svclist{display:flex;flex-direction:column;gap:8px}
 .svcopt{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:start;text-align:left;width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px}

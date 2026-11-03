@@ -90,7 +90,9 @@ service cloud.firestore {
         allow read, update, delete: if isOwner(sid) || isAdmin();
         allow create: if isOwner(sid) || isAdmin() || (
           salonOpen(sid)
-          && request.resource.data.keys().hasOnly(['date', 'time', 'serviceId', 'barberId', 'cust', 'phone', 'email', 'status', 'created', 'src'])
+          && request.resource.data.keys().hasOnly(['date', 'time', 'serviceId', 'barberId', 'cust', 'phone', 'email', 'status', 'created', 'src', 'extra', 'dur'])
+          && (!('extra' in request.resource.data) || (request.resource.data.extra is list && request.resource.data.extra.size() <= 10))
+          && (!('dur' in request.resource.data) || (request.resource.data.dur is int && request.resource.data.dur > 0 && request.resource.data.dur <= 720))
           && request.resource.data.status == 'booked'
           && request.resource.data.src == 'online'
           && request.resource.data.cust is string && request.resource.data.cust.size() > 0 && request.resource.data.cust.size() <= 60

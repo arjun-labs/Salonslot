@@ -18,11 +18,11 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.10.30-11";
+const APP_VERSION = "2026.11.03-1";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
-// customers never use the test version
-if (IS_BETA && new URLSearchParams(location.search).get("s")) location.replace(MAIN_URL());
+// customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
+if (IS_BETA && new URLSearchParams(location.search).get("s") && new URLSearchParams(location.search).get("t")!=="1") location.replace(MAIN_URL());
 
 const fb = initializeApp(firebaseConfig);
 const auth = getAuth(fb);
@@ -81,7 +81,7 @@ const T = {
   link_h:"Your booking link", link_p:"Share this link on WhatsApp, Instagram and Google. Customers book from their own phone, no app needed.", copy:"Copy", copied:"Copied", share_wa:"Share on WhatsApp", open_link:"Open booking page", qr_p:"Print this QR and keep it on the counter.",
   share_msg:"Book your appointment at {salon} online: {link}",
   book_h:"Book an appointment", book_owner:"Add a booking for a walk-in or phone customer.",
-  pick_svc:"1. Choose a service", pick_barber:"2. Choose a barber", any_barber:"Any barber", any_sub:"First one free",
+  pick_svc:"1. Choose a service", pick_barber:"2. Choose a barber", add_h:"Add another service?", add_p:"Optional. Tap to add more, then choose your barber.", add_tot:"Total", add_next:"Next: choose barber", any_barber:"Any barber", any_sub:"First one free",
   pick_date:"3. Choose a day", pick_time:"4. Choose a time", your_details:"5. Your details", cust_name:"Name", cust_phone:"Mobile number", cust_email:"Email (for Google Calendar reminder)", bad_email:"That email doesn't look right. Check it or leave it empty.", barber_email:"Gmail (for Google Calendar)", barber_phone:"WhatsApp number", private_note:"Only you see this. Customers never see barber numbers.", no_phone:"No WhatsApp number saved. Add it in Settings → Barbers.", send_each:"Send each barber their day", send_all_p:"Each barber gets all of today's bookings in one message on their own WhatsApp. Tap the big button, send, come back, and the next barber is ready.",
   send:"Send", sent:"Sent", send_all:"Start: send to {name}", send_next:"Next: send to {name}", all_sent:"All barbers have today's schedule.", send_again:"Send again from the start",
   cal_note:"Customer and barber emails are already added as guests. Tap Save in Google Calendar, then Send, so they get the invite.", cal_note_c:"The salon is already added as a guest. Tap Save in Google Calendar, then Send.",
@@ -172,7 +172,7 @@ const T = {
   link_h:"आपका booking link", link_p:"ये link WhatsApp, Instagram और Google पर share करें। ग्राहक अपने फ़ोन से booking करेंगे, कोई app नहीं चाहिए।", copy:"Copy", copied:"Copy हो गया", share_wa:"WhatsApp पर share करें", open_link:"Booking page खोलें", qr_p:"ये QR print करके counter पर लगाएं।",
   share_msg:"{salon} में अपनी appointment online book करें: {link}",
   book_h:"Appointment बुक करें", book_owner:"Walk-in या फ़ोन वाले ग्राहक की booking जोड़ें।",
-  pick_svc:"1. Service चुनें", pick_barber:"2. Barber चुनें", any_barber:"कोई भी barber", any_sub:"जो पहले free हो",
+  pick_svc:"1. Service चुनें", pick_barber:"2. Barber चुनें", add_h:"और कोई service जोड़नी है?", add_p:"ज़रूरी नहीं। जितनी चाहिए tap करके जोड़ें, फिर barber चुनें।", add_tot:"कुल", add_next:"आगे: Barber चुनें", any_barber:"कोई भी barber", any_sub:"जो पहले free हो",
   pick_date:"3. दिन चुनें", pick_time:"4. समय चुनें", your_details:"5. आपकी जानकारी", cust_name:"नाम", cust_phone:"मोबाइल नंबर", cust_email:"Email (Google Calendar reminder के लिए)", bad_email:"Email सही नहीं लग रहा। Check करें या खाली छोड़ दें।", barber_email:"Gmail (Google Calendar के लिए)", barber_phone:"WhatsApp नंबर", private_note:"ये सिर्फ़ आपको दिखेगा। Customers को barber का नंबर कभी नहीं दिखता।", no_phone:"WhatsApp नंबर save नहीं है। Settings → Barbers में डालें।", send_each:"हर barber को उसका दिन भेजें", send_all_p:"हर barber को आज की सारी bookings एक ही message में उसके अपने WhatsApp पर जाती हैं। बड़ा button दबाएं, Send करें, वापस आएं, अगला barber तैयार मिलेगा।",
   send:"भेजें", sent:"भेजा", send_all:"शुरू करें: {name} को भेजें", send_next:"अगला: {name} को भेजें", all_sent:"सारे barbers को आज का schedule मिल गया।", send_again:"फिर से शुरू से भेजें",
   cal_note:"Customer और barber के email पहले से guest में जुड़ जाते हैं। Google Calendar में Save दबाएं, फिर Send, ताकि उन्हें invite मिले।", cal_note_c:"सैलून पहले से guest में जुड़ा है। Google Calendar में Save दबाएं, फिर Send।",
@@ -294,6 +294,16 @@ const barberServes = b => (b && (b.serves==="m"||b.serves==="f")) ? b.serves : "
 const genderOk = (v, b) => { const f = svcFor(v), g = barberServes(b); return f==="all" || g==="both" || f===g; };
 // b.svcs (optional) = the only services this barber does; no list = every service that fits men / women / both
 const canDo = (v, b) => !v || !b || (genderOk(v,b) && (!Array.isArray(b.svcs) || b.svcs.includes(v.id)));
+// one visit can hold more than one service: B.svc (first pick) + B.extra (add-ons); time and price add up
+const bkList = (s,B) => [B.svc].concat(B.extra||[]).map(id=>svcOf(s,id)).filter(Boolean);
+const bkLen = (s,B) => bkList(s,B).reduce((a,v)=>a+(Number(v.dur)||30),0) || 30;
+const canDoAll = (list, b) => (list||[]).every(v=>canDo(v,b));
+// add-ons that fit: same men / women side as what is picked, and at least one barber can do all of it
+function addOpts(s, B){
+  const list = bkList(s,B); if (!list.length) return [];
+  const g = list.map(svcFor).find(x=>x!=="all");
+  return (s.services||[]).filter(v=>v.id!==B.svc && (!g || svcFor(v)==="all" || svcFor(v)===g) && s.barbers.some(b=>canDoAll(list.filter(x=>x.id!==v.id).concat(v), b)));
+}
 const onLeave = (s,bid,date) => ((s.leave||{})[bid]||[]).includes(date);
 function isFree(busy, b, start, dur){ return !busy.some(x => x.b===b && start < x.start+x.dur && x.start < start+dur); }
 // opt.dur: length to fit (default: the service's), opt.skip: {b,start} a booking to ignore (the one being moved)
@@ -302,14 +312,14 @@ function freeSlots(salon, date, svcId, barberPref, slotsMap, opt){
   const d = new Date(date+"T00:00"); if (!(salon.days||[]).includes(d.getDay())) return null;
   const open = toMin(salon.open||"10:00"), close = toMin(salon.close||"21:00"), dur = opt.dur || Number(svc.dur)||30;
   const now = new Date(); const nowM = date===ymd(now) ? now.getHours()*60+now.getMinutes() : -1;
-  const cands = (barberPref && barberPref!=="any" ? salon.barbers.filter(b=>b.id===barberPref) : salon.barbers).filter(b=>!onLeave(salon,b.id,date) && (!svc || canDo(svc,b)));
+  const cands = (barberPref && barberPref!=="any" ? salon.barbers.filter(b=>b.id===barberPref) : salon.barbers).filter(b=>!onLeave(salon,b.id,date) && (!svc || canDo(svc,b)) && (!opt.svcs || canDoAll(opt.svcs,b)));
   const busy = busyList(slotsMap).filter(x=>!(opt.skip && x.b===opt.skip.b && x.start===opt.skip.start)); const out = [];
   const step = opt.step || (dur < 30 ? 10 : 15);
   for (let m=open; m+dur<=close; m+=step){ if (m<=nowM) continue; const f = cands.find(b=>isFree(busy,b.id,m,dur)); if (f) out.push({time:toHM(m), barberId:f.id}); }
   return out;
 }
 async function createBooking(sid, salon, b, force){
-  const dur = Number((svcOf(salon,b.serviceId)||{}).dur)||30;
+  const dur = Number(b.dur) || Number((svcOf(salon,b.serviceId)||{}).dur)||30;
   const dref = doc(db,"salons",sid,"days",b.date), bref = doc(collection(db,"salons",sid,"bookings"));
   const key = slotKey(b.barberId, b.time);
   await runTransaction(db, async tx => {
@@ -600,14 +610,14 @@ function slotGrid(slots, sel, act, withBarber){
 }
 
 // client: pick own time inside free windows (hour strip + 5-minute strip); only free minutes can be tapped
-function ownPick(salon, B, free5){
+function ownPick(salon, B, free5, dur){
   const free = new Set(free5.map(x=>x.time)); if (!free.size) return "";
   const hrs = [...new Set(free5.map(x=>Math.floor(toMin(x.time)/60)))];
   let h = UI.ownH; if (!hrs.includes(h)) h = B.time && free.has(B.time) ? Math.floor(toMin(B.time)/60) : hrs[0];
   const mins = []; for (let m=0;m<60;m+=5) mins.push(toHM(h*60+m));
   return `<div class="ownpick"><p class="ownt">${t("own_h2")}</p><p class="ownl">${t("own_h")}</p><div class="hscroll">${hrs.map(x=>`<button class="ochip ${x===h?"on":""}" data-a="ownH" data-v="${x}">${hourLbl(x*60).toLowerCase()}</button>`).join("")}</div>
     <p class="ownl">${t("own_m")}</p><div class="hscroll">${mins.map(m=>free.has(m)?`<button class="ochip ${B.time===m?"on":""}" data-a="bTime" data-v="${m}">${nice(m).slice(0,-3)}</button>`:`<span class="ochip busy" aria-hidden="true">${nice(m).slice(0,-3)}</span>`).join("")}</div>
-    ${B.time && free.has(B.time)?`<div class="ownok" role="status">${t("sel_slot")}: ${niceRange(B.time, Number((svcOf(salon,B.svc)||{}).dur)||30).toLowerCase()} · ${t("own_free")}</div>`:""}</div>`;
+    ${B.time && free.has(B.time)?`<div class="ownok" role="status">${t("sel_slot")}: ${niceRange(B.time, dur||Number((svcOf(salon,B.svc)||{}).dur)||30).toLowerCase()} · ${t("own_free")}</div>`:""}</div>`;
 }
 function selBox(salon, B, slots){
   const sl = B.time && slots.find(s=>s.time===B.time); if (!sl) return "";
@@ -840,13 +850,14 @@ setInterval(()=>{ const d = new Date();
     if (hc && Number(hc.dataset.sel)!==d.getHours()) setCol(hc, d.getHours(), true);
     if (mc && Number(mc.dataset.sel)!==d.getMinutes()) setCol(mc, d.getMinutes(), true); }); }, 1000);
 const roundNow = nowHM;
-function pickBarberFor(salon, svcId, date, pref){
+function pickBarberFor(salon, svcId, date, pref, list){
   if (pref && pref!=="any") return barberOf(salon, pref);
-  const v = svcOf(salon, svcId); return salon.barbers.find(b=>canDo(v,b) && !onLeave(salon,b.id,date)) || salon.barbers.find(b=>canDo(v,b)) || salon.barbers[0];
+  const L = list && list.length ? list : [svcOf(salon, svcId)].filter(Boolean);
+  return salon.barbers.find(b=>canDoAll(L,b) && !onLeave(salon,b.id,date)) || salon.barbers.find(b=>canDoAll(L,b)) || salon.barbers[0];
 }
 // summary + warnings for an owner-chosen time; booking still allowed
-function customBox(salon, date, time, svcId, b, dur, skip){
-  const v = svcOf(salon, svcId)||{name:""}; if (!b) return "";
+function customBox(salon, date, time, svcId, b, dur, skip, names){
+  const v = { name: names || (svcOf(salon, svcId)||{name:""}).name }; if (!b) return "";
   const st = toMin(time), busy = busyList(ownerSlotsMap(date)).filter(x=>!(skip && x.b===skip.b && x.start===skip.start));
   const clash = !isFree(busy, b.id, st, dur), open = toMin(salon.open||"10:00"), close = toMin(salon.close||"21:00");
   const nowD = new Date(), past = date < ymd(nowD) || (date===ymd(nowD) && st < nowD.getHours()*60+nowD.getMinutes());
@@ -862,21 +873,28 @@ function bookingForm(salon, slotsFor, ownerMode){
   if (!B.date) B.date = days.filter(d=>d>=ymd(new Date())).find(d=>(salon.days||[]).includes(new Date(d+"T00:00").getDay())) || days[0];
   const map = slotsFor(B.date);
   if (map===undefined && CUSTOMER_SID) setTimeout(()=>loadDay(B.date),0);
-  const slots = B.svc ? (map===undefined ? undefined : freeSlots(salon, B.date, B.svc, B.barber||"any", map)) : [];
+  B.extra = (B.extra||[]).filter(id=>id!==B.svc && svcOf(salon,id));
+  const list = bkList(salon,B), dur = bkLen(salon,B), so = { dur, svcs:list }, adds = addOpts(salon,B);
+  const slots = B.svc ? (map===undefined ? undefined : freeSlots(salon, B.date, B.svc, B.barber||"any", map, so)) : [];
   return `
   <div class="card ${UI.flashSvc?"flash":""}" id="svcCard"><h3>${t("pick_svc")}</h3>${!salon.services.length?`<p class="muted">${t("no_services")}</p>`:""}${svcGroups(salon).map(g=>`${g.head?`<p class="label svchead">${g.head}</p>`:""}<div class="svclist" role="radiogroup" ${g.head?`aria-label="${g.head}"`:""}>${g.list.map(s=>`<button class="svcopt ${B.svc===s.id?"on":""}" role="radio" aria-checked="${B.svc===s.id}" data-a="bSvc" data-v="${s.id}">
       <span class="tick" aria-hidden="true">${B.svc===s.id?"✓":""}</span>
       <span class="nm"><b>${esc(s.name)}</b><small>⏱ ${esc(s.dur)} ${t("min")}</small>${s.desc?`<span class="ds">${esc(s.desc)}</span>`:""}</span>
       <span class="pr">₹${esc(s.price)}</span></button>`).join("")}</div>`).join("")}</div>
+  ${B.svc && adds.length ? `<div class="card addcard" id="addCard"><h3>+ ${t("add_h")}</h3><p class="small muted">${t("add_p")}</p>
+    <div class="addlist">${adds.map(v=>{ const on = B.extra.includes(v.id); return `<button class="addopt ${on?"on":""}" role="checkbox" aria-checked="${on}" data-a="bAdd" data-v="${v.id}">
+      <span class="tick" aria-hidden="true">${on?"✓":"+"}</span><span class="nm"><b>${esc(v.name)}</b><small>⏱ ${esc(v.dur)} ${t("min")}</small></span><span class="pr">₹${esc(v.price)}</span></button>`; }).join("")}</div>
+    <div class="addsum" role="status"><span><b>${t("add_tot")}:</b> ${list.map(v=>esc(v.name)).join(" + ")}</span><span class="addtot">⏱ ${dur} ${t("min")} · ₹${list.reduce((a,v)=>a+(Number(v.price)||0),0)}</span></div>
+    <button class="btn primary block" data-a="toBarber">${t("add_next")} ↓</button></div>` : ""}
   <div class="card" id="barberCard"><h3>${t("pick_barber")}</h3><div class="barbers">
     <button class="bcard ${(!B.barber||B.barber==="any")?"on":""}" data-a="bBarber" data-v="any"><span class="av lg" style="background:var(--surface2);color:var(--muted)" aria-hidden="true">✂</span><b>${t("any_barber")}</b><small>${t("any_sub")}</small></button>
-    ${salon.barbers.filter(b=>!B.svc || canDo(svcOf(salon,B.svc),b)).map(b=>{ const off = onLeave(salon,b.id,B.date); return `<button class="bcard ${B.barber===b.id?"on":""} ${off?"off":""}" data-a="bBarber" data-v="${b.id}">${avatar(b,"lg")}<b>${esc(b.name)}</b>${off?`<span class="pill bad">${t("on_leave")}</span>`:b.spec?`<small>${esc(b.spec)}</small>`:""}</button>`; }).join("")}</div>
+    ${salon.barbers.filter(b=>!B.svc || canDoAll(list,b)).map(b=>{ const off = onLeave(salon,b.id,B.date); return `<button class="bcard ${B.barber===b.id?"on":""} ${off?"off":""}" data-a="bBarber" data-v="${b.id}">${avatar(b,"lg")}<b>${esc(b.name)}</b>${off?`<span class="pill bad">${t("on_leave")}</span>`:b.spec?`<small>${esc(b.spec)}</small>`:""}</button>`; }).join("")}</div>
     ${B.barber && B.barber!=="any" && onLeave(salon,B.barber,B.date)?`<div class="banner warn">${t("barber_off",{name:esc((barberOf(salon,B.barber)||{}).name||""), date:dayLabel(B.date)})}</div>`:""}</div>
   <div class="card" id="dateCard"><h3>${t("pick_date")}</h3><div class="hscroll">${days.map(d=>{const dt=new Date(d+"T00:00");const closed=!(salon.days||[]).includes(dt.getDay());
     return `<button class="date ${B.date===d?"on":""}" data-a="bDate" data-v="${d}" ${closed?"disabled":""}><small>${t("dw")[dt.getDay()]}</small><b>${dt.getDate()}</b><small>${t("mon")[dt.getMonth()]}</small></button>`}).join("")}</div></div>
-  <div class="card" id="timeCard"><h3>${t("pick_time")}</h3>${ownerMode ? `<p class="small muted">${t("ck_help")}</p>${clockPicker("wkBook", B.time||nowHM(), !B.time)}${!B.svc?`<button class="btn block" data-a="toSvc">↑ ${t("pick_svc_first")}</button>`:(()=>{ const b = pickBarberFor(salon,B.svc,B.date,B.barber), dur = Number((svcOf(salon,B.svc)||{}).dur)||30;
-      return customBox(salon, B.date, B.time||nowHM(), B.svc, b, dur, null) + ((!B.barber||B.barber==="any") && b ? `<p class="small muted">${t("ct_pickb",{name:esc(b.name)})}</p>` : ""); })()}` :
-    !B.svc?`<button class="btn block" data-a="toSvc">↑ ${t("pick_svc_first")}</button>`:slots===undefined?`<div class="spin"></div>`:slots===null?`<p class="muted">${t("closed_day")}</p>`:slots.length?slotGrid(slots, B.time, "bTime")+(()=>{ const f5 = freeSlots(salon, B.date, B.svc, B.barber||"any", map, {step:5})||[]; return ``+ownPick(salon,B,f5); })():`<p class="muted">${t("no_slots")}</p>`}</div>
+  <div class="card" id="timeCard"><h3>${t("pick_time")}</h3>${ownerMode ? `<p class="small muted">${t("ck_help")}</p>${clockPicker("wkBook", B.time||nowHM(), !B.time)}${!B.svc?`<button class="btn block" data-a="toSvc">↑ ${t("pick_svc_first")}</button>`:(()=>{ const b = pickBarberFor(salon,B.svc,B.date,B.barber,list);
+      return customBox(salon, B.date, B.time||nowHM(), B.svc, b, dur, null, list.map(v=>v.name).join(" + ")) + ((!B.barber||B.barber==="any") && b ? `<p class="small muted">${t("ct_pickb",{name:esc(b.name)})}</p>` : ""); })()}` :
+    !B.svc?`<button class="btn block" data-a="toSvc">↑ ${t("pick_svc_first")}</button>`:slots===undefined?`<div class="spin"></div>`:slots===null?`<p class="muted">${t("closed_day")}</p>`:slots.length?slotGrid(slots, B.time, "bTime")+(()=>{ const f5 = freeSlots(salon, B.date, B.svc, B.barber||"any", map, {...so, step:5})||[]; return ``+ownPick(salon,B,f5,dur); })():`<p class="muted">${t("no_slots")}</p>`}</div>
   <div class="card" id="detailsCard"><h3>${t("your_details")}</h3>
     <label class="field"><span>${t("cust_name")}</span><input type="text" id="c_name" autocomplete="name" data-book="name" value="${esc(B.name||"")}"></label>
     <label class="field"><span>${t("cust_phone")}</span><input type="tel" inputmode="tel" autocomplete="tel" id="c_phone" data-book="phone" value="${esc(B.phone||"")}" placeholder="98XXXXXXXX"></label>
@@ -887,7 +905,7 @@ function bookingForm(salon, slotsFor, ownerMode){
 function viewBook(){
   if (UI.bookedData){ const k = UI.bookedData, s = S.salon, m = msgs(s,k), svc = svcOf(s,k.serviceId), b = barberOf(s,k.barberId);
     return `<div class="card lock"><div class="big" aria-hidden="true">✅</div><h2>${t("booked_h")}</h2>
-      <p>${t("booked_p",{svc:esc(svc.name),barber:esc(b.name),date:dayLabel(k.date),time:nice(k.time)})}</p></div>
+      <p>${t("booked_p",{svc:esc(bkNames(s,k)),barber:esc(b.name),date:dayLabel(k.date),time:nice(k.time)})}</p></div>
     <div class="card"><h3>${t("msgs_h")}</h3>
       <div class="msg"><span class="to">${esc(k.cust)} · ${esc(k.phone)}</span>${esc(m.cust)}</div>
       <div class="row"><a class="btn sm primary" href="${waLink(k.phone,m.cust)}" target="_blank" rel="noopener">${t("send_cust")}</a>
@@ -1149,7 +1167,7 @@ function renderCustomer(){
       ${s.phone?`<div class="copy"><code>${esc(s.phone)}</code><button class="btn sm" data-a="copy" data-v="${esc(s.phone)}">${t("copy")}</button></div><a class="btn primary" href="${waLink(s.phone,"")}" target="_blank" rel="noopener">${t("whatsapp")}</a>`:""}</div>${addrCard(s)}`;
   else if (UI.bookedData){ const k = UI.bookedData, m = msgs(s,k), svc = svcOf(s,k.serviceId), b = barberOf(s,k.barberId);
     body = `<div class="card lock"><div class="big" aria-hidden="true">✅</div><h2>${t("booked_h")}</h2>
-      <p>${t("booked_p",{svc:esc(svc.name),barber:esc(b.name),date:dayLabel(k.date),time:nice(k.time)})}</p>
+      <p>${t("booked_p",{svc:esc(bkNames(s,k)),barber:esc(b.name),date:dayLabel(k.date),time:nice(k.time)})}</p>
       <a class="btn" href="${calLink(s,k,custGuests(s,k))}" target="_blank" rel="noopener">${t("calendar")}</a>
       <p class="small muted">${t("cal_note_c")}</p></div>
       ${addrCard(s, t("how_reach"))}
@@ -1247,7 +1265,14 @@ const A = {
     k.bill.sent = n; setTimeout(render, 300); updateDoc(doc(db,"salons",S.sid,"bookings",v),{"bill.sent":n}).catch(()=>{}); },
   cancelBk:async v=>{ const k = S.bookings.find(x=>x.id===v); if (!k) return; if (UI.sheet){ UI.sheet=null; render(); }
     try{ await updateDoc(doc(db,"salons",S.sid,"bookings",v),{status:"cancelled"}); await updateDoc(doc(db,"salons",S.sid,"days",k.date),{["slots."+slotKey(k.barberId,k.time)]:deleteField()}).catch(()=>{}); }catch(e){ toast(t("save_fail")); } },
-  bSvc:v=>{ go(()=>{ UI.book.svc=v; { const sl = CUSTOMER_SID ? C.salon : S.salon, bb = UI.book.barber && UI.book.barber!=="any" && barberOf(sl,UI.book.barber); if (bb && !canDo(svcOf(sl,v),bb)) UI.book.barber = "any"; } UI.book.time=UI.book.prefTime||null; UI.flashSvc=false; if (CUSTOMER_SID) loadDay(UI.book.date); }); stepTo("barberCard"); },
+  bSvc:v=>{ go(()=>{ const B = UI.book, sl = CUSTOMER_SID ? C.salon : S.salon; B.svc=v;
+      B.extra = (B.extra||[]).filter(id=>id!==v); const ok = new Set(addOpts(sl,{svc:v}).map(x=>x.id)); B.extra = B.extra.filter(id=>ok.has(id) && sl.barbers.some(b=>canDoAll(bkList(sl,{svc:v,extra:B.extra}),b)));
+      { const bb = B.barber && B.barber!=="any" && barberOf(sl,B.barber); if (bb && !canDoAll(bkList(sl,B),bb)) B.barber = "any"; } B.time=B.prefTime||null; UI.flashSvc=false; if (CUSTOMER_SID) loadDay(B.date); });
+    stepTo(document.getElementById("addCard") ? "addCard" : "barberCard"); },
+  bAdd:v=>go(()=>{ const B = UI.book, sl = CUSTOMER_SID ? C.salon : S.salon; B.extra = B.extra||[];
+      if (B.extra.includes(v)) B.extra = B.extra.filter(x=>x!==v); else B.extra = B.extra.concat(v);
+      const bb = B.barber && B.barber!=="any" && barberOf(sl,B.barber); if (bb && !canDoAll(bkList(sl,B),bb)) B.barber = "any"; B.time = null; }),
+  toBarber:()=>stepTo("barberCard"),
   toSvc:()=>{ UI.flashSvc=true; render(); const el=document.getElementById("svcCard"); if (el) el.scrollIntoView({behavior:"smooth", block:"start"}); setTimeout(()=>{ UI.flashSvc=false; render(); }, 1600); },
   bBarber:v=>{ go(()=>{ UI.book.barber=v; UI.book.time=null; }); stepTo("dateCard"); },
   bDate:v=>{ go(()=>{ UI.book.date=v; UI.book.time=null; if (CUSTOMER_SID) loadDay(v); }); stepTo("timeCard"); },
@@ -1260,10 +1285,12 @@ const A = {
     const em = (B.email||"").trim().toLowerCase(); if (em && !isEmail(em)){ UI.err = t("bad_email"); render(); return; }
     const own = !CUSTOMER_SID; if (own && !B.time) B.time = nowHM();
     const map = CUSTOMER_SID ? (C.days[B.date]||{}) : ownerSlotsMap(B.date);
-    const slot = own ? { time:B.time, barberId:(pickBarberFor(salon,B.svc,B.date,B.barber)||{}).id } : (freeSlots(salon,B.date,B.svc,B.barber||"any",map,{step:5})||[]).find(s=>s.time===B.time);
+    B.extra = (B.extra||[]).filter(id=>id!==B.svc && svcOf(salon,id)); const list = bkList(salon,B), dur = bkLen(salon,B);
+    const slot = own ? { time:B.time, barberId:(pickBarberFor(salon,B.svc,B.date,B.barber,list)||{}).id } : (freeSlots(salon,B.date,B.svc,B.barber||"any",map,{step:5, dur, svcs:list})||[]).find(s=>s.time===B.time);
     if (!slot || !slot.barberId){ UI.err = t("taken"); render(); return; }
     const k = { date:B.date, time:B.time, serviceId:B.svc, barberId:slot.barberId, cust:B.name.trim().slice(0,60), phone:digits(B.phone), status:"booked", created:Date.now(), src: CUSTOMER_SID?"online":"walkin" };
     if (em) k.email = em.slice(0,100);
+    if (B.extra.length){ k.extra = B.extra.slice(0,10); k.dur = dur; }
     UI.busy=true; UI.err=""; render();
     try{ await createBooking(sid, salon, k, own); UI.bookedData = k; if (CUSTOMER_SID){ delete C.days[B.date]; } window.scrollTo(0,0); }
     catch(e){ console.error(e); UI.err = e.message==="taken" ? t("taken") : t("save_fail"); if (CUSTOMER_SID){ delete C.days[B.date]; loadDay(B.date); } }
