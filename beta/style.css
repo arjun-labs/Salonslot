@@ -380,3 +380,7 @@ table.led td{padding:8px 4px;border-bottom:1px dashed var(--line);font-variant-n
 .dcl.muted{color:var(--muted)}
 .dcl.tot{border-bottom:0;padding-top:12px}
 .dcl.tot b{font-size:26px;color:var(--gold-deep,var(--ink))}
+.svcopt.dis{opacity:.4}
+.addopt .btn.ghost{padding:4px 10px;font-size:16px;line-height:1}
+.addbtn{border:1.5px dashed var(--gold);background:#FFFBF2;color:var(--ink);font-weight:600}
+.addpick{display:flex;align-items:center;gap:10px;margin-bottom:6px}
