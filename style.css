@@ -161,6 +161,18 @@ table.led td{padding:8px 4px;border-bottom:1px dashed var(--line);font-variant-n
 .bcard .pill{margin-top:2px}
 .card.flash{box-shadow:0 0 0 3px var(--gold);transition:box-shadow .2s}
 #svcCard,#timeCard{scroll-margin-top:96px}
+/* add-on services (booking): optional extra services under the first pick */
+.addcard{border:1.5px dashed var(--gold)}
+.addlist{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.addopt{display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:center;text-align:left;width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 12px}
+.addopt .tick{width:22px;height:22px;border-radius:6px;border:2px solid var(--line);display:grid;place-items:center;font-size:14px;font-weight:700;color:var(--muted)}
+.addopt.on{border-color:var(--gold);box-shadow:0 0 0 1.5px var(--gold);background:#FFFBF2}
+.addopt.on .tick{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.addopt .nm{display:flex;flex-direction:column;gap:1px;min-width:0}
+.addopt .nm small{color:var(--muted);font-size:12.5px}
+.addopt .pr{font-family:var(--display);font-weight:600;font-size:16px;white-space:nowrap}
+.addsum{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-size:14px;background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.addtot{font-weight:700;white-space:nowrap}
 /* service list (booking) */
 .svclist{display:flex;flex-direction:column;gap:8px}
 .svcopt{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:start;text-align:left;width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px}
@@ -269,8 +281,9 @@ table.led td{padding:8px 4px;border-bottom:1px dashed var(--line);font-variant-n
   body.owner .barbers{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 }
 @media (min-width:960px){
-  body.owner #app{max-width:1440px}
-  body.owner main{padding-left:240px;padding-right:28px;padding-bottom:40px}
+  /* top bar spans the whole screen like the left menu; content stops at a readable width */
+  body.owner #app{max-width:none}
+  body.owner main{padding-left:240px;padding-right:28px;padding-bottom:40px;width:100%;max-width:1480px}
   body.owner main.t-book,body.owner main.t-plan,body.owner main.t-settings,body.owner main.t-rewards,body.owner main.t-barber{max-width:1040px}
   /* bottom bar becomes a menu on the left */
   body.owner .nav{top:calc(68px + env(safe-area-inset-top,0px));right:auto;width:212px;border-top:0;border-right:2px solid var(--gold);padding:16px 10px}
@@ -351,3 +364,25 @@ table.led td{padding:8px 4px;border-bottom:1px dashed var(--line);font-variant-n
 .ownpick .hscroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}.ochip{flex:none;min-width:56px;text-align:center;padding:10px 14px;border-radius:12px;background:#3A3530;color:#F6F2EA;font-weight:600;border:0;font-variant-numeric:tabular-nums}
 .ochip.on{background:#D4AE63;color:#24211F;font-weight:700}.ochip.busy{background:#2A2623;color:#7A7266;text-decoration:line-through}
 .ownok{background:#1F3A2B;border:2px solid #7FC29B;border-radius:14px;padding:12px 14px;font-size:15px;font-weight:600}
+
+/* clients, history, day closing */
+.homebtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.homebtns .btn{justify-content:center}
+.cname{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:1px;min-width:0}
+.cname b{text-decoration:underline dotted var(--muted);text-underline-offset:3px}
+.cname small{color:var(--muted);font-size:12.5px}
+.cname:focus-visible{outline:2px solid var(--gold);border-radius:4px}
+.crow{display:flex;flex-direction:column;gap:6px;padding:12px 0;border-top:1px dashed var(--line)}
+.crow[hidden]{display:none}
+.hrow2{padding:10px 0;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:3px}
+.dcard{gap:2px}
+.dcl{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px dashed var(--line);font-size:16px}
+.dcl b{font-family:var(--display);font-weight:600;font-size:19px;font-variant-numeric:tabular-nums}
+.dcl.muted{color:var(--muted)}
+.dcl.tot{border-bottom:0;padding-top:12px}
+.dcl.tot b{font-size:26px;color:var(--gold-deep,var(--ink))}
+.svcopt.dis{opacity:.4}
+.addopt .btn.ghost{padding:4px 10px;font-size:16px;line-height:1}
+.addbtn{border:1.5px dashed var(--gold);background:#FFFBF2;color:var(--ink);font-weight:600}
+.addpick{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+main > .btn.sm{align-self:flex-start}
