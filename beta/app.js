@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.04-1";
+const APP_VERSION = "2026.11.04-2";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -832,13 +832,14 @@ function viewClientHist(c){
   const done = c.visits.filter(k=>k.status==="done"), first = c.visits[c.visits.length-1];
   const fav = {}; c.visits.forEach(k=>{ fav[k.barberId] = (fav[k.barberId]||0)+1; });
   const favB = barberOf(s, Object.keys(fav).sort((a,b)=>fav[b]-fav[a])[0]);
-  const hi = LANG==="hi", hello = hi ? `नमस्ते ${c.name}! ${s.name} से।` : `Hi ${c.name}! From ${s.name}.`;
+  // WhatsApp from history: next booking ahead → its reminder; otherwise the booking invite (same as "वापस बुलाएँ")
+  const waTxt = c.next ? msgs(s, c.next).remind : c.last ? fuText(s, c) : `${LANG==="hi"?"नमस्ते":"Hi"} ${c.name||""}! ${s.name}: ${linkFor(S.sid)}`;
   return `${back}
   <div class="card"><h1 style="margin:0">${esc(c.name||c.phone)}</h1><p class="muted">${esc(c.phone)}</p>
     <div class="stats"><div class="stat"><b>${c.visits.length}</b><span>${t("ch_visits")}</span></div><div class="stat"><b>${rs(c.spent)}</b><span>${t("ch_spent")}</span></div><div class="stat"><b>${done.length?rs(Math.round(c.spent/done.length)):"—"}</b><span>${t("ch_avg")}</span></div></div>
     <p class="small">${first?t("ch_first",{date:longDate(new Date(first.date+"T00:00").getTime())}):""}${c.last?" · "+t("ch_last",{n:c.days}):""}${favB?" · "+t("ch_fav",{name:esc(favB.name)}):""}</p>
     ${c.next?`<div class="banner ok">${t("ch_next",{date:dayLabel(c.next.date), time:nice(c.next.time)})}</div>`:""}
-    <div class="row" style="gap:6px"><a class="btn sm primary" href="${waLink(c.phone, hello)}" target="_blank" rel="noopener">${t("whatsapp")}</a><a class="btn sm" href="tel:${c.phone}">${t("ch_call")}</a><button class="btn sm" data-a="clBook" data-v="${c.phone}">+ ${t("ch_book")}</button></div></div>
+    <div class="row" style="gap:6px"><a class="btn sm primary" ${!c.next&&c.last?`data-a="fuSent" data-v="${c.phone}"`:""} href="${waLink(c.phone, waTxt)}" target="_blank" rel="noopener">${c.next?t("remind"):t("fu_send")}</a>${!c.next&&fuLbl(c.phone)?`<span class="small muted">✓ ${fuLbl(c.phone)}</span>`:""}<a class="btn sm" href="tel:${c.phone}">${t("ch_call")}</a><button class="btn sm" data-a="clBook" data-v="${c.phone}">+ ${t("ch_book")}</button></div></div>
   <div class="card"><h2>${t("ch_list")}</h2>${c.visits.length?c.visits.map(k=>{ const b = barberOf(s,k.barberId)||{name:""};
     return `<div class="hrow2"><div class="row" style="gap:8px"><b class="grow">${longDate(new Date(k.date+"T00:00").getTime())}</b><span class="small muted">${nice(k.time)}</span>${k.status==="done"?`<b>${rs(bkEarn(s,k))}</b>`:`<span class="pill warn">${t("ch_notdone")}</span>`}</div>
       <p class="small muted">${esc(k.bill?(k.bill.items||[]).map(x=>x.n).join(" + "):bkNames(s,k))}${b.name?" · "+esc(b.name):""}${k.bill?" · "+(k.bill.pay==="upi"?"UPI":"Cash")+" · "+t("bill_no",{n:k.bill.no}):""}${k.bill&&k.bill.disc?" · "+t("dc_disc")+" "+rs(k.bill.disc):""}</p></div>`; }).join(""):`<p class="muted">${t("cl_nohist")}</p>`}</div>`;
