@@ -386,3 +386,10 @@ table.led td{padding:8px 4px;border-bottom:1px dashed var(--line);font-variant-n
 .addbtn{border:1.5px dashed var(--gold);background:#FFFBF2;color:var(--ink);font-weight:600}
 .addpick{display:flex;align-items:center;gap:10px;margin-bottom:6px}
 main > .btn.sm{align-self:flex-start}
+
+.sug{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:#fff;margin:-4px 0 12px;overflow:hidden}
+.sugi{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:1px;padding:10px 12px;min-height:44px;box-sizing:border-box;border-top:1px dashed var(--line)}
+.sugi:first-child{border-top:0}
+.sugi small{color:var(--muted);font-size:12.5px}
+.sugi:hover,.sugi:focus-visible{background:var(--gold-soft)}
+#cSug:empty{display:none}
