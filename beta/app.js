@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.23-1";
+const APP_VERSION = "2026.11.23-2";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -468,7 +468,7 @@ function render(){
   }
   document.body.classList.toggle("owner", !CUSTOMER_SID && UI.view==="main");
   app.innerHTML = html; window.scrollTo(0,y);
-  drawQRs(); initScratch(); initWheels();
+  drawQRs(); initScratch(); initWheels(); initDocWheel();
   document.querySelectorAll(".ownpick .hscroll").forEach(r=>{ const on = r.querySelector(".ochip.on"); if (on) r.scrollLeft = Math.max(0, on.offsetLeft - 16); });
 }
 function navBar(){
@@ -1800,6 +1800,25 @@ function viewQueue(){
       ${now?`<div class="tkin"><span class="label">${t("q_in")}</span><div class="row" style="gap:10px"><span class="tkno big">#${now.token}</span><b class="grow">${esc(now.cust)}</b></div></div>`:`<p class="muted">${t("q_idle")}</p>`}
       ${waits.length?`<div>${waits.map((k,i)=>tokenRow(k,i,{remind:true})).join("")}</div>`:`<p class="small muted">${t("q_none")}</p>`}</div>`; }).join("")}`;
 }
+
+// vertical token wheel: done ones fade above, the one inside is centred and highlighted, waiting ones blur out below
+function docWheel(bid, now, waits){
+  const td = qDay(), all = S.bookings.filter(k=>k.date===td && k.barberId===bid && k.token && k.status!=="cancelled").sort((a,x)=>a.token-x.token);
+  const nxId = !now && waits[0] ? waits[0].id : null; const cur = qCur(bid);
+  const done = all.filter(k=>k.status==="done" && (!now || k.id!==now.id)).slice(-3), wait = all.filter(k=>k.status!=="done" && (!now || k.id!==now.id));
+  const rows = [...done.map(k=>({k,c:"done"})), ...(now?[{k:now,c:"cur"}]:[]), ...wait.map((k,i)=>({k,c:"wait d"+Math.min(3,(now?i+1:i)) + (k.id===nxId?" nx":"")}))];
+  if (!rows.length) return `<div class="docwheel empty"></div>`;
+  return `<div class="docwheel" id="docWheel" aria-live="polite">${rows.map(r=>`<div class="tk ${r.c}" data-tk="${r.k.token}"><span class="tn">#${r.k.token}</span><span class="tc">${esc(r.k.cust)}</span></div>`).join("")}</div>`;
+}
+function initDocWheel(){
+  const w = document.getElementById("docWheel"); if (!w){ UI.dwTok = null; return; }
+  const items = [...w.querySelectorAll(".tk")]; const target = w.querySelector(".tk.cur") || w.querySelector(".tk.nx") || w.querySelector(".tk.wait") || items[items.length-1]; if (!target) return;
+  const ctr = el => el.offsetTop - (w.clientHeight - el.offsetHeight)/2;
+  const prev = UI.dwTok!=null ? items.find(x=>x.dataset.tk===String(UI.dwTok)) : null;
+  if (prev && prev!==target){ w.scrollTop = ctr(prev); requestAnimationFrame(()=>requestAnimationFrame(()=>w.scrollTo({top:ctr(target), behavior:"smooth"}))); }
+  else w.scrollTop = ctr(target);
+  UI.dwTok = target.dataset.tk;
+}
 function viewDoctor(){
   const s = S.salon, docs = s.barbers||[];
   const bid = S.staff && S.staff.barberId ? S.staff.barberId : (UI.docId && barberOf(s,UI.docId) ? UI.docId : (docs[0]||{}).id);
@@ -1810,11 +1829,10 @@ function viewDoctor(){
   const pick = !S.staff && docs.length>1 ? `<div class="chips">${docs.map(x=>`<button class="chip ${x.id===bid?"on":""}" data-a="docPick" data-v="${x.id}">${esc(x.name)}</button>`).join("")}</div>` : "";
   return `<div class="docpage">${back}${pick}
     <div class="docwho">${avatar(b,"lg")}<b>${esc(b.name)}</b>${b.spec?`<span class="small muted">${esc(b.spec)}</span>`:""}</div>
-    ${now?`<div class="docnow"><span class="label">${t("q_in")}</span><div class="tokbig">#${now.token}</div><h1>${esc(now.cust)}</h1>
-        <button class="btn primary docdone" data-a="qDone" data-v="${bid}">✓ ${t("q_done")}</button></div>`
-      : nx?`<div class="docnow idle"><span class="label">${t("q_idle")}</span><div class="tokbig">#${nx.token}</div><h1>${esc(nx.cust)}</h1>
-        <button class="btn primary docdone" data-a="qCall" data-v="${bid}">${t("q_call")}</button></div>`
-      : `<div class="docnow idle"><div class="tokbig">–</div><h1>${t("q_none")}</h1></div>`}
+    ${docWheel(bid, now, waits)}
+    ${now?`<button class="btn primary docdone" data-a="qDone" data-v="${bid}">✓ ${t("q_done")}</button>`
+      : nx?`<button class="btn primary docdone" data-a="qCall" data-v="${bid}">${t("q_call")} #${nx.token}</button>`
+      : `<p class="muted" style="text-align:center">${t("q_none")}</p>`}
     <p class="docfoot">${t("q_waiting",{n:waits.length})}${now&&nx?` · ${t("q_next")}: #${nx.token} ${esc(nx.cust)}`:""}</p></div>`;
 }
 // patient's own live page (no login): ?s=..&q=1&d=<doctor>&dt=<date>&tk=<token>
