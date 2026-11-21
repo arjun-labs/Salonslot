@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.23-5";
+const APP_VERSION = "2026.11.23-6";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -264,13 +264,13 @@ function bizTr(k, s){
 }
 
 Object.assign(T.en,{ nav_queue:"Tokens", q_h:"Token queue", q_p:"Patients in order of token. The doctor taps Done and the next token starts.", q_mode:"Doctor mode", q_back:"Full app",
-  q_in:"In consultation", q_done:"Done", q_call:"Call next", q_none:"No patient waiting", q_fin:"Done", q_seen_s:"Seen", q_ready:"Ready for next patient", q_wait_s:"Waiting", q_waiting:"{n} waiting", q_next:"Next", q_nodoc:"Add a doctor in Settings first.", q_pickdoc:"Doctor",
+  q_in:"In consultation", q_done:"Done", q_call:"Call next", q_none:"No patient waiting", q_fin:"Done", prob_h:"Describe the problem", prob_ph:"e.g. fever for 3 days, child is 5 years old", prob_priv:"Only the doctor and clinic can see this.", mic_start:"Speak", mic_stop:"Stop", mic_na:"Tip: use the 🎤 on your keyboard to speak.", mic_denied:"Microphone permission is off.", q_seen_s:"Seen", q_ready:"Ready for next patient", q_wait_s:"Waiting", q_waiting:"{n} waiting", q_next:"Next", q_nodoc:"Add a doctor in Settings first.", q_pickdoc:"Doctor",
   q_idle:"Doctor is free", q_ahead:"{n} ahead", q_nextup:"Next to go in", q_remind:"Send reminder", q_sent:"Reminder sent", q_nobk:"No tokens today yet.", q_tok:"Token",
   q_msg:"Hello {name}, {clinic}: your token is #{tk}. {ahead} patient(s) before you. Please reach the clinic soon.\nLive status: {link}", q_msg0:"Hello {name}, {clinic}: you are next, token #{tk}. Please be ready.\nLive status: {link}",
   q_your:"Your token", q_now:"Now in", q_yourturn:"It is your turn. Please go in.", q_seen:"Your consultation is done.", q_before:"Patients before you", q_live:"Live token status", q_notyet:"Not started yet", q_open:"See live token",
   team_h:"Team access", team_p:"Add staff by their Google email. They log in with their own account and see only what you allow.", team_email:"Staff Google email", team_name:"Name", team_role:"Role", r_reception:"Reception", r_doctor:"Doctor", r_manager:"Manager", team_doc:"Which doctor profile?", team_rev:"Can see earnings", team_add:"Add staff", team_none:"No staff added yet.", team_bad:"Enter a valid Gmail address.", team_tip:"Doctor who owns the clinic? You already have everything. Use Doctor mode." });
 Object.assign(T.hi,{ nav_queue:"टोकन", q_h:"टोकन कतार", q_p:"मरीज़ टोकन के क्रम में। डॉक्टर Done दबाए तो अगला टोकन चालू हो जाता है।", q_mode:"डॉक्टर मोड", q_back:"पूरा ऐप",
-  q_in:"अभी अंदर", q_done:"Done", q_call:"अगला बुलाएँ", q_none:"कोई मरीज़ इंतज़ार में नहीं", q_fin:"पूरा हुआ", q_seen_s:"देखे गए", q_ready:"अगला मरीज़ बुलाएँ", q_wait_s:"इंतज़ार", q_waiting:"{n} इंतज़ार में", q_next:"अगला", q_nodoc:"पहले Settings में डॉक्टर जोड़ें।", q_pickdoc:"डॉक्टर",
+  q_in:"अभी अंदर", q_done:"Done", q_call:"अगला बुलाएँ", q_none:"कोई मरीज़ इंतज़ार में नहीं", q_fin:"पूरा हुआ", prob_h:"समस्या बताएँ", prob_ph:"जैसे: 3 दिन से बुखार है, बच्चा 5 साल का है", prob_priv:"इसे सिर्फ़ डॉक्टर और क्लिनिक देखेंगे।", mic_start:"बोलकर लिखें", mic_stop:"रोकें", mic_na:"सुझाव: कीबोर्ड के 🎤 से बोलकर लिखें।", mic_denied:"माइक की अनुमति बंद है।", q_seen_s:"देखे गए", q_ready:"अगला मरीज़ बुलाएँ", q_wait_s:"इंतज़ार", q_waiting:"{n} इंतज़ार में", q_next:"अगला", q_nodoc:"पहले Settings में डॉक्टर जोड़ें।", q_pickdoc:"डॉक्टर",
   q_idle:"डॉक्टर ख़ाली हैं", q_ahead:"आगे {n}", q_nextup:"अगला अंदर जाएगा", q_remind:"रिमाइंडर भेजें", q_sent:"रिमाइंडर भेजा", q_nobk:"आज अभी कोई टोकन नहीं।", q_tok:"टोकन",
   q_msg:"नमस्ते {name}, {clinic}: आपका टोकन #{tk} है। आपसे पहले {ahead} मरीज़ हैं। कृपया जल्दी क्लिनिक पहुँचें।\nलाइव स्थिति: {link}", q_msg0:"नमस्ते {name}, {clinic}: अगला नंबर आपका है, टोकन #{tk}। कृपया तैयार रहें।\nलाइव स्थिति: {link}",
   q_your:"आपका टोकन", q_now:"अभी अंदर", q_yourturn:"आपकी बारी है। कृपया अंदर जाइए।", q_seen:"आपका परामर्श हो चुका है।", q_before:"आपसे पहले मरीज़", q_live:"टोकन की लाइव स्थिति", q_notyet:"अभी शुरू नहीं हुआ", q_open:"लाइव टोकन देखें",
@@ -380,6 +380,8 @@ function freeSlots(salon, date, svcId, barberPref, slotsMap, opt){
   for (let m=open; m+dur<=close; m+=step){ if (m<=nowM) continue; const f = cands.find(b=>isFree(busy,b.id,m,dur)); if (f) out.push({time:toHM(m), barberId:f.id}); }
   return out;
 }
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let micRec = null;
 async function createBooking(sid, salon, b, force){
   const dur = Number(b.dur) || Number((svcOf(salon,b.serviceId)||{}).dur)||30;
   const dref = doc(db,"salons",sid,"days",b.date), bref = doc(collection(db,"salons",sid,"bookings"));
@@ -883,6 +885,7 @@ function cSugNote(B){
 }
 // typing in the owner form: refresh the suggestions; a full known number fills an empty name
 function bookSug(k, el){
+  if (k==="problem") return;
   const B = UI.book; B.picked = null;
   if (k==="name"){ const box = document.getElementById("cSug"); if (box) box.innerHTML = cSugHtml(el.value); return; }
   if (k==="phone"){ const p = digits(el.value); if (p.length!==10 || String(B.name||"").trim()) return;
@@ -1116,6 +1119,10 @@ function bookingForm(salon, slotsFor, ownerMode){
     ${ownerMode?`<div id="cSug">${!B.picked && digits(B.phone).length!==10 ? cSugHtml(B.name) : ""}</div>${cSugNote(B)}`:""}
     <label class="field"><span>${t("cust_phone")}</span><input type="tel" inputmode="tel" autocomplete="tel" id="c_phone" data-book="phone" value="${esc(B.phone||"")}" placeholder="98XXXXXXXX"></label>
     <label class="field"><span>${t("cust_email")} <em>(${t("optional")})</em></span><input type="email" inputmode="email" autocomplete="email" id="c_email" data-book="email" value="${esc(B.email||"")}" placeholder="name@gmail.com"></label>
+    ${isClinic(salon)?`<div class="field probbox"><span>${t("prob_h")} <em>(${t("optional")})</em></span>
+      <textarea id="c_prob" rows="3" maxlength="300" data-book="problem" placeholder="${esc(t("prob_ph"))}">${esc(B.problem||"")}</textarea>
+      ${SR?`<button type="button" class="btn micbtn ${UI.mic?"on":""}" id="micBtn" data-a="mic">${UI.mic?"⏹ "+t("mic_stop"):"🎤 "+t("mic_start")}</button>`:`<p class="small muted">${t("mic_na")}</p>`}
+      <p class="small muted">🔒 ${t("prob_priv")}</p></div>`:""}
     ${UI.err?`<div class="banner bad" role="alert">${UI.err}</div>`:""}
     <button class="btn primary block" data-a="confirm" ${UI.busy?"disabled":""}>${t("confirm_bk")}</button></div>`;
 }
@@ -1552,6 +1559,19 @@ const A = {
   bDate:v=>{ go(()=>{ UI.book.date=v; UI.book.time=null; if (CUSTOMER_SID) loadDay(v); }); stepTo("timeCard"); },
   ownH:v=>go(()=>{ UI.ownH = Number(v); }),
   bTime:v=>{ go(()=>{ UI.book.time=v; UI.err=""; }); stepTo("detailsCard"); },
+  mic:()=>{
+    if (!SR) return;
+    const btn = () => document.getElementById("micBtn");
+    if (micRec){ try{ micRec.stop(); }catch(e){} return; }
+    const r = new SR(); micRec = r; r.lang = LANG==="hi" ? "hi-IN" : "en-IN"; r.interimResults = true; r.continuous = true;
+    const B = UI.book, base = (B.problem||"").trim(); let fin = "";
+    const put = txt => { B.problem = (base ? base+" " : "") + txt; B.problem = B.problem.slice(0,300); const ta = document.getElementById("c_prob"); if (ta) ta.value = B.problem; };
+    r.onresult = ev => { let interim = ""; for (let i=ev.resultIndex;i<ev.results.length;i++){ const x = ev.results[i]; if (x.isFinal) fin += x[0].transcript+" "; else interim += x[0].transcript; } put((fin+interim).trim()); };
+    const off = () => { micRec = null; UI.mic = false; const b = btn(); if (b){ b.classList.remove("on"); b.textContent = "🎤 "+t("mic_start"); } };
+    r.onerror = ev => { off(); if (ev && (ev.error==="not-allowed"||ev.error==="service-not-allowed")) toast(t("mic_denied")); };
+    r.onend = off;
+    try{ r.start(); UI.mic = true; const b = btn(); if (b){ b.classList.add("on"); b.textContent = "⏹ "+t("mic_stop"); } }catch(e){ off(); }
+  },
   confirm: async ()=>{ const B = UI.book; const salon = CUSTOMER_SID ? C.salon : S.salon, sid = CUSTOMER_SID || S.sid;
     if (!B.svc){ A.toSvc(); return; }
     if (!B.time && CUSTOMER_SID){ UI.err = t("pick_time"); render(); const el=document.getElementById("timeCard"); if (el) el.scrollIntoView({behavior:"smooth", block:"start"}); return; }
@@ -1564,6 +1584,7 @@ const A = {
     if (!slot || !slot.barberId){ UI.err = t("taken"); render(); return; }
     const k = { date:B.date, time:B.time, serviceId:B.svc, barberId:slot.barberId, cust:B.name.trim().slice(0,60), phone:digits(B.phone), status:"booked", created:Date.now(), src: CUSTOMER_SID?"online":"walkin" };
     if (em) k.email = em.slice(0,100);
+    if (isClinic(salon) && (B.problem||"").trim()) k.problem = B.problem.trim().slice(0,300);
     if (B.extra.length){ k.extra = B.extra.slice(0,10); k.dur = dur; }
     UI.busy=true; UI.err=""; render();
     try{ await createBooking(sid, salon, k, own); UI.bookedData = k; if (CUSTOMER_SID){ delete C.days[B.date]; } window.scrollTo(0,0); }
@@ -1793,7 +1814,7 @@ function qRemindMsg(k, ahead){
 function tokenRow(k, ahead, o){
   const lvl = ahead; const sent = (k.rem||{})[String(lvl)];
   const can = o && o.remind && (ahead===2 || ahead===1) && digits(k.phone).length===10;
-  return `<div class="tkrow"><span class="tkno">#${k.token}</span><div class="grow"><b>${esc(k.cust)}</b><div class="small">${esc(bkNames(S.salon,k))}</div><div class="small muted">${t("q_ahead",{n:ahead})}${digits(k.phone).length===10?" · "+esc(k.phone):""}</div></div>
+  return `<div class="tkrow"><span class="tkno">#${k.token}</span><div class="grow"><b>${esc(k.cust)}</b><div class="small">${esc(bkNames(S.salon,k))}</div>${k.problem?`<div class="small prob">“${esc(k.problem)}”</div>`:""}<div class="small muted">${t("q_ahead",{n:ahead})}${digits(k.phone).length===10?" · "+esc(k.phone):""}</div></div>
     ${can?(sent?`<span class="pill ok">${t("q_sent")}</span>`:`<a class="btn sm saffron" data-a="qRemind" data-v="${k.id}|${lvl}" href="${waLink(k.phone, qRemindMsg(k, ahead))}" target="_blank" rel="noopener">${t("q_remind")}</a>`):""}
     <a class="btn sm ghost" href="${waLink(k.phone, qRemindMsg(k, ahead))}" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a></div>`;
 }
@@ -1804,12 +1825,12 @@ function viewQueue(){
   <div class="row" style="gap:8px"><button class="btn primary grow" data-a="walkin">+ ${t("add_walkin")}</button>${canDoctor()?`<button class="btn grow" data-a="docMode">🩺 ${t("q_mode")}</button>`:""}</div>
   ${(s.barbers||[]).map(b=>{ const now = qNowK(b.id), waits = qWait(b.id).filter(k=>!now||k.id!==now.id);
     return `<div class="card"><div class="row" style="gap:10px">${avatar(b,"lg")}<div class="grow"><h2>${esc(b.name)}</h2>${b.spec?`<p class="small muted">${esc(b.spec)}</p>`:""}</div><span class="pill ${waits.length?"warn":""}">${t("q_waiting",{n:waits.length})}</span></div>
-      ${now?`<div class="tkin"><span class="label">${t("q_in")}</span><div class="row" style="gap:10px"><span class="tkno big">#${now.token}</span><div class="grow"><b>${esc(now.cust)}</b><div class="small">${esc(bkNames(S.salon,now))}</div></div></div></div>`:`<p class="muted">${t("q_idle")}</p>`}
+      ${now?`<div class="tkin"><span class="label">${t("q_in")}</span><div class="row" style="gap:10px"><span class="tkno big">#${now.token}</span><div class="grow"><b>${esc(now.cust)}</b><div class="small">${esc(bkNames(S.salon,now))}</div>${now.problem?`<div class="small prob">“${esc(now.problem)}”</div>`:""}</div></div></div>`:`<p class="muted">${t("q_idle")}</p>`}
       ${waits.length?`<div>${waits.map((k,i)=>tokenRow(k,i,{remind:true})).join("")}</div>`:`<p class="small muted">${t("q_none")}</p>`}</div>`; }).join("")}`;
 }
 
 // doctor page: one compact card. Seen (faded) above, patient inside (highlighted) in the middle, waiting (blurred) below.
-function docRow(k, c){ return `<div class="dk ${c}"><span class="dn">#${k.token}</span><span class="dtx"><span class="dc">${esc(k.cust)}</span><span class="dsv">${esc(bkNames(S.salon,k))}</span></span></div>`; }
+function docRow(k, c){ return `<div class="dk ${c}"><span class="dn">#${k.token}</span><span class="dtx"><span class="dc">${esc(k.cust)}</span><span class="dsv">${esc(bkNames(S.salon,k))}</span>${k.problem&&c.indexOf("wait")===0?`<span class="dpr">${esc(k.problem)}</span>`:""}</span></div>`; }
 function viewDoctor(){
   const s = S.salon, docs = s.barbers||[];
   const bid = S.staff && S.staff.barberId ? S.staff.barberId : (UI.docId && barberOf(s,UI.docId) ? UI.docId : (docs[0]||{}).id);
@@ -1823,8 +1844,8 @@ function viewDoctor(){
   const key = bid+":"+cur+":"+(qIn(bid)?1:0)+":"+seen.length; const pop = UI.dwKey!==key ? " pop" : ""; UI.dwKey = key;
   const back = !S.staff ? `<button class="btn sm ghost" data-a="docBack">← ${t("q_back")}</button>` : "";
   const pick = !S.staff && docs.length>1 ? `<div class="chips">${docs.map(x=>`<button class="chip ${x.id===bid?"on":""}" data-a="docPick" data-v="${x.id}">${esc(x.name)}</button>`).join("")}</div>` : "";
-  const mid = now ? `<div class="dmid in${pop}"><span class="dlab">${t("q_in")}</span><div class="dbig">#${now.token}</div><div class="dname">${esc(now.cust)}</div><div class="dsvc">${esc(bkNames(S.salon,now))}</div></div>`
-    : last ? `<div class="dmid fin${pop}"><span class="dlab">✓ ${t("q_fin")}</span><div class="dbig">#${last.token}</div><div class="dname">${esc(last.cust)}</div><div class="dsvc">${esc(bkNames(S.salon,last))}</div></div>`
+  const mid = now ? `<div class="dmid in${pop}"><span class="dlab">${t("q_in")}</span><div class="dbig">#${now.token}</div><div class="dname">${esc(now.cust)}</div><div class="dsvc">${esc(bkNames(S.salon,now))}</div>${now.problem?`<div class="dprob">“${esc(now.problem)}”</div>`:""}</div>`
+    : last ? `<div class="dmid fin${pop}"><span class="dlab">✓ ${t("q_fin")}</span><div class="dbig">#${last.token}</div><div class="dname">${esc(last.cust)}</div><div class="dsvc">${esc(bkNames(S.salon,last))}</div>${last.problem?`<div class="dprob">“${esc(last.problem)}”</div>`:""}</div>`
     : `<div class="dmid idle${pop}"><span class="dlab">${t("q_ready")}</span><div class="dbig">—</div><div class="dname">${nx?"":t("q_none")}</div></div>`;
   const btn = now ? `<button class="btn primary docdone" data-a="qDone" data-v="${bid}">✓ ${t("q_done")}</button>`
     : nx ? `<button class="btn primary docdone next" data-a="qCall" data-v="${bid}">${t("q_call")} · #${nx.token} →</button>`

@@ -109,8 +109,9 @@ service cloud.firestore {
         allow delete: if isOwner(sid) || isAdmin();
         allow create: if isOwner(sid) || isAdmin() || isStaff(sid) || (
           salonOpen(sid)
-          && request.resource.data.keys().hasOnly(['date', 'time', 'serviceId', 'barberId', 'cust', 'phone', 'email', 'status', 'created', 'src', 'extra', 'dur', 'token'])
+          && request.resource.data.keys().hasOnly(['date', 'time', 'serviceId', 'barberId', 'cust', 'phone', 'email', 'status', 'created', 'src', 'extra', 'dur', 'token', 'problem'])
           && (!('extra' in request.resource.data) || (request.resource.data.extra is list && request.resource.data.extra.size() <= 10))
+          && (!('problem' in request.resource.data) || (request.resource.data.problem is string && request.resource.data.problem.size() <= 300))
           && (!('token' in request.resource.data) || (request.resource.data.token is int && request.resource.data.token > 0))
           && (!('dur' in request.resource.data) || (request.resource.data.dur is int && request.resource.data.dur > 0 && request.resource.data.dur <= 720))
           && request.resource.data.status == 'booked'

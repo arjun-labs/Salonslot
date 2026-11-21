@@ -448,3 +448,9 @@ main > .btn.sm{align-self:flex-start}
 .dk .dtx{display:flex;flex-direction:column;align-items:flex-start;max-width:68%;min-width:0}
 .dk .dsv{font-family:var(--body);font-size:13px;font-weight:500;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dmid .dsvc{display:inline-block;margin-top:6px;padding:4px 12px;border-radius:999px;background:var(--surface);border:1px solid currentColor;font-size:15px;font-weight:600}
+.probbox textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;resize:vertical;background:var(--surface);color:var(--fg)}
+.micbtn{margin-top:8px;width:100%}.micbtn.on{background:#B3261E;border-color:#B3261E;color:#fff;animation:micp 1.2s infinite}
+@keyframes micp{50%{opacity:.7}}
+.dmid .dprob{margin:8px auto 0;max-width:92%;font-size:16px;font-style:italic;color:var(--fg);line-height:1.35;word-break:break-word}
+.dk .dpr{font-family:var(--body);font-size:12px;font-weight:400;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.small.prob{font-style:italic;color:var(--fg)}
