@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.24-3";
+const APP_VERSION = "2026.11.24-4";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -220,7 +220,7 @@ const T = {
 /* ================= business types (Slot platform) ================= */
 // One platform, many branches. Existing salons have no bizType and stay "salon".
 const BIZ = {
-  salon:{ icon:"💈", name:{en:"SalonSlot",hi:"SalonSlot"}, pick:{en:"Salon",hi:"सैलून"}, hint:{en:"Barber · Salon · Beauty parlour",hi:"बारबर · सैलून · ब्यूटी पार्लर"}, color:"#24211F", rep:{en:[],hi:[]} },
+  salon:{ icon:"💈", name:{en:"SalonSlot",hi:"SalonSlot"}, pick:{en:"Salon",hi:"सैलून"}, hint:{en:"Barber · Salon · Beauty parlour",hi:"बारबर · सैलून · ब्यूटी पार्लर"}, color:"#24211F", rep:{en:[[/Customers/g,"Clients"],[/customers/g,"clients"],[/Customer/g,"Client"],[/customer/g,"client"]], hi:[[/ग्राहक/g,"क्लाइंट"],[/Customers/g,"क्लाइंट"],[/customers/g,"क्लाइंट"],[/Customer/g,"क्लाइंट"],[/customer/g,"क्लाइंट"]] } },
   clinic:{ icon:"🩺", name:{en:"Clinic Slot",hi:"क्लिनिक स्लॉट"}, pick:{en:"Clinic",hi:"क्लिनिक"}, hint:{en:"Doctor · Token · Appointment",hi:"डॉक्टर · टोकन · अपॉइंटमेंट"}, color:"#0F5C5C",
     tag:{en:"Clinic appointments and tokens, made simple",hi:"क्लिनिक की अपॉइंटमेंट और टोकन, आसान"},
     sugg:[["General consultation",300,15],["Follow-up visit",150,10],["Fever / cold check",300,15],["Child check-up",400,20],["Blood pressure check",100,10],["Dressing / injection",150,10],["Health check-up",800,30]],
@@ -229,8 +229,8 @@ const BIZ = {
   spa:{ icon:"🧖", name:{en:"Spa Slot",hi:"स्पा स्लॉट"}, pick:{en:"Spa",hi:"स्पा"}, hint:{en:"Therapy · Packages · Wellness",hi:"थेरेपी · पैकेज · वेलनेस"}, color:"#6B4E71",
     tag:{en:"Spa and wellness bookings, made simple",hi:"स्पा और वेलनेस की बुकिंग, आसान"},
     sugg:[["Swedish massage",1500,60],["Deep tissue massage",2000,60],["Head & shoulder massage",600,30],["Aromatherapy",1800,60],["Facial",1200,45],["Body scrub",1800,60],["Foot reflexology",700,30],["Couple package",4500,90]],
-    rep:{en:[[/Barbers/g,"Therapists"],[/barbers/g,"therapists"],[/Barber/g,"Therapist"],[/barber/g,"therapist"],[/Salons/g,"Spas"],[/salons/g,"spas"],[/Salon/g,"Spa"],[/salon/g,"spa"],[/Customers/g,"Guests"],[/customers/g,"guests"],[/Customer/g,"Guest"],[/customer/g,"guest"],[/Clients/g,"Guests"],[/clients/g,"guests"],[/Client/g,"Guest"],[/client/g,"guest"],[/Services/g,"Therapies"],[/services/g,"therapies"],[/Service/g,"Therapy"],[/service/g,"therapy"]],
-         hi:[[/Barbers/g,"थेरेपिस्ट"],[/barbers/g,"थेरेपिस्ट"],[/Barber/g,"थेरेपिस्ट"],[/barber/g,"थेरेपिस्ट"],[/सैलून/g,"स्पा"],[/Salon/g,"Spa"],[/salon/g,"spa"],[/ग्राहक/g,"मेहमान"],[/Customers/g,"मेहमान"],[/customers/g,"मेहमान"],[/Customer/g,"मेहमान"],[/customer/g,"मेहमान"],[/Clients/g,"मेहमान"],[/clients/g,"मेहमान"],[/Client/g,"मेहमान"],[/client/g,"मेहमान"],[/Services/g,"थेरेपी"],[/services/g,"थेरेपी"],[/Service/g,"थेरेपी"],[/service/g,"थेरेपी"]] } },
+    rep:{en:[[/Barbers/g,"Therapists"],[/barbers/g,"therapists"],[/Barber/g,"Therapist"],[/barber/g,"therapist"],[/Salons/g,"Spas"],[/salons/g,"spas"],[/Salon/g,"Spa"],[/salon/g,"spa"],[/Customers/g,"Clients"],[/customers/g,"clients"],[/Customer/g,"Client"],[/customer/g,"client"],[/Clients/g,"Clients"],[/clients/g,"clients"],[/Client/g,"Client"],[/client/g,"client"],[/Services/g,"Therapies"],[/services/g,"therapies"],[/Service/g,"Therapy"],[/service/g,"therapy"]],
+         hi:[[/Barbers/g,"थेरेपिस्ट"],[/barbers/g,"थेरेपिस्ट"],[/Barber/g,"थेरेपिस्ट"],[/barber/g,"थेरेपिस्ट"],[/सैलून/g,"स्पा"],[/Salon/g,"Spa"],[/salon/g,"spa"],[/ग्राहक/g,"क्लाइंट"],[/Customers/g,"क्लाइंट"],[/customers/g,"क्लाइंट"],[/Customer/g,"क्लाइंट"],[/customer/g,"क्लाइंट"],[/Clients/g,"क्लाइंट"],[/clients/g,"क्लाइंट"],[/Client/g,"क्लाइंट"],[/client/g,"क्लाइंट"],[/Services/g,"थेरेपी"],[/services/g,"थेरेपी"],[/Service/g,"थेरेपी"],[/service/g,"थेरेपी"]] } },
   other:{ icon:"✨", name:{en:"Slot",hi:"स्लॉट"}, pick:{en:"Other",hi:"अन्य"}, hint:{en:"Any service business",hi:"कोई भी सर्विस बिज़नेस"}, color:"#3E5A47",
     tag:{en:"Bookings for any service business",hi:"किसी भी सर्विस बिज़नेस की बुकिंग"},
     sugg:[["Consultation",500,30],["Standard service",800,60],["Premium service",1500,60],["Quick visit",200,15]],
@@ -256,7 +256,7 @@ const bizIcon = () => BIZ[BIZ_ID].icon;
 // brand-name swap + word swap for non-salon types; admin/lead/offer screens stay as they are
 const BIZ_SKIP = /^(adm|lead|of_|ofr|rw_|pay|plan|gst|exp)/;
 function bizTr(k, s){
-  if (BIZ_ID==="salon" || typeof s!=="string" || BIZ_SKIP.test(k)) return s;
+  if (typeof s!=="string" || BIZ_SKIP.test(k)) return s;
   const b = BIZ[BIZ_ID];
   s = s.replace(/SalonSlot/g, b.name.en);
   for (const [re, to] of (b.rep[LANG]||b.rep.en)) s = s.replace(re, to);
@@ -264,13 +264,13 @@ function bizTr(k, s){
 }
 
 Object.assign(T.en,{ nav_queue:"Tokens", q_h:"Token queue", q_p:"Patients in order of token. The doctor taps Done and the next token starts.", q_mode:"Doctor mode", q_back:"Full app",
-  q_in:"In consultation", q_done:"Done", q_call:"Call next", q_none:"No patient waiting", q_fin:"Done", gst_h:"GST billing", gst_on:"ON", gst_off:"OFF", gst_p:"Turn on to give GST tax invoices with your GSTIN and tax breakup. Off = plain bill as before.", gst_legal:"Business name on invoice", gst_bad:"Enter a valid 15-character GSTIN to issue GST invoices.", gst_rate:"GST rate %", gst_price:"Your service prices are", gst_incl:"GST included", gst_excl:"GST extra", gst_note:"The GSTIN is checked for format and check digit only; you are responsible for using your own registered number. Please confirm the rate and SAC code with your CA. This makes invoices only, it does not file GST returns.", gst_taxable:"Taxable value", exp_h:"Download data for your CA", exp_p:"Last 2 years of bookings and bills in one Excel/CSV file: invoice numbers, GST split, payments.", exp_btn:"Download 2-year data", exp_done:"{n} rows downloaded", popup_off:"Allow pop-ups to open the bill.", prob_h:"Describe the problem", prob_ph:"e.g. fever for 3 days, child is 5 years old", prob_priv:"Only the doctor and clinic can see this.", mic_start:"Speak", mic_stop:"Stop", mic_na:"Tip: use the 🎤 on your keyboard to speak.", mic_denied:"Microphone permission is off.", q_seen_s:"Seen", q_ready:"Ready for next patient", q_wait_s:"Waiting", q_waiting:"{n} waiting", q_next:"Next", q_nodoc:"Add a doctor in Settings first.", q_pickdoc:"Doctor",
+  q_in:"In consultation", q_done:"Done", q_call:"Call next", q_none:"No patient waiting", q_fin:"Done", who_lbl:"Customer", by_lbl:"Barber", gst_h:"GST billing", gst_on:"ON", gst_off:"OFF", gst_p:"Turn on to give GST tax invoices with your GSTIN and tax breakup. Off = plain bill as before.", gst_legal:"Business name on invoice", gst_bad:"Enter a valid 15-character GSTIN to issue GST invoices.", gst_rate:"GST rate %", gst_price:"Your service prices are", gst_incl:"GST included", gst_excl:"GST extra", gst_note:"The GSTIN is checked for format and check digit only; you are responsible for using your own registered number. Please confirm the rate and SAC code with your CA. This makes invoices only, it does not file GST returns.", gst_taxable:"Taxable value", exp_h:"Download data for your CA", exp_p:"Last 2 years of bookings and bills in one Excel/CSV file: invoice numbers, GST split, payments.", exp_btn:"Download 2-year data", exp_done:"{n} rows downloaded", popup_off:"Allow pop-ups to open the bill.", prob_h:"Describe the problem", prob_ph:"e.g. fever for 3 days, child is 5 years old", prob_priv:"Only the doctor and clinic can see this.", mic_start:"Speak", mic_stop:"Stop", mic_na:"Tip: use the 🎤 on your keyboard to speak.", mic_denied:"Microphone permission is off.", q_seen_s:"Seen", q_ready:"Ready for next patient", q_wait_s:"Waiting", q_waiting:"{n} waiting", q_next:"Next", q_nodoc:"Add a doctor in Settings first.", q_pickdoc:"Doctor",
   q_idle:"Doctor is free", q_ahead:"{n} ahead", q_nextup:"Next to go in", q_remind:"Send reminder", q_sent:"Reminder sent", q_nobk:"No tokens today yet.", q_tok:"Token",
   q_msg:"Hello {name}, {clinic}: your token is #{tk}. {ahead} patient(s) before you. Please reach the clinic soon.\nLive status: {link}", q_msg0:"Hello {name}, {clinic}: you are next, token #{tk}. Please be ready.\nLive status: {link}",
   q_your:"Your token", q_now:"Now in", q_yourturn:"It is your turn. Please go in.", q_seen:"Your consultation is done.", q_before:"Patients before you", q_live:"Live token status", q_notyet:"Not started yet", q_open:"See live token",
   team_h:"Team access", team_p:"Add staff by their Google email. They log in with their own account and see only what you allow.", team_email:"Staff Google email", team_name:"Name", team_role:"Role", r_reception:"Reception", r_doctor:"Doctor", r_manager:"Manager", team_doc:"Which doctor profile?", team_rev:"Can see earnings", team_add:"Add staff", team_none:"No staff added yet.", team_bad:"Enter a valid Gmail address.", team_tip:"Doctor who owns the clinic? You already have everything. Use Doctor mode." });
 Object.assign(T.hi,{ nav_queue:"टोकन", q_h:"टोकन कतार", q_p:"मरीज़ टोकन के क्रम में। डॉक्टर Done दबाए तो अगला टोकन चालू हो जाता है।", q_mode:"डॉक्टर मोड", q_back:"पूरा ऐप",
-  q_in:"अभी अंदर", q_done:"Done", q_call:"अगला बुलाएँ", q_none:"कोई मरीज़ इंतज़ार में नहीं", q_fin:"पूरा हुआ", gst_h:"GST बिलिंग", gst_on:"चालू", gst_off:"बंद", gst_p:"चालू करने पर आपके GSTIN और टैक्स ब्रेकअप के साथ GST टैक्स इनवॉइस बनेगा। बंद = पहले जैसा सादा बिल।", gst_legal:"इनवॉइस पर व्यापार का नाम", gst_bad:"GST इनवॉइस के लिए सही 15 अक्षर का GSTIN डालें।", gst_rate:"GST दर %", gst_price:"आपकी सर्विस के दाम", gst_incl:"GST समेत", gst_excl:"GST ऊपर से", gst_note:"GSTIN की जाँच सिर्फ़ फ़ॉर्मैट और चेक-अंक से होती है; अपना ही रजिस्टर्ड नंबर डालना आपकी ज़िम्मेदारी है। दर और SAC कोड अपने CA से पक्का कर लें। यह सिर्फ़ इनवॉइस बनाता है, GST रिटर्न नहीं भरता।", gst_taxable:"टैक्स योग्य राशि", exp_h:"CA के लिए डेटा डाउनलोड", exp_p:"पिछले 2 साल की बुकिंग और बिल एक Excel/CSV फ़ाइल में: इनवॉइस नंबर, GST का बँटवारा, भुगतान।", exp_btn:"2 साल का डेटा डाउनलोड", exp_done:"{n} पंक्तियाँ डाउनलोड हुईं", popup_off:"बिल खोलने के लिए pop-up की अनुमति दें।", prob_h:"समस्या बताएँ", prob_ph:"जैसे: 3 दिन से बुखार है, बच्चा 5 साल का है", prob_priv:"इसे सिर्फ़ डॉक्टर और क्लिनिक देखेंगे।", mic_start:"बोलकर लिखें", mic_stop:"रोकें", mic_na:"सुझाव: कीबोर्ड के 🎤 से बोलकर लिखें।", mic_denied:"माइक की अनुमति बंद है।", q_seen_s:"देखे गए", q_ready:"अगला मरीज़ बुलाएँ", q_wait_s:"इंतज़ार", q_waiting:"{n} इंतज़ार में", q_next:"अगला", q_nodoc:"पहले Settings में डॉक्टर जोड़ें।", q_pickdoc:"डॉक्टर",
+  q_in:"अभी अंदर", q_done:"Done", q_call:"अगला बुलाएँ", q_none:"कोई मरीज़ इंतज़ार में नहीं", q_fin:"पूरा हुआ", who_lbl:"ग्राहक", by_lbl:"Barber", gst_h:"GST बिलिंग", gst_on:"चालू", gst_off:"बंद", gst_p:"चालू करने पर आपके GSTIN और टैक्स ब्रेकअप के साथ GST टैक्स इनवॉइस बनेगा। बंद = पहले जैसा सादा बिल।", gst_legal:"इनवॉइस पर व्यापार का नाम", gst_bad:"GST इनवॉइस के लिए सही 15 अक्षर का GSTIN डालें।", gst_rate:"GST दर %", gst_price:"आपकी सर्विस के दाम", gst_incl:"GST समेत", gst_excl:"GST ऊपर से", gst_note:"GSTIN की जाँच सिर्फ़ फ़ॉर्मैट और चेक-अंक से होती है; अपना ही रजिस्टर्ड नंबर डालना आपकी ज़िम्मेदारी है। दर और SAC कोड अपने CA से पक्का कर लें। यह सिर्फ़ इनवॉइस बनाता है, GST रिटर्न नहीं भरता।", gst_taxable:"टैक्स योग्य राशि", exp_h:"CA के लिए डेटा डाउनलोड", exp_p:"पिछले 2 साल की बुकिंग और बिल एक Excel/CSV फ़ाइल में: इनवॉइस नंबर, GST का बँटवारा, भुगतान।", exp_btn:"2 साल का डेटा डाउनलोड", exp_done:"{n} पंक्तियाँ डाउनलोड हुईं", popup_off:"बिल खोलने के लिए pop-up की अनुमति दें।", prob_h:"समस्या बताएँ", prob_ph:"जैसे: 3 दिन से बुखार है, बच्चा 5 साल का है", prob_priv:"इसे सिर्फ़ डॉक्टर और क्लिनिक देखेंगे।", mic_start:"बोलकर लिखें", mic_stop:"रोकें", mic_na:"सुझाव: कीबोर्ड के 🎤 से बोलकर लिखें।", mic_denied:"माइक की अनुमति बंद है।", q_seen_s:"देखे गए", q_ready:"अगला मरीज़ बुलाएँ", q_wait_s:"इंतज़ार", q_waiting:"{n} इंतज़ार में", q_next:"अगला", q_nodoc:"पहले Settings में डॉक्टर जोड़ें।", q_pickdoc:"डॉक्टर",
   q_idle:"डॉक्टर ख़ाली हैं", q_ahead:"आगे {n}", q_nextup:"अगला अंदर जाएगा", q_remind:"रिमाइंडर भेजें", q_sent:"रिमाइंडर भेजा", q_nobk:"आज अभी कोई टोकन नहीं।", q_tok:"टोकन",
   q_msg:"नमस्ते {name}, {clinic}: आपका टोकन #{tk} है। आपसे पहले {ahead} मरीज़ हैं। कृपया जल्दी क्लिनिक पहुँचें।\nलाइव स्थिति: {link}", q_msg0:"नमस्ते {name}, {clinic}: अगला नंबर आपका है, टोकन #{tk}। कृपया तैयार रहें।\nलाइव स्थिति: {link}",
   q_your:"आपका टोकन", q_now:"अभी अंदर", q_yourturn:"आपकी बारी है। कृपया अंदर जाइए।", q_seen:"आपका परामर्श हो चुका है।", q_before:"आपसे पहले मरीज़", q_live:"टोकन की लाइव स्थिति", q_notyet:"अभी शुरू नहीं हुआ", q_open:"लाइव टोकन देखें",
@@ -364,7 +364,7 @@ function billText(s, k, bill){
   const hi = LANG==="hi", b = barberOf(s,k.barberId)||{name:""}, addr = fullAddr(s), line = "———————";
   const L = [`*${s.name}*`, `Bill #${bill.no}${bill.edited?(hi?" (बदला हुआ)":" (revised)"):""}`];
   if (addr) L.push((hi?"पता: ":"Address: ")+addr);
-  L.push(`${hi?"तारीख़":"Date"}: ${longDate(new Date(k.date+"T00:00").getTime())}, ${nice(k.time)}`, `Customer: ${k.cust}${b.name?" · Barber: "+b.name:""}`, line);
+  L.push(`${hi?"तारीख़":"Date"}: ${longDate(new Date(k.date+"T00:00").getTime())}, ${nice(k.time)}`, `${t("who_lbl")}: ${k.cust}${b.name?" · "+t("by_lbl")+": "+b.name:""}`, line);
   bill.items.forEach(x=>L.push(`${x.n}: ${rs(x.p)}`));
   if (bill.disc) L.push(`Discount: −${rs(bill.disc)}`);
   L.push(`*${hi?"कुल":"Total"}: ${rs(bill.total)}* · ${bill.pay==="upi"?"UPI":"Cash"}`, line, hi?"धन्यवाद, फिर आइए!":"Thank you, see you again!", ...billTail(s));
@@ -377,7 +377,7 @@ function gstBillText(s, k, bill){
   const hi = LANG==="hi", g = bill.gst, addr = fullAddr(s), line = "———————", dt = new Date(bill.at||Date.now());
   const L = [`*${g.legal||s.name}*`, `GSTIN: ${g.gstin}`, `*Tax Invoice ${g.inv}*${bill.edited?(hi?" (बदला हुआ)":" (revised)"):""}`];
   if (addr) L.push((hi?"पता: ":"Address: ")+addr);
-  L.push(`${hi?"तारीख़":"Date"}: ${longDate(dt.getTime())}`, `${hi?"ग्राहक":"Customer"}: ${k.cust}`, line);
+  L.push(`${hi?"तारीख़":"Date"}: ${longDate(dt.getTime())}`, `${t("who_lbl")}: ${k.cust}`, line);
   bill.items.forEach(x=>L.push(`${x.n}${g.sac?" ("+g.sac+")":""}: ${rs2(x.p)}`));
   if (bill.disc) L.push(`${hi?"छूट":"Discount"}: −${rs2(bill.disc)}`);
   L.push(line, `${hi?"टैक्स योग्य राशि":"Taxable value"}: ${rs2(g.taxable)}`, `CGST ${g.rate/2}%: ${rs2(g.cgst)}`, `SGST ${g.rate/2}%: ${rs2(g.sgst)}`, `*${hi?"कुल":"Total"}: ${rs2(bill.total)}* · ${bill.pay==="upi"?"UPI":"Cash"}`, line, hi?"धन्यवाद, फिर आइए!":"Thank you, see you again!", ...billTail(s));
@@ -873,7 +873,7 @@ table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px;borde
 @media print{body{padding:0}}.next{margin-top:22px;padding:12px 14px;border:1px solid #ddd;border-radius:10px;font-size:14px}.next a{color:#0b5;word-break:break-all}</style></head><body>
 <div class="row"><div><h1>${E(g&&g.legal?g.legal:s.name)}</h1>${addr?`<div class="m">${E(addr)}</div>`:""}${s.phone?`<div class="m">${E(s.phone)}</div>`:""}${g?`<div><b>GSTIN:</b> ${E(g.gstin)}</div>`:""}</div>
 <div class="r"><h2 style="margin-top:0">${g?"Tax Invoice":(hi?"बिल":"Bill")}</h2><div><b>${E(g?g.inv:"#"+bill.no)}</b></div><div class="m">${hi?"तारीख़":"Date"}: ${E(longDate(dt.getTime()))}</div></div></div>
-<h2>${hi?"ग्राहक":"Billed to"}</h2><div><b>${E(k.cust)}</b>${k.phone?` · ${E(k.phone)}`:""}</div>
+<h2>${t("who_lbl")}</h2><div><b>${E(k.cust)}</b>${k.phone?` · ${E(k.phone)}`:""}</div>
 <table><thead><tr><th>#</th><th>${hi?"सेवा":"Service"}</th>${g?`<th>SAC</th>`:""}<th class="r">${hi?"राशि":"Amount"}</th></tr></thead><tbody>${rows}${sum}</tbody></table>
 <p class="m">${hi?"भुगतान":"Paid by"}: ${bill.pay==="upi"?"UPI":"Cash"}</p>
 <div class="next"><b>${hi?"फिर ज़रूरत पड़े तो":"Need us again?"}</b>
@@ -1289,7 +1289,7 @@ async function exportData(){
     const snap = await getDocs(query(collection(db,"salons",S.sid,"bookings"), where("date",">=",ymd(from))));
     const list = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
     const cell = v => { const x = String(v==null?"":v).replace(/\r?\n/g," ").trim(); return /[",;]/.test(x) ? '"'+x.replace(/"/g,'""')+'"' : x; };
-    const head = ["Date","Time","Invoice / Bill no","Customer","Phone","Services","With","Status","Gross (Rs)","Discount (Rs)","Taxable value (Rs)","GST rate %","CGST (Rs)","SGST (Rs)","Total (Rs)","Payment","Shop GSTIN","SAC"];
+    const head = ["Date","Time","Invoice / Bill no",t("who_lbl"),"Phone","Services","With","Status","Gross (Rs)","Discount (Rs)","Taxable value (Rs)","GST rate %","CGST (Rs)","SGST (Rs)","Total (Rs)","Payment","Shop GSTIN","SAC"];
     const rows = list.map(k=>{ const b = k.bill||{}, g = b.gst, sv = barberOf(s,k.barberId)||{};
       const gross = (b.items||[]).reduce((a,x)=>a+(Number(x.p)||0),0);
       return [k.date,k.time,g?g.inv:(b.no?"Bill "+b.no:""),k.cust,k.phone,bkNames(s,k),sv.name||"",k.status,
