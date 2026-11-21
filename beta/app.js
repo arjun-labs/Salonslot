@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.23-6";
+const APP_VERSION = "2026.11.23-7";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -1562,15 +1562,22 @@ const A = {
   mic:()=>{
     if (!SR) return;
     const btn = () => document.getElementById("micBtn");
-    if (micRec){ try{ micRec.stop(); }catch(e){} return; }
-    const r = new SR(); micRec = r; r.lang = LANG==="hi" ? "hi-IN" : "en-IN"; r.interimResults = true; r.continuous = true;
-    const B = UI.book, base = (B.problem||"").trim(); let fin = "";
-    const put = txt => { B.problem = (base ? base+" " : "") + txt; B.problem = B.problem.slice(0,300); const ta = document.getElementById("c_prob"); if (ta) ta.value = B.problem; };
-    r.onresult = ev => { let interim = ""; for (let i=ev.resultIndex;i<ev.results.length;i++){ const x = ev.results[i]; if (x.isFinal) fin += x[0].transcript+" "; else interim += x[0].transcript; } put((fin+interim).trim()); };
-    const off = () => { micRec = null; UI.mic = false; const b = btn(); if (b){ b.classList.remove("on"); b.textContent = "🎤 "+t("mic_start"); } };
-    r.onerror = ev => { off(); if (ev && (ev.error==="not-allowed"||ev.error==="service-not-allowed")) toast(t("mic_denied")); };
-    r.onend = off;
-    try{ r.start(); UI.mic = true; const b = btn(); if (b){ b.classList.add("on"); b.textContent = "⏹ "+t("mic_stop"); } }catch(e){ off(); }
+    if (micRec){ micRec.want = false; try{ micRec.stop(); }catch(e){} return; }
+    const B = UI.book, base = (B.problem||"").trim(); let done = "";          // done = text from finished phrases
+    const show = interim => { const parts = [base, done, interim].map(x=>String(x||"").trim()).filter(Boolean); B.problem = parts.join(" ").slice(0,300); const ta = document.getElementById("c_prob"); if (ta) ta.value = B.problem; };
+    const ui = on => { UI.mic = on; const b = btn(); if (b){ b.classList.toggle("on", on); b.textContent = (on?"⏹ ":"🎤 ")+t(on?"mic_stop":"mic_start"); } };
+    const ctl = { want:true }; micRec = ctl;
+    const begin = () => {
+      const r = new SR(); r.lang = LANG==="hi" ? "hi-IN" : "en-IN"; r.interimResults = true; r.continuous = false; r.maxAlternatives = 1; ctl.r = r;
+      r.onresult = ev => {                                                    // one phrase per run: rebuild it from scratch each time, never append
+        let txt = "", fin = false; for (let i=0;i<ev.results.length;i++){ txt += ev.results[i][0].transcript; if (ev.results[i].isFinal) fin = true; }
+        txt = txt.trim(); if (!txt) return;
+        if (fin){ if (!(done+" ").endsWith(txt+" ")) done = (done+" "+txt).trim(); show(""); } else show(txt); };
+      r.onerror = ev => { if (ev && (ev.error==="not-allowed"||ev.error==="service-not-allowed")){ ctl.want = false; toast(t("mic_denied")); } };
+      r.onend = () => { if (ctl.want){ setTimeout(()=>{ if (ctl.want){ try{ begin(); }catch(e){ ctl.want = false; micRec = null; ui(false); } } }, 150); } else { micRec = null; ui(false); } };
+      r.start();
+    };
+    try{ begin(); ui(true); }catch(e){ micRec = null; ui(false); }
   },
   confirm: async ()=>{ const B = UI.book; const salon = CUSTOMER_SID ? C.salon : S.salon, sid = CUSTOMER_SID || S.sid;
     if (!B.svc){ A.toSvc(); return; }
