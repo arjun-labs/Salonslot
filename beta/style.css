@@ -455,3 +455,4 @@ main > .btn.sm{align-self:flex-start}
 .dk .dpr{font-family:var(--body);font-size:12px;font-weight:400;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .small.prob{font-style:italic;color:var(--fg)}
 .gstsplit{margin:6px 0;line-height:1.5}
+.pdfoffer{display:flex;align-items:center;gap:8px;margin:0 0 12px;padding:10px 12px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:14px;font-size:14px}
