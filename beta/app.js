@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.24-1";
+const APP_VERSION = "2026.11.24-2";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -359,9 +359,12 @@ function billText(s, k, bill){
   L.push(`${hi?"तारीख़":"Date"}: ${longDate(new Date(k.date+"T00:00").getTime())}, ${nice(k.time)}`, `Customer: ${k.cust}${b.name?" · Barber: "+b.name:""}`, line);
   bill.items.forEach(x=>L.push(`${x.n}: ${rs(x.p)}`));
   if (bill.disc) L.push(`Discount: −${rs(bill.disc)}`);
-  L.push(`*${hi?"कुल":"Total"}: ${rs(bill.total)}* · ${bill.pay==="upi"?"UPI":"Cash"}`, line, hi?"धन्यवाद, फिर आइए!":"Thank you, see you again!", `${hi?"अगली booking यहाँ से":"Book your next visit"}: ${linkFor(S.sid)}`);
+  L.push(`*${hi?"कुल":"Total"}: ${rs(bill.total)}* · ${bill.pay==="upi"?"UPI":"Cash"}`, line, hi?"धन्यवाद, फिर आइए!":"Thank you, see you again!", ...billTail(s));
   return L.join("\n");
 }
+const waShop = sl => digits(sl.phone).length===10 ? "https://wa.me/"+waNum(sl.phone) : "";
+// last lines of every bill: book again, chat on the shop's WhatsApp, map
+function billTail(s){ const hi = LANG==="hi", L = [`${hi?"अगली booking यहाँ से":"Book your next visit"}: ${linkFor(S.sid)}`]; const w = waShop(s); if (w) L.push(`${hi?"WhatsApp पर बात करें":"Chat on WhatsApp"}: ${w}`); L.push(`${hi?"रास्ता":"Map"}: ${mapUrl(s)}`); return L; }
 function gstBillText(s, k, bill){
   const hi = LANG==="hi", g = bill.gst, addr = fullAddr(s), line = "———————", dt = new Date(bill.at||Date.now());
   const L = [`*${g.legal||s.name}*`, `GSTIN: ${g.gstin}`, `*Tax Invoice ${g.inv}*${bill.edited?(hi?" (बदला हुआ)":" (revised)"):""}`];
@@ -369,7 +372,7 @@ function gstBillText(s, k, bill){
   L.push(`${hi?"तारीख़":"Date"}: ${longDate(dt.getTime())}`, `${hi?"ग्राहक":"Customer"}: ${k.cust}`, line);
   bill.items.forEach(x=>L.push(`${x.n}${g.sac?" ("+g.sac+")":""}: ${rs2(x.p)}`));
   if (bill.disc) L.push(`${hi?"छूट":"Discount"}: −${rs2(bill.disc)}`);
-  L.push(line, `${hi?"टैक्स योग्य राशि":"Taxable value"}: ${rs2(g.taxable)}`, `CGST ${g.rate/2}%: ${rs2(g.cgst)}`, `SGST ${g.rate/2}%: ${rs2(g.sgst)}`, `*${hi?"कुल":"Total"}: ${rs2(bill.total)}* · ${bill.pay==="upi"?"UPI":"Cash"}`, line, hi?"धन्यवाद, फिर आइए!":"Thank you, see you again!");
+  L.push(line, `${hi?"टैक्स योग्य राशि":"Taxable value"}: ${rs2(g.taxable)}`, `CGST ${g.rate/2}%: ${rs2(g.cgst)}`, `SGST ${g.rate/2}%: ${rs2(g.sgst)}`, `*${hi?"कुल":"Total"}: ${rs2(bill.total)}* · ${bill.pay==="upi"?"UPI":"Cash"}`, line, hi?"धन्यवाद, फिर आइए!":"Thank you, see you again!", ...billTail(s));
   return L.join("\n");
 }
 const billSentLbl = b => !b.sent ? t("bill_not_sent") : b.sent===1 ? t("bill_sent1") : t("bill_sent_n",{n:b.sent});
@@ -859,12 +862,16 @@ function invoiceHtml(s, k, bill){
   return `<!doctype html><html lang="${hi?"hi":"en"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${E(g?g.inv:"Bill "+bill.no)}</title>
 <style>body{font:15px/1.45 system-ui,"Noto Sans Devanagari",sans-serif;color:#111;margin:0;padding:24px;max-width:720px}h1{font-size:22px;margin:0}h2{font-size:15px;letter-spacing:.08em;text-transform:uppercase;margin:18px 0 6px}.m{color:#555}.row{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px;border-bottom:1px solid #ddd;text-align:left}th{background:#f3f3f3}.r{text-align:right}.t td{font-weight:700;font-size:17px;border-top:2px solid #111}.foot{margin-top:28px;color:#555;font-size:13px}
-@media print{body{padding:0}}</style></head><body>
+@media print{body{padding:0}}.next{margin-top:22px;padding:12px 14px;border:1px solid #ddd;border-radius:10px;font-size:14px}.next a{color:#0b5;word-break:break-all}</style></head><body>
 <div class="row"><div><h1>${E(g&&g.legal?g.legal:s.name)}</h1>${addr?`<div class="m">${E(addr)}</div>`:""}${s.phone?`<div class="m">${E(s.phone)}</div>`:""}${g?`<div><b>GSTIN:</b> ${E(g.gstin)}</div>`:""}</div>
 <div class="r"><h2 style="margin-top:0">${g?"Tax Invoice":(hi?"बिल":"Bill")}</h2><div><b>${E(g?g.inv:"#"+bill.no)}</b></div><div class="m">${hi?"तारीख़":"Date"}: ${E(longDate(dt.getTime()))}</div></div></div>
 <h2>${hi?"ग्राहक":"Billed to"}</h2><div><b>${E(k.cust)}</b>${k.phone?` · ${E(k.phone)}`:""}</div>
 <table><thead><tr><th>#</th><th>${hi?"सेवा":"Service"}</th>${g?`<th>SAC</th>`:""}<th class="r">${hi?"राशि":"Amount"}</th></tr></thead><tbody>${rows}${sum}</tbody></table>
 <p class="m">${hi?"भुगतान":"Paid by"}: ${bill.pay==="upi"?"UPI":"Cash"}</p>
+<div class="next"><b>${hi?"फिर ज़रूरत पड़े तो":"Need us again?"}</b>
+<div>${hi?"अगली booking":"Book next visit"}: <a href="${E(linkFor(S.sid))}">${E(linkFor(S.sid))}</a></div>
+${waShop(s)?`<div>WhatsApp: <a href="${E(waShop(s))}">${E(s.phone)}</a></div>`:""}
+<div>${hi?"रास्ता (Map)":"Map"}: <a href="${E(mapUrl(s))}">${E(mapUrl(s).length>70?(hi?"Google Maps पर खोलें":"Open in Google Maps"):mapUrl(s))}</a></div></div>
 <p class="foot">${hi?"धन्यवाद, फिर आइए!":"Thank you, see you again!"}${g?`<br>${hi?"यह कंप्यूटर से बना बिल है, हस्ताक्षर आवश्यक नहीं।":"This is a computer-generated invoice."}`:""}</p>
 <script>window.onload=function(){setTimeout(function(){window.print()},350)}<\/script></body></html>`;
 }
@@ -1911,7 +1918,7 @@ function queueLink(sl, k){
 }
 function qRemindMsg(k, ahead){
   const sl = S.salon, link = queueLink({id:S.sid}, k);
-  return t(ahead<=0?"q_msg0":"q_msg",{name:k.cust, clinic:sl.name, tk:k.token, ahead:ahead, link:link});
+  return t(ahead<=0?"q_msg0":"q_msg",{name:k.cust, clinic:sl.name, tk:k.token, ahead:ahead, link:link}) + "\n" + (LANG==="hi"?"रास्ता":"Map") + ": " + mapUrl(sl);
 }
 function tokenRow(k, ahead, o){
   const lvl = ahead; const sent = (k.rem||{})[String(lvl)];
