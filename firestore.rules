@@ -7,7 +7,10 @@ service cloud.firestore {
         && request.auth.token.email == 'vishwakarmaarjun128@gmail.com'
         && request.auth.token.email_verified == true;
     }
-    function isOwner(sid) { return request.auth != null && request.auth.uid == sid; }
+    function isOwner(sid) {
+      return request.auth != null && (request.auth.uid == sid
+        || (isAdmin() && sid.matches(request.auth.uid + '_(clinic|spa|other)')));
+    }
     function salonOpen(sid) {
       let s = get(/databases/$(database)/documents/salons/$(sid)).data;
       return s.active == true && s.sub.expires > request.time.toMillis();

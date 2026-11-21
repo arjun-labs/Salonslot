@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.22-1b";
+const APP_VERSION = "2026.11.22-2";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -242,6 +242,7 @@ const BIZ_CHOSEN = () => { try{ const v = localStorage.getItem("ss_biz"); return
 function setBiz(id){ BIZ_ID = BIZ[id] ? id : "salon"; const b = BIZ[BIZ_ID];
   document.documentElement.dataset.biz = BIZ_ID;
   const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = b.color; }
+const wsSid = uid => (isAdmin() && BIZ_CHOSEN() && BIZ_CHOSEN()!=="salon") ? uid+"_"+BIZ_CHOSEN() : uid;
 const bizName = () => BIZ[BIZ_ID].name[LANG] || BIZ[BIZ_ID].name.en;
 const bizIcon = () => BIZ[BIZ_ID].icon;
 // brand-name swap + word swap for non-salon types; admin/lead/offer screens stay as they are
@@ -1280,7 +1281,9 @@ function viewAdmin(){
   const live = list.filter(x=>subInfo(x).active).length, pend = list.filter(x=>x.payReq);
   const collected = list.reduce((a,x)=>a+(x.payments||[]).reduce((b,p)=>b+(Number(p.amt)||0),0),0);
   const sorted = list.slice().sort((a,b)=>(b.payReq?1:0)-(a.payReq?1:0) || ((a.sub||{}).expires||0)-((b.sub||{}).expires||0));
-  return `<div><h1>${t("adm_h")}</h1><p class="small muted" style="margin-top:4px">${t("adm_p")}</p></div>
+  const wsNow = BIZ_CHOSEN()||"salon";
+  const wsCard = `<div class="card"><p class="label">Demo workspace</p><p class="small muted">Each type is its own business under your login. Pick one to open its setup and theme.</p><div class="chips">${["salon","clinic","spa","other"].map(id=>`<button class="chip ${wsNow===id?"on":""}" data-a="wsSwitch" data-v="${id}">${BIZ[id].icon} ${BIZ[id].pick.en}</button>`).join("")}</div></div>`;
+  return `<div><h1>${t("adm_h")}</h1><p class="small muted" style="margin-top:4px">${t("adm_p")}</p></div>${wsCard}
   <div class="stats"><div class="stat"><b>${list.length}</b><span>${t("adm_salons")}</span></div><div class="stat"><b>${live}</b><span>${t("adm_live")}</span></div><div class="stat"><b>₹${collected.toLocaleString("en-IN")}</b><span>${t("adm_collected")}</span></div></div>
   ${pend.length?`<div class="banner warn">${t("adm_pending")}: <b>${pend.length}</b></div>`:""}
   <div class="card">${sorted.length?sorted.map(x=>{ const i=subInfo(x);
@@ -1407,6 +1410,7 @@ const A = {
       if (e && e.code!=="auth/popup-closed-by-user") UI.err = t("signin_fail"); }
     UI.busy=false; render(); },
   pickBiz:v=>go(()=>{ try{ localStorage.setItem("ss_biz",v); }catch(e){} setBiz(v); }),
+  wsSwitch:v=>{ try{ localStorage.setItem("ss_biz",v); }catch(e){} location.reload(); },
   changeBiz:()=>go(()=>{ try{ localStorage.removeItem("ss_biz"); }catch(e){} setBiz("salon"); }),
   logout: async ()=>{ await signOut(auth); },
   adminOnly:()=>go(()=>{ pushNav(); UI.view="adminOnly"; watchAdmin(); window.scrollTo(0,0); }),
@@ -1429,8 +1433,8 @@ const A = {
     UI.busy=true; render(); cleanList(D); const now = Date.now();
     const data = { ...D, ownerUid:S.user.uid, ownerEmail:S.user.email||"", active:true, createdAt:now, sub:{ plan:null, trialStart:now, expires: now+TRIAL_DAYS*DAY } };
     const contacts = cleanContacts(D); delete data.contacts;
-    try{ await setDoc(doc(db,"salons",S.user.uid), data); await setDoc(doc(db,"salons",S.user.uid,"private","contacts"), { barbers: contacts }); }catch(err){ console.error(err); UI.err = t("save_fail"); UI.busy=false; render(); return; }
-    UI.busy=false; startOwner(S.user.uid); },
+    try{ await setDoc(doc(db,"salons",S.sid), data); await setDoc(doc(db,"salons",S.sid,"private","contacts"), { barbers: contacts }); }catch(err){ console.error(err); UI.err = t("save_fail"); UI.busy=false; render(); return; }
+    UI.busy=false; startOwner(S.sid); },
   day:v=>{ const o = editTarget(); const d=Number(v), i=o.days.indexOf(d); if (i>=0) o.days.splice(i,1); else o.days.push(d); render(); if (o===S.salon) queueSave(); },
   sugg:v=>{ const o = editTarget(); const [n,p,d]=v.split("|"); o.services.push({id:uid(),name:n,price:Number(p),dur:Number(d)}); UI.err=""; render(); if (o===S.salon) queueSave(); },
   addSvc:()=>{ const o = editTarget(); o.services.push({id:uid(),name:"",price:"",dur:30}); render(); },
@@ -1720,5 +1724,5 @@ else {
   getRedirectResult(auth).catch(()=>{ UI.err = t("signin_fail"); });
   onAuthStateChanged(auth, u => { stopOwner(); S.user = u; betaGate();
     if (!u){ setBiz(BIZ_CHOSEN()||"salon"); UI.view="login"; UI.busy=false; render(); return; }
-    UI.view="loading"; render(); startOwner(u.uid); if (isAdmin()) watchAdmin(); });
+    UI.view="loading"; render(); startOwner(wsSid(u.uid)); if (isAdmin()) watchAdmin(); });
 }
