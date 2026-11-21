@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.23-4";
+const APP_VERSION = "2026.11.23-5";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -1793,7 +1793,7 @@ function qRemindMsg(k, ahead){
 function tokenRow(k, ahead, o){
   const lvl = ahead; const sent = (k.rem||{})[String(lvl)];
   const can = o && o.remind && (ahead===2 || ahead===1) && digits(k.phone).length===10;
-  return `<div class="tkrow"><span class="tkno">#${k.token}</span><div class="grow"><b>${esc(k.cust)}</b><div class="small muted">${t("q_ahead",{n:ahead})}${digits(k.phone).length===10?" · "+esc(k.phone):""}</div></div>
+  return `<div class="tkrow"><span class="tkno">#${k.token}</span><div class="grow"><b>${esc(k.cust)}</b><div class="small">${esc(bkNames(S.salon,k))}</div><div class="small muted">${t("q_ahead",{n:ahead})}${digits(k.phone).length===10?" · "+esc(k.phone):""}</div></div>
     ${can?(sent?`<span class="pill ok">${t("q_sent")}</span>`:`<a class="btn sm saffron" data-a="qRemind" data-v="${k.id}|${lvl}" href="${waLink(k.phone, qRemindMsg(k, ahead))}" target="_blank" rel="noopener">${t("q_remind")}</a>`):""}
     <a class="btn sm ghost" href="${waLink(k.phone, qRemindMsg(k, ahead))}" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a></div>`;
 }
@@ -1804,12 +1804,12 @@ function viewQueue(){
   <div class="row" style="gap:8px"><button class="btn primary grow" data-a="walkin">+ ${t("add_walkin")}</button>${canDoctor()?`<button class="btn grow" data-a="docMode">🩺 ${t("q_mode")}</button>`:""}</div>
   ${(s.barbers||[]).map(b=>{ const now = qNowK(b.id), waits = qWait(b.id).filter(k=>!now||k.id!==now.id);
     return `<div class="card"><div class="row" style="gap:10px">${avatar(b,"lg")}<div class="grow"><h2>${esc(b.name)}</h2>${b.spec?`<p class="small muted">${esc(b.spec)}</p>`:""}</div><span class="pill ${waits.length?"warn":""}">${t("q_waiting",{n:waits.length})}</span></div>
-      ${now?`<div class="tkin"><span class="label">${t("q_in")}</span><div class="row" style="gap:10px"><span class="tkno big">#${now.token}</span><b class="grow">${esc(now.cust)}</b></div></div>`:`<p class="muted">${t("q_idle")}</p>`}
+      ${now?`<div class="tkin"><span class="label">${t("q_in")}</span><div class="row" style="gap:10px"><span class="tkno big">#${now.token}</span><div class="grow"><b>${esc(now.cust)}</b><div class="small">${esc(bkNames(S.salon,now))}</div></div></div></div>`:`<p class="muted">${t("q_idle")}</p>`}
       ${waits.length?`<div>${waits.map((k,i)=>tokenRow(k,i,{remind:true})).join("")}</div>`:`<p class="small muted">${t("q_none")}</p>`}</div>`; }).join("")}`;
 }
 
 // doctor page: one compact card. Seen (faded) above, patient inside (highlighted) in the middle, waiting (blurred) below.
-function docRow(k, c){ return `<div class="dk ${c}"><span class="dn">#${k.token}</span><span class="dc">${esc(k.cust)}</span></div>`; }
+function docRow(k, c){ return `<div class="dk ${c}"><span class="dn">#${k.token}</span><span class="dtx"><span class="dc">${esc(k.cust)}</span><span class="dsv">${esc(bkNames(S.salon,k))}</span></span></div>`; }
 function viewDoctor(){
   const s = S.salon, docs = s.barbers||[];
   const bid = S.staff && S.staff.barberId ? S.staff.barberId : (UI.docId && barberOf(s,UI.docId) ? UI.docId : (docs[0]||{}).id);
@@ -1823,11 +1823,11 @@ function viewDoctor(){
   const key = bid+":"+cur+":"+(qIn(bid)?1:0)+":"+seen.length; const pop = UI.dwKey!==key ? " pop" : ""; UI.dwKey = key;
   const back = !S.staff ? `<button class="btn sm ghost" data-a="docBack">← ${t("q_back")}</button>` : "";
   const pick = !S.staff && docs.length>1 ? `<div class="chips">${docs.map(x=>`<button class="chip ${x.id===bid?"on":""}" data-a="docPick" data-v="${x.id}">${esc(x.name)}</button>`).join("")}</div>` : "";
-  const mid = now ? `<div class="dmid in${pop}"><span class="dlab">${t("q_in")}</span><div class="dbig">#${now.token}</div><div class="dname">${esc(now.cust)}</div></div>`
-    : last ? `<div class="dmid fin${pop}"><span class="dlab">✓ ${t("q_fin")}</span><div class="dbig">#${last.token}</div><div class="dname">${esc(last.cust)}</div></div>`
+  const mid = now ? `<div class="dmid in${pop}"><span class="dlab">${t("q_in")}</span><div class="dbig">#${now.token}</div><div class="dname">${esc(now.cust)}</div><div class="dsvc">${esc(bkNames(S.salon,now))}</div></div>`
+    : last ? `<div class="dmid fin${pop}"><span class="dlab">✓ ${t("q_fin")}</span><div class="dbig">#${last.token}</div><div class="dname">${esc(last.cust)}</div><div class="dsvc">${esc(bkNames(S.salon,last))}</div></div>`
     : `<div class="dmid idle${pop}"><span class="dlab">${t("q_ready")}</span><div class="dbig">—</div><div class="dname">${nx?"":t("q_none")}</div></div>`;
   const btn = now ? `<button class="btn primary docdone" data-a="qDone" data-v="${bid}">✓ ${t("q_done")}</button>`
-    : nx ? `<button class="btn primary docdone next" data-a="qCall" data-v="${bid}">${t("q_call")} · #${nx.token} ${esc(nx.cust)} →</button>`
+    : nx ? `<button class="btn primary docdone next" data-a="qCall" data-v="${bid}">${t("q_call")} · #${nx.token} →</button>`
     : `<button class="btn docdone" disabled>${t("q_none")}</button>`;
   return `<div class="docpage">${back}${pick}
     <div class="dochead">${avatar(b,"lg")}<div class="grow"><b>${esc(b.name)}</b>${b.spec?`<div class="small muted">${esc(b.spec)}</div>`:""}</div>
