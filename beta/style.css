@@ -454,3 +454,4 @@ main > .btn.sm{align-self:flex-start}
 .dmid .dprob{margin:8px auto 0;max-width:92%;font-size:16px;font-style:italic;color:var(--fg);line-height:1.35;word-break:break-word}
 .dk .dpr{font-family:var(--body);font-size:12px;font-weight:400;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .small.prob{font-style:italic;color:var(--fg)}
+.gstsplit{margin:6px 0;line-height:1.5}

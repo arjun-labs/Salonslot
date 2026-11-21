@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.23-8";
+const APP_VERSION = "2026.11.24-1";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -254,7 +254,7 @@ const wsSid = uid => (isAdmin() && BIZ_CHOSEN() && BIZ_CHOSEN()!=="salon") ? uid
 const bizName = () => BIZ[BIZ_ID].name[LANG] || BIZ[BIZ_ID].name.en;
 const bizIcon = () => BIZ[BIZ_ID].icon;
 // brand-name swap + word swap for non-salon types; admin/lead/offer screens stay as they are
-const BIZ_SKIP = /^(adm|lead|of_|ofr|rw_|pay|plan)/;
+const BIZ_SKIP = /^(adm|lead|of_|ofr|rw_|pay|plan|gst|exp)/;
 function bizTr(k, s){
   if (BIZ_ID==="salon" || typeof s!=="string" || BIZ_SKIP.test(k)) return s;
   const b = BIZ[BIZ_ID];
@@ -264,13 +264,13 @@ function bizTr(k, s){
 }
 
 Object.assign(T.en,{ nav_queue:"Tokens", q_h:"Token queue", q_p:"Patients in order of token. The doctor taps Done and the next token starts.", q_mode:"Doctor mode", q_back:"Full app",
-  q_in:"In consultation", q_done:"Done", q_call:"Call next", q_none:"No patient waiting", q_fin:"Done", prob_h:"Describe the problem", prob_ph:"e.g. fever for 3 days, child is 5 years old", prob_priv:"Only the doctor and clinic can see this.", mic_start:"Speak", mic_stop:"Stop", mic_na:"Tip: use the 🎤 on your keyboard to speak.", mic_denied:"Microphone permission is off.", q_seen_s:"Seen", q_ready:"Ready for next patient", q_wait_s:"Waiting", q_waiting:"{n} waiting", q_next:"Next", q_nodoc:"Add a doctor in Settings first.", q_pickdoc:"Doctor",
+  q_in:"In consultation", q_done:"Done", q_call:"Call next", q_none:"No patient waiting", q_fin:"Done", gst_h:"GST billing", gst_on:"ON", gst_off:"OFF", gst_p:"Turn on to give GST tax invoices with your GSTIN and tax breakup. Off = plain bill as before.", gst_legal:"Business name on invoice", gst_bad:"Enter a valid 15-character GSTIN to issue GST invoices.", gst_rate:"GST rate %", gst_price:"Your service prices are", gst_incl:"GST included", gst_excl:"GST extra", gst_note:"Please confirm the rate and SAC code with your CA. This makes invoices only, it does not file GST returns.", gst_taxable:"Taxable value", exp_h:"Download data for your CA", exp_p:"Last 2 years of bookings and bills in one Excel/CSV file: invoice numbers, GST split, payments.", exp_btn:"Download 2-year data", exp_done:"{n} rows downloaded", popup_off:"Allow pop-ups to open the bill.", prob_h:"Describe the problem", prob_ph:"e.g. fever for 3 days, child is 5 years old", prob_priv:"Only the doctor and clinic can see this.", mic_start:"Speak", mic_stop:"Stop", mic_na:"Tip: use the 🎤 on your keyboard to speak.", mic_denied:"Microphone permission is off.", q_seen_s:"Seen", q_ready:"Ready for next patient", q_wait_s:"Waiting", q_waiting:"{n} waiting", q_next:"Next", q_nodoc:"Add a doctor in Settings first.", q_pickdoc:"Doctor",
   q_idle:"Doctor is free", q_ahead:"{n} ahead", q_nextup:"Next to go in", q_remind:"Send reminder", q_sent:"Reminder sent", q_nobk:"No tokens today yet.", q_tok:"Token",
   q_msg:"Hello {name}, {clinic}: your token is #{tk}. {ahead} patient(s) before you. Please reach the clinic soon.\nLive status: {link}", q_msg0:"Hello {name}, {clinic}: you are next, token #{tk}. Please be ready.\nLive status: {link}",
   q_your:"Your token", q_now:"Now in", q_yourturn:"It is your turn. Please go in.", q_seen:"Your consultation is done.", q_before:"Patients before you", q_live:"Live token status", q_notyet:"Not started yet", q_open:"See live token",
   team_h:"Team access", team_p:"Add staff by their Google email. They log in with their own account and see only what you allow.", team_email:"Staff Google email", team_name:"Name", team_role:"Role", r_reception:"Reception", r_doctor:"Doctor", r_manager:"Manager", team_doc:"Which doctor profile?", team_rev:"Can see earnings", team_add:"Add staff", team_none:"No staff added yet.", team_bad:"Enter a valid Gmail address.", team_tip:"Doctor who owns the clinic? You already have everything. Use Doctor mode." });
 Object.assign(T.hi,{ nav_queue:"टोकन", q_h:"टोकन कतार", q_p:"मरीज़ टोकन के क्रम में। डॉक्टर Done दबाए तो अगला टोकन चालू हो जाता है।", q_mode:"डॉक्टर मोड", q_back:"पूरा ऐप",
-  q_in:"अभी अंदर", q_done:"Done", q_call:"अगला बुलाएँ", q_none:"कोई मरीज़ इंतज़ार में नहीं", q_fin:"पूरा हुआ", prob_h:"समस्या बताएँ", prob_ph:"जैसे: 3 दिन से बुखार है, बच्चा 5 साल का है", prob_priv:"इसे सिर्फ़ डॉक्टर और क्लिनिक देखेंगे।", mic_start:"बोलकर लिखें", mic_stop:"रोकें", mic_na:"सुझाव: कीबोर्ड के 🎤 से बोलकर लिखें।", mic_denied:"माइक की अनुमति बंद है।", q_seen_s:"देखे गए", q_ready:"अगला मरीज़ बुलाएँ", q_wait_s:"इंतज़ार", q_waiting:"{n} इंतज़ार में", q_next:"अगला", q_nodoc:"पहले Settings में डॉक्टर जोड़ें।", q_pickdoc:"डॉक्टर",
+  q_in:"अभी अंदर", q_done:"Done", q_call:"अगला बुलाएँ", q_none:"कोई मरीज़ इंतज़ार में नहीं", q_fin:"पूरा हुआ", gst_h:"GST बिलिंग", gst_on:"चालू", gst_off:"बंद", gst_p:"चालू करने पर आपके GSTIN और टैक्स ब्रेकअप के साथ GST टैक्स इनवॉइस बनेगा। बंद = पहले जैसा सादा बिल।", gst_legal:"इनवॉइस पर व्यापार का नाम", gst_bad:"GST इनवॉइस के लिए सही 15 अक्षर का GSTIN डालें।", gst_rate:"GST दर %", gst_price:"आपकी सर्विस के दाम", gst_incl:"GST समेत", gst_excl:"GST ऊपर से", gst_note:"दर और SAC कोड अपने CA से पक्का कर लें। यह सिर्फ़ इनवॉइस बनाता है, GST रिटर्न नहीं भरता।", gst_taxable:"टैक्स योग्य राशि", exp_h:"CA के लिए डेटा डाउनलोड", exp_p:"पिछले 2 साल की बुकिंग और बिल एक Excel/CSV फ़ाइल में: इनवॉइस नंबर, GST का बँटवारा, भुगतान।", exp_btn:"2 साल का डेटा डाउनलोड", exp_done:"{n} पंक्तियाँ डाउनलोड हुईं", popup_off:"बिल खोलने के लिए pop-up की अनुमति दें।", prob_h:"समस्या बताएँ", prob_ph:"जैसे: 3 दिन से बुखार है, बच्चा 5 साल का है", prob_priv:"इसे सिर्फ़ डॉक्टर और क्लिनिक देखेंगे।", mic_start:"बोलकर लिखें", mic_stop:"रोकें", mic_na:"सुझाव: कीबोर्ड के 🎤 से बोलकर लिखें।", mic_denied:"माइक की अनुमति बंद है।", q_seen_s:"देखे गए", q_ready:"अगला मरीज़ बुलाएँ", q_wait_s:"इंतज़ार", q_waiting:"{n} इंतज़ार में", q_next:"अगला", q_nodoc:"पहले Settings में डॉक्टर जोड़ें।", q_pickdoc:"डॉक्टर",
   q_idle:"डॉक्टर ख़ाली हैं", q_ahead:"आगे {n}", q_nextup:"अगला अंदर जाएगा", q_remind:"रिमाइंडर भेजें", q_sent:"रिमाइंडर भेजा", q_nobk:"आज अभी कोई टोकन नहीं।", q_tok:"टोकन",
   q_msg:"नमस्ते {name}, {clinic}: आपका टोकन #{tk} है। आपसे पहले {ahead} मरीज़ हैं। कृपया जल्दी क्लिनिक पहुँचें।\nलाइव स्थिति: {link}", q_msg0:"नमस्ते {name}, {clinic}: अगला नंबर आपका है, टोकन #{tk}। कृपया तैयार रहें।\nलाइव स्थिति: {link}",
   q_your:"आपका टोकन", q_now:"अभी अंदर", q_yourturn:"आपकी बारी है। कृपया अंदर जाइए।", q_seen:"आपका परामर्श हो चुका है।", q_before:"आपसे पहले मरीज़", q_live:"टोकन की लाइव स्थिति", q_notyet:"अभी शुरू नहीं हुआ", q_open:"लाइव टोकन देखें",
@@ -336,8 +336,23 @@ function billDraft(s, k){
   const items = [k.serviceId].concat(k.extra||[]).map(id=>svcOf(s,id)).filter(Boolean).map(v=>({n:v.name, p:String(Number(v.price)||0)}));
   return { items: items.length ? items : [{n:bkNames(s,k), p:String(bkPrice(s,k))}], disc:"", pay:"cash" };
 }
-function billSum(d){ const sub = d.items.reduce((a,x)=>a+Math.max(0,Math.round(Number(x.p)||0)),0); const disc = Math.min(sub, Math.max(0,Math.round(Number(d.disc)||0))); return { sub, disc, total: sub-disc }; }
+const r2 = n => Math.round((Number(n)||0)*100)/100;
+const rs2 = n => "₹"+(Number(n)||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+const GSTIN_RE = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
+const gstOk = g => !!g && g.on && GSTIN_RE.test(String(g.gstin||"").trim().toUpperCase());
+const GST_DEF = { salon:{rate:18,sac:"999721"}, spa:{rate:18,sac:"999723"}, clinic:{rate:0,sac:"999312"}, other:{rate:18,sac:""} };
+// g = {rate, incl}; returns sub, disc, total and (with g) the tax split. Prices are GST-inclusive by default.
+function billSum(d, g){
+  const sub = d.items.reduce((a,x)=>a+Math.max(0,Math.round(Number(x.p)||0)),0); const disc = Math.min(sub, Math.max(0,Math.round(Number(d.disc)||0))); const base = sub-disc;
+  if (!g) return { sub, disc, total: base };
+  const rate = Number(g.rate)||0; let taxable, total;
+  if (g.incl!==false){ total = base; taxable = r2(base*100/(100+rate)); } else { taxable = base; total = r2(base + base*rate/100); }
+  const tax = r2(total-taxable), cgst = r2(tax/2), sgst = r2(tax-cgst);
+  return { sub, disc, total, taxable, cgst, sgst, rate };
+}
+const fyOf = (d=new Date()) => { const y = d.getMonth()>=3 ? d.getFullYear() : d.getFullYear()-1; return String(y).slice(2)+"-"+String(y+1).slice(2); };
 function billText(s, k, bill){
+  if (bill.gst) return gstBillText(s, k, bill);
   const hi = LANG==="hi", b = barberOf(s,k.barberId)||{name:""}, addr = fullAddr(s), line = "———————";
   const L = [`*${s.name}*`, `Bill #${bill.no}${bill.edited?(hi?" (बदला हुआ)":" (revised)"):""}`];
   if (addr) L.push((hi?"पता: ":"Address: ")+addr);
@@ -345,6 +360,16 @@ function billText(s, k, bill){
   bill.items.forEach(x=>L.push(`${x.n}: ${rs(x.p)}`));
   if (bill.disc) L.push(`Discount: −${rs(bill.disc)}`);
   L.push(`*${hi?"कुल":"Total"}: ${rs(bill.total)}* · ${bill.pay==="upi"?"UPI":"Cash"}`, line, hi?"धन्यवाद, फिर आइए!":"Thank you, see you again!", `${hi?"अगली booking यहाँ से":"Book your next visit"}: ${linkFor(S.sid)}`);
+  return L.join("\n");
+}
+function gstBillText(s, k, bill){
+  const hi = LANG==="hi", g = bill.gst, addr = fullAddr(s), line = "———————", dt = new Date(bill.at||Date.now());
+  const L = [`*${g.legal||s.name}*`, `GSTIN: ${g.gstin}`, `*Tax Invoice ${g.inv}*${bill.edited?(hi?" (बदला हुआ)":" (revised)"):""}`];
+  if (addr) L.push((hi?"पता: ":"Address: ")+addr);
+  L.push(`${hi?"तारीख़":"Date"}: ${longDate(dt.getTime())}`, `${hi?"ग्राहक":"Customer"}: ${k.cust}`, line);
+  bill.items.forEach(x=>L.push(`${x.n}${g.sac?" ("+g.sac+")":""}: ${rs2(x.p)}`));
+  if (bill.disc) L.push(`${hi?"छूट":"Discount"}: −${rs2(bill.disc)}`);
+  L.push(line, `${hi?"टैक्स योग्य राशि":"Taxable value"}: ${rs2(g.taxable)}`, `CGST ${g.rate/2}%: ${rs2(g.cgst)}`, `SGST ${g.rate/2}%: ${rs2(g.sgst)}`, `*${hi?"कुल":"Total"}: ${rs2(bill.total)}* · ${bill.pay==="upi"?"UPI":"Cash"}`, line, hi?"धन्यवाद, फिर आइए!":"Thank you, see you again!");
   return L.join("\n");
 }
 const billSentLbl = b => !b.sent ? t("bill_not_sent") : b.sent===1 ? t("bill_sent1") : t("bill_sent_n",{n:b.sent});
@@ -613,10 +638,10 @@ function bookingRow(k, o){
   const pill = k.status==="done"?`<span class="pill ok">${t("st_done")}</span>`:k.status==="cancelled"?`<span class="pill bad">${t("st_cancelled")}</span>`:`<span class="pill warn">${t("st_booked")}</span>`;
   const manage = !o.view && S.bookings.some(x=>x.id===k.id);
   return `<div class="bk"><div class="t">${nice(k.time).replace(" ","<small>")}</small></div><div class="body">
-    <div class="row" style="gap:8px">${digits(k.phone).length===10?`<button class="cname grow" data-a="cHist" data-v="${digits(k.phone)}"><b>${esc(k.cust)}</b></button>`:`<b class="grow">${esc(k.cust)}</b>`}${k.src==="online"?`<span class="pill">${t("online")}</span>`:""}${k.bill?`<span class="pill">${t("bill_no",{n:k.bill.no})}</span>`:""}${pill}</div>
+    <div class="row" style="gap:8px">${digits(k.phone).length===10?`<button class="cname grow" data-a="cHist" data-v="${digits(k.phone)}"><b>${esc(k.cust)}</b></button>`:`<b class="grow">${esc(k.cust)}</b>`}${k.src==="online"?`<span class="pill">${t("online")}</span>`:""}${k.bill?`<span class="pill">${k.bill.gst?esc(k.bill.gst.inv):t("bill_no",{n:k.bill.no})}</span>`:""}${pill}</div>
     <div class="row small muted" style="gap:6px">${avatar(b,"sm")}<span>${niceRange(k.time,bkDur(s,k))} · ${esc(b.name)} · ${esc(svc.name)} · ${rs(bkEarn(s,k))}${k.bill?" "+(k.bill.pay==="upi"?"UPI":"Cash"):""} · ${esc(k.phone)}${k.email?" · "+esc(k.email):""}</span></div>
     ${k.status==="done" && manage?`<div class="row" style="gap:6px">
-      ${k.bill?`<a class="btn sm primary" data-a="billResent" data-v="${k.id}" href="${waLink(k.phone, billText(s,k,{...k.bill, edited:!!k.bill.edited}))}" target="_blank" rel="noopener">${t("bill_resend")}</a><button class="btn sm" data-a="billOpen" data-v="${k.id}">${t("bill_edit")}</button><span class="small muted">${billSentLbl(k.bill)}</span>`
+      ${k.bill?`<a class="btn sm primary" data-a="billResent" data-v="${k.id}" href="${waLink(k.phone, billText(s,k,{...k.bill, edited:!!k.bill.edited}))}" target="_blank" rel="noopener">${t("bill_resend")}</a><button class="btn sm" data-a="billOpen" data-v="${k.id}">${t("bill_edit")}</button><button class="btn sm" data-a="billPdf" data-v="${k.id}">🧾 PDF</button><span class="small muted">${billSentLbl(k.bill)}</span>`
         :`<button class="btn sm primary" data-a="billOpen" data-v="${k.id}">${t("bill_make")}</button>`}</div>`:""}
     ${k.status==="booked"?`<div class="row" style="gap:6px">
       <button class="btn sm primary" data-a="done" data-v="${k.id}">${t("mark_done")}</button>
@@ -747,7 +772,7 @@ function viewSheet(){
   const d = bkDur(s,k), b = barberOf(s,k.barberId)||{name:"?"}, m = msgs(s,k);
   let body = "";
   if (sh.mode==="bill" && UI.bill){
-    const dr = UI.bill, sm = billSum(dr), old = k.bill;
+    const dr = UI.bill, old = k.bill, gs0 = s.gst, gC = old ? (old.gst?{rate:old.gst.rate,incl:old.gst.incl}:null) : (gs0&&gs0.on?{rate:Number(gs0.rate)||0,incl:gs0.incl!==false}:null), sm = billSum(dr, gC);
     body = `<div class="row" style="gap:8px"><h2 class="grow">${old?t("bill_no",{n:old.no}):t("bill_h")}</h2>${old?`<span class="small muted">${billSentLbl(old)}</span>`:""}</div>
       <p class="small muted">${t("bill_p")}</p>
       <div class="stack" style="gap:6px">${dr.items.map((x,i)=>`<div class="billrow"><span class="grow">${esc(x.n)}</span>
@@ -756,7 +781,8 @@ function viewSheet(){
       <p class="label">${t("bill_add")}</p><div class="chips">${s.services.map(v=>`<button class="chip" data-a="billAdd" data-v="${v.id}">+ ${esc(v.name)} · ${rs(v.price)}</button>`).join("")}</div>
       <div class="billrow"><label class="grow" for="bdisc">${t("bill_disc")}</label><label class="billp"><span aria-hidden="true">₹</span><input type="number" inputmode="numeric" min="0" id="bdisc" data-bill="disc" value="${esc(dr.disc)}" placeholder="0"></label></div>
       <p class="label">${t("bill_pay")}</p><div class="chips">${["cash","upi"].map(p=>`<button class="chip ${dr.pay===p?"on":""}" data-a="billPay" data-v="${p}" aria-pressed="${dr.pay===p}">${t("pay_"+p)}</button>`).join("")}</div>
-      <div class="billtot"><span>${t("bill_total")}</span><b id="billTotal">${rs(sm.total)}</b></div>
+      ${gC?`<div class="gstsplit small muted" id="billGst">${gstSplitHtml(sm)}</div>${!old&&!gstOk(gs0)?`<div class="banner bad">${t("gst_bad")}</div>`:""}`:""}
+      <div class="billtot"><span>${t("bill_total")}</span><b id="billTotal">${gC?rs2(sm.total):rs(sm.total)}</b></div>
       <button class="btn primary block" data-a="billSend">${old?t("bill_resave_send"):t("bill_send")}</button>
       <button class="btn block" data-a="billSave">${old?t("bill_resave"):t("bill_later")}</button>
       ${old&&old.sent?`<p class="small muted">${t("bill_edit_note")}</p>`:""}`;
@@ -800,7 +826,7 @@ function viewSheet(){
     body = `<div class="stack" style="gap:8px">
       ${k.status==="booked"?`<button class="btn primary block" data-a="done" data-v="${k.id}">${t("mark_done")}</button>
       <div class="row" style="gap:8px"><button class="btn grow" data-a="sheetMode" data-v="${k.id}|extend">${t("sh_extend")}</button><button class="btn grow" data-a="sheetMode" data-v="${k.id}|move">${t("sh_move")}</button></div>`:""}
-      ${k.status==="done"?(k.bill?`<div class="row" style="gap:8px"><a class="btn primary grow" data-a="billResent" data-v="${k.id}" href="${waLink(k.phone, billText(s,k,k.bill))}" target="_blank" rel="noopener">${t("bill_resend")}</a><button class="btn grow" data-a="billOpen" data-v="${k.id}">${t("bill_edit")}</button></div><p class="small muted">${t("bill_no",{n:k.bill.no})} · ${billSentLbl(k.bill)}</p>`
+      ${k.status==="done"?(k.bill?`<div class="row" style="gap:8px"><a class="btn primary grow" data-a="billResent" data-v="${k.id}" href="${waLink(k.phone, billText(s,k,k.bill))}" target="_blank" rel="noopener">${t("bill_resend")}</a><button class="btn grow" data-a="billOpen" data-v="${k.id}">${t("bill_edit")}</button><button class="btn grow" data-a="billPdf" data-v="${k.id}">🧾 PDF</button></div><p class="small muted">${k.bill.gst?k.bill.gst.inv:t("bill_no",{n:k.bill.no})} · ${billSentLbl(k.bill)}</p>`
         :`<button class="btn primary block" data-a="billOpen" data-v="${k.id}">${t("bill_make")}</button>`):""}
       <div class="row" style="gap:8px"><a class="btn grow" href="${waLink(k.phone, m.remind)}" target="_blank" rel="noopener">${t("whatsapp")}</a><a class="btn grow" href="${barberWa(k.barberId,m.barber)}" target="_blank" rel="noopener">${t("send_barber")}</a></div>
       ${k.status==="booked"?`<button class="btn ghost block" data-a="cancelBk" data-v="${k.id}">${t("cancel")}</button>`:""}</div>`;
@@ -820,19 +846,47 @@ async function updateBk(k, patch){
   Object.assign(k, patch); // local copy until the live update arrives
 }
 // save the bill on the booking (and mark it done); with send, WhatsApp opens first so the browser treats it as the tap's own window
+const gstSplitHtml = m => `${t("gst_taxable")} ${rs2(m.taxable)} · CGST ${m.rate/2}% ${rs2(m.cgst)} · SGST ${m.rate/2}% ${rs2(m.sgst)}`;
+function invoiceHtml(s, k, bill){
+  const hi = LANG==="hi", g = bill.gst, E = esc, dt = new Date(bill.at||Date.now()), addr = fullAddr(s);
+  const rows = bill.items.map((x,i)=>`<tr><td>${i+1}</td><td>${E(x.n)}</td>${g?`<td>${E(g.sac||"")}</td>`:""}<td class="r">${g?rs2(x.p):rs(x.p)}</td></tr>`).join("");
+  const sum = g ? `<tr><td colspan="3" class="r">${hi?"छूट":"Discount"}</td><td class="r">−${rs2(bill.disc||0)}</td></tr>
+    <tr><td colspan="3" class="r">${hi?"टैक्स योग्य राशि":"Taxable value"}</td><td class="r">${rs2(g.taxable)}</td></tr>
+    <tr><td colspan="3" class="r">CGST ${g.rate/2}%</td><td class="r">${rs2(g.cgst)}</td></tr>
+    <tr><td colspan="3" class="r">SGST ${g.rate/2}%</td><td class="r">${rs2(g.sgst)}</td></tr>
+    <tr class="t"><td colspan="3" class="r">${hi?"कुल":"Total"}</td><td class="r">${rs2(bill.total)}</td></tr>`
+    : `${bill.disc?`<tr><td colspan="2" class="r">${hi?"छूट":"Discount"}</td><td class="r">−${rs(bill.disc)}</td></tr>`:""}<tr class="t"><td colspan="2" class="r">${hi?"कुल":"Total"}</td><td class="r">${rs(bill.total)}</td></tr>`;
+  return `<!doctype html><html lang="${hi?"hi":"en"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${E(g?g.inv:"Bill "+bill.no)}</title>
+<style>body{font:15px/1.45 system-ui,"Noto Sans Devanagari",sans-serif;color:#111;margin:0;padding:24px;max-width:720px}h1{font-size:22px;margin:0}h2{font-size:15px;letter-spacing:.08em;text-transform:uppercase;margin:18px 0 6px}.m{color:#555}.row{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px;border-bottom:1px solid #ddd;text-align:left}th{background:#f3f3f3}.r{text-align:right}.t td{font-weight:700;font-size:17px;border-top:2px solid #111}.foot{margin-top:28px;color:#555;font-size:13px}
+@media print{body{padding:0}}</style></head><body>
+<div class="row"><div><h1>${E(g&&g.legal?g.legal:s.name)}</h1>${addr?`<div class="m">${E(addr)}</div>`:""}${s.phone?`<div class="m">${E(s.phone)}</div>`:""}${g?`<div><b>GSTIN:</b> ${E(g.gstin)}</div>`:""}</div>
+<div class="r"><h2 style="margin-top:0">${g?"Tax Invoice":(hi?"बिल":"Bill")}</h2><div><b>${E(g?g.inv:"#"+bill.no)}</b></div><div class="m">${hi?"तारीख़":"Date"}: ${E(longDate(dt.getTime()))}</div></div></div>
+<h2>${hi?"ग्राहक":"Billed to"}</h2><div><b>${E(k.cust)}</b>${k.phone?` · ${E(k.phone)}`:""}</div>
+<table><thead><tr><th>#</th><th>${hi?"सेवा":"Service"}</th>${g?`<th>SAC</th>`:""}<th class="r">${hi?"राशि":"Amount"}</th></tr></thead><tbody>${rows}${sum}</tbody></table>
+<p class="m">${hi?"भुगतान":"Paid by"}: ${bill.pay==="upi"?"UPI":"Cash"}</p>
+<p class="foot">${hi?"धन्यवाद, फिर आइए!":"Thank you, see you again!"}${g?`<br>${hi?"यह कंप्यूटर से बना बिल है, हस्ताक्षर आवश्यक नहीं।":"This is a computer-generated invoice."}`:""}</p>
+<script>window.onload=function(){setTimeout(function(){window.print()},350)}<\/script></body></html>`;
+}
 function saveBill(send){
   const k = curK(), s = S.salon, d = UI.bill; if (!k || !d) return;
   const items = d.items.map(x=>({ n:String(x.n||"").slice(0,60), p:Math.max(0,Math.round(Number(x.p)||0)) })).filter(x=>x.n);
   if (!items.length){ toast(t("bill_empty")); return; }
-  const { disc, total } = billSum({ items, disc:d.disc }), old = k.bill;
+  const old = k.bill, gs = S.salon.gst;
+  const gCfg = old ? (old.gst ? { rate:old.gst.rate, incl:old.gst.incl } : null) : (gs && gs.on ? { rate:Number(gs.rate)||0, incl:gs.incl!==false } : null);
+  if (!old && gs && gs.on && !gstOk(gs)){ toast(t("gst_bad")); return; }
+  const sm = billSum({ items, disc:d.disc }, gCfg), { disc, total } = sm;
   const changed = !!old && (old.total!==total || (old.disc||0)!==disc || JSON.stringify(old.items)!==JSON.stringify(items));
   const no = old ? old.no : (Number(s.billSeq)||0)+1;
+  const fy = fyOf(), gq = s.gstSeq && s.gstSeq.fy===fy ? Number(s.gstSeq.n)||0 : 0;
+  const gstInfo = !gCfg ? null : old ? { ...old.gst, rate:sm.rate, taxable:sm.taxable, cgst:sm.cgst, sgst:sm.sgst }
+    : { inv:"INV/"+fy+"/"+String(gq+1).padStart(4,"0"), seq:gq+1, fy, rate:sm.rate, incl:gCfg.incl, taxable:sm.taxable, cgst:sm.cgst, sgst:sm.sgst, gstin:String(gs.gstin).trim().toUpperCase(), legal:String(gs.legal||"").trim().slice(0,80), sac:String(gs.sac||"").trim().slice(0,10) };
   const bill = { no, items, disc, total, pay: d.pay==="upi"?"upi":"cash", at: old&&old.at ? old.at : Date.now(),
-    sent: (old ? Number(old.sent)||0 : 0) + (send?1:0), edited: !!old && (!!old.edited || (changed && (Number(old.sent)||0)>0)) };
+    sent: (old ? Number(old.sent)||0 : 0) + (send?1:0), edited: !!old && (!!old.edited || (changed && (Number(old.sent)||0)>0)), ...(gstInfo?{gst:gstInfo}:{}) };
   if (send) window.open(waLink(k.phone, billText(s, k, bill)), "_blank", "noopener");
   const b = writeBatch(db);
   b.update(doc(db,"salons",S.sid,"bookings",k.id), { status:"done", bill });
-  if (!old){ b.update(doc(db,"salons",S.sid), { billSeq: no }); s.billSeq = no; }
+  if (!old){ b.update(doc(db,"salons",S.sid), { billSeq: no, ...(gstInfo?{gstSeq:{fy,n:gstInfo.seq}}:{}) }); s.billSeq = no; if (gstInfo) s.gstSeq = { fy, n:gstInfo.seq }; }
   Object.assign(k, { status:"done", bill });
   UI.sheet = null; UI.bill = null; render();
   b.commit().then(()=>toast(send?t("bill_sent"):t("bill_saved"))).catch(e=>{ console.error(e); toast(t("save_fail")); });
@@ -1190,12 +1244,47 @@ function viewSettings(){
   <div class="card"><h2>${t("services")}</h2>${servicesEditor(s)}</div>
   <div class="card"><h2>${t("barbers")}</h2>${barbersEditor(s)}</div>
   ${teamCard()}
+  ${gstCard()}
+  ${exportCard()}
   ${linkCard()}
   <div class="card"><h3>${t("install_h")}</h3><p class="small muted">${t("install_p")}</p></div>
   <div class="card"><h3>${t("account")}</h3><div class="who">${S.user.photoURL?`<img src="${esc(S.user.photoURL)}" alt="">`:""}<div><span class="small muted">${t("signed_as")}</span><br><b>${esc(S.user.email)}</b></div></div>
     <button class="btn" data-a="logout">${t("logout")}</button></div>`;
 }
 
+function gstCard(){
+  const s = S.salon, g = s.gst || {}, d = GST_DEF[s.bizType||"salon"]||GST_DEF.salon, on = !!g.on, bad = on && !gstOk(g);
+  const f = (k, label, ph, extra="") => `<label class="field"><span>${label}</span><input type="text" ${extra} data-gst="${k}" value="${esc(g[k]==null?"":g[k])}" placeholder="${esc(ph)}"></label>`;
+  return `<div class="card"><div class="row" style="gap:8px"><h2 class="grow">${t("gst_h")}</h2><button class="chip ${on?"on":""}" data-a="gstOn" aria-pressed="${on}">${on?t("gst_on"):t("gst_off")}</button></div>
+  <p class="small muted">${t("gst_p")}</p>
+  ${on?`${f("legal",t("gst_legal"),s.name)}${f("gstin","GSTIN","27ABCDE1234F1Z5",'autocapitalize="characters" maxlength="15" style="text-transform:uppercase"')}
+    ${bad?`<p class="small" style="color:var(--danger)">${t("gst_bad")}</p>`:`<p class="small muted">✓ GSTIN</p>`}
+    <div class="row"><label class="field grow"><span>${t("gst_rate")}</span><input type="number" inputmode="decimal" min="0" max="28" step="0.5" data-gst="rate" value="${esc(g.rate==null?d.rate:g.rate)}"></label>
+    <label class="field grow"><span>SAC</span><input type="text" data-gst="sac" maxlength="8" value="${esc(g.sac==null?d.sac:g.sac)}"></label></div>
+    <div class="field"><span>${t("gst_price")}</span><div class="chips"><button class="chip ${g.incl!==false?"on":""}" data-a="gstIncl" data-v="1">${t("gst_incl")}</button><button class="chip ${g.incl===false?"on":""}" data-a="gstIncl" data-v="0">${t("gst_excl")}</button></div></div>
+    <p class="small muted">${t("gst_note")}</p>`:""}</div>`;
+}
+function exportCard(){
+  return `<div class="card"><h2>${t("exp_h")}</h2><p class="small muted">${t("exp_p")}</p><button class="btn block" data-a="exportData" ${UI.expBusy?"disabled":""}>⬇ ${UI.expBusy?t("loading"):t("exp_btn")}</button></div>`;
+}
+async function exportData(){
+  const s = S.salon; if (!s || !S.sid || UI.expBusy) return; UI.expBusy = true; render();
+  try{
+    const from = new Date(); from.setFullYear(from.getFullYear()-2);
+    const snap = await getDocs(query(collection(db,"salons",S.sid,"bookings"), where("date",">=",ymd(from))));
+    const list = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+    const cell = v => { const x = String(v==null?"":v).replace(/\r?\n/g," ").trim(); return /[",;]/.test(x) ? '"'+x.replace(/"/g,'""')+'"' : x; };
+    const head = ["Date","Time","Invoice / Bill no","Customer","Phone","Services","With","Status","Gross (Rs)","Discount (Rs)","Taxable value (Rs)","GST rate %","CGST (Rs)","SGST (Rs)","Total (Rs)","Payment","Shop GSTIN","SAC"];
+    const rows = list.map(k=>{ const b = k.bill||{}, g = b.gst, sv = barberOf(s,k.barberId)||{};
+      const gross = (b.items||[]).reduce((a,x)=>a+(Number(x.p)||0),0);
+      return [k.date,k.time,g?g.inv:(b.no?"Bill "+b.no:""),k.cust,k.phone,bkNames(s,k),sv.name||"",k.status,
+        b.items?gross:"",b.disc||"",g?g.taxable:"",g?g.rate:"",g?g.cgst:"",g?g.sgst:"",b.total==null?"":b.total,b.pay?(b.pay==="upi"?"UPI":"Cash"):"",g?g.gstin:"",g?g.sac:""].map(cell).join(","); });
+    const blob = new Blob(["﻿"+[head.join(",")].concat(rows).join("\r\n")], {type:"text/csv;charset=utf-8"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = (String(s.name||"data").replace(/[^\w]+/g,"-"))+"-2yr-"+ymd(new Date())+".csv"; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1500);
+    toast(t("exp_done",{n:rows.length}));
+  }catch(e){ console.error(e); toast(t("save_fail")); }
+  UI.expBusy = false; render();
+}
 function teamCard(){
   if (S.staff) return "";
   const clinic = isClinic(S.salon), roles = ["reception","doctor","manager"].filter(r=>clinic||r!=="doctor"), role = roles.includes(UI.tmRole)?UI.tmRole:"reception";
@@ -1447,7 +1536,7 @@ async function saveSalon(){
   const contacts = cleanContacts(s);
   const clean = JSON.parse(JSON.stringify({services:s.services, barbers:s.barbers})); cleanList(clean);
   setDoc(doc(db,"salons",S.sid,"private","contacts"), { barbers: contacts }).catch(e=>console.error(e));
-  try{ await updateDoc(doc(db,"salons",S.sid), { name:s.name, owner:s.owner, phone:s.phone, address:String(s.address||"").trim(), mapLink: isMapLink(s.mapLink)?String(s.mapLink).trim():"", area:s.area, open:s.open, close:s.close, days:s.days, services:clean.services, barbers:clean.barbers });
+  try{ await updateDoc(doc(db,"salons",S.sid), { name:s.name, owner:s.owner, phone:s.phone, address:String(s.address||"").trim(), mapLink: isMapLink(s.mapLink)?String(s.mapLink).trim():"", area:s.area, open:s.open, close:s.close, days:s.days, services:clean.services, barbers:clean.barbers, gst: s.gst || { on:false } });
     toast(t("saved")); }catch(e){ console.error(e); toast(t("save_fail")); }
 }
 
@@ -1559,6 +1648,10 @@ const A = {
   bDate:v=>{ go(()=>{ UI.book.date=v; UI.book.time=null; if (CUSTOMER_SID) loadDay(v); }); stepTo("timeCard"); },
   ownH:v=>go(()=>{ UI.ownH = Number(v); }),
   bTime:v=>{ go(()=>{ UI.book.time=v; UI.err=""; }); stepTo("detailsCard"); },
+  gstOn:()=>{ const s = S.salon, d = GST_DEF[s.bizType||"salon"]||GST_DEF.salon; s.gst = s.gst || {}; s.gst.on = !s.gst.on; if (s.gst.on){ if (s.gst.rate==null) s.gst.rate = d.rate; if (s.gst.sac==null) s.gst.sac = d.sac; if (s.gst.incl==null) s.gst.incl = true; if (!s.gst.legal) s.gst.legal = s.name||""; } render(); queueSave(); },
+  gstIncl:v=>{ const s = S.salon; s.gst = s.gst || {}; s.gst.incl = v==="1"; render(); queueSave(); },
+  exportData:()=>{ exportData(); },
+  billPdf:v=>{ const k = S.bookings.find(x=>x.id===v); if (!k || !k.bill) return; const w = window.open("","_blank"); if (!w){ toast(t("popup_off")); return; } w.document.open(); w.document.write(invoiceHtml(S.salon,k,k.bill)); w.document.close(); },
   mic:()=>{
     if (!SR) return;
     const btn = () => document.getElementById("micBtn");
@@ -1725,14 +1818,17 @@ function filterShChips(q){
 }
 app.addEventListener("input", e => { const el = e.target, d = el.dataset; if (d.shs){ filterShChips(el.value); return; }
   if (d.cls){ const q = el.value.trim().toLowerCase(), qd = q.replace(/\D/g,""); let n = 0; document.querySelectorAll("#clList .crow").forEach(r=>{ const ok = !q || r.dataset.q.includes(q) || (qd.length>=3 && r.dataset.q.includes(qd)); r.hidden = !ok; if (ok) n++; }); const no = document.getElementById("clNone"); if (no) no.hidden = n>0; return; } const o = editTarget();
-  if (d.salon && o){ o[d.salon] = el.value; if (o===S.salon) queueSave(); }
+  if (d.gst && o===S.salon){ o.gst = o.gst || {}; let v = el.value; if (d.gst=="gstin") v = v.toUpperCase().replace(/[^0-9A-Z]/g,""); if (d.gst=="rate") v = Math.min(28, Math.max(0, Number(v)||0)); o.gst[d.gst] = v; queueSave(); }
+  else if (d.salon && o){ o[d.salon] = el.value; if (o===S.salon) queueSave(); }
   else if (d.svc && o){ const s = o.services.find(x=>x.id===d.svc); if (s){ s[d.k] = el.value; if (o===S.salon) queueSave(); } }
   else if (d.bar && o){ const b = o.barbers.find(x=>x.id===d.bar); if (b){ b[d.k] = el.value; if (o===S.salon) queueSave(); } }
   else if (d.bc){ const c = contactsOf(); c[d.bc] = {...(c[d.bc]||{}), [d.k]: el.value}; if (UI.view==="main") queueSave(); }
   else if (d.book){ UI.book[d.book] = el.value; if (!CUSTOMER_SID) bookSug(d.book, el); }
   else if (d.of){ UI.of[d.of] = el.type==="checkbox" ? el.checked : el.value; }
   else if (d.bill && UI.bill){ if (d.bill==="p"){ const x = UI.bill.items[Number(d.i)]; if (x) x.p = el.value; } else UI.bill[d.bill] = el.value;
-    const tot = document.getElementById("billTotal"); if (tot) tot.textContent = rs(billSum(UI.bill).total); }
+    const k0 = curK(), og = k0 && k0.bill, gs1 = S.salon.gst, g1 = og ? (og.gst?{rate:og.gst.rate,incl:og.gst.incl}:null) : (gs1&&gs1.on?{rate:Number(gs1.rate)||0,incl:gs1.incl!==false}:null), m1 = billSum(UI.bill, g1);
+      const tot = document.getElementById("billTotal"); if (tot) tot.textContent = g1 ? rs2(m1.total) : rs(m1.total);
+      const bg = document.getElementById("billGst"); if (bg && g1) bg.innerHTML = gstSplitHtml(m1); }
   else if (d.ui){ UI[d.ui] = el.value; }
 });
 app.addEventListener("change", e => { const el = e.target; const o = editTarget();

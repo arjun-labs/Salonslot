@@ -101,6 +101,7 @@ service cloud.firestore {
         && request.resource.data.sub.expires <= request.time.toMillis() + 8 * 86400000;
       allow update: if isAdmin()
         || (isOwner(sid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['sub', 'active', 'ownerUid', 'payments', 'lastClaim', 'createdAt']))
+        || (isStaff(sid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['billSeq', 'gstSeq']))
         || claimUpdate(sid);
       allow delete: if isAdmin();
 
