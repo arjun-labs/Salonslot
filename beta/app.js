@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.22-2";
+const APP_VERSION = "2026.11.22-3";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -237,6 +237,14 @@ const BIZ = {
     rep:{en:[[/Barbers/g,"Staff"],[/barbers/g,"staff"],[/Barber/g,"Staff"],[/barber/g,"staff"],[/Salons/g,"Businesses"],[/salons/g,"businesses"],[/Salon/g,"Business"],[/salon/g,"business"],[/Customers/g,"Clients"],[/customers/g,"clients"],[/Customer/g,"Client"],[/customer/g,"client"]],
          hi:[[/Barbers/g,"स्टाफ़"],[/barbers/g,"स्टाफ़"],[/Barber/g,"स्टाफ़"],[/barber/g,"स्टाफ़"],[/सैलून/g,"बिज़नेस"],[/Salon/g,"Business"],[/salon/g,"business"],[/ग्राहक/g,"क्लाइंट"],[/Customers/g,"क्लाइंट"],[/customers/g,"क्लाइंट"],[/Customer/g,"क्लाइंट"],[/customer/g,"क्लाइंट"]] } }
 };
+BIZ.salon.spec = ["Haircut specialist","Beard expert","Hair colour specialist","Hair spa & treatment","Bridal makeup artist","Facial & skin care","Threading & waxing","Nail artist","Kids haircut","Unisex stylist"];
+BIZ.salon.specPh = {en:"e.g. Beard expert, Hair colour", hi:"जैसे Beard expert, Hair colour"};
+BIZ.clinic.spec = ["General Physician","Child specialist (Paediatrician)","Gynaecologist","Dermatologist (Skin)","Dentist","ENT specialist","Orthopaedic (Bone & Joint)","Cardiologist (Heart)","Diabetologist","Eye specialist (Ophthalmologist)","Physiotherapist","Psychiatrist","Neurologist","Gastroenterologist","Urologist","Pulmonologist (Chest)","General Surgeon","Homeopath","Ayurveda (BAMS)","Dietician"];
+BIZ.clinic.specPh = {en:"e.g. General Physician, Child specialist", hi:"जैसे General Physician, Child specialist"};
+BIZ.spa.spec = ["Swedish massage therapist","Deep tissue specialist","Aromatherapy therapist","Thai massage therapist","Ayurvedic (Abhyanga) therapist","Hot stone therapist","Reflexology specialist","Sports massage therapist","Head & shoulder massage","Facial & skin therapist","Body scrub & wrap","Couple massage","Senior therapist"];
+BIZ.spa.specPh = {en:"e.g. Swedish massage, Aromatherapy", hi:"जैसे Swedish massage, Aromatherapy"};
+BIZ.other.spec = ["Consultant","Senior specialist","Trainer","Technician","Assistant"];
+BIZ.other.specPh = {en:"e.g. Senior specialist", hi:"जैसे Senior specialist"};
 let BIZ_ID = "salon";
 const BIZ_CHOSEN = () => { try{ const v = localStorage.getItem("ss_biz"); return BIZ[v] && v!=="" ? v : ""; }catch(e){ return ""; } };
 function setBiz(id){ BIZ_ID = BIZ[id] ? id : "salon"; const b = BIZ[BIZ_ID];
@@ -256,7 +264,7 @@ function bizTr(k, s){
 }
 /* ================= helpers ================= */
 let LANG = "hi"; try{ LANG = localStorage.getItem("ss_lang") || "hi"; }catch(e){}
-const t = (k, v) => { let s = (T[LANG]||T.en)[k]; if (s===undefined) s = T.en[k]; if (k==="sugg" && BIZ[BIZ_ID].sugg) return BIZ[BIZ_ID].sugg; if (k==="tagline" && BIZ[BIZ_ID].tag) s = BIZ[BIZ_ID].tag[LANG]||BIZ[BIZ_ID].tag.en; s = bizTr(k, s); if (typeof s==="string" && v) for (const x in v) s = s.split("{"+x+"}").join(v[x]); return s; };
+const t = (k, v) => { let s = (T[LANG]||T.en)[k]; if (s===undefined) s = T.en[k]; if (k==="sugg" && BIZ[BIZ_ID].sugg) return BIZ[BIZ_ID].sugg; if (k==="spec_ph" && BIZ[BIZ_ID].specPh) return BIZ[BIZ_ID].specPh[LANG]||BIZ[BIZ_ID].specPh.en; if (k==="tagline" && BIZ[BIZ_ID].tag) s = BIZ[BIZ_ID].tag[LANG]||BIZ[BIZ_ID].tag.en; s = bizTr(k, s); if (typeof s==="string" && v) for (const x in v) s = s.split("{"+x+"}").join(v[x]); return s; };
 const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid = () => Math.random().toString(36).slice(2,9);
 const pad = n => String(n).padStart(2,"0");
@@ -503,10 +511,11 @@ function barbersEditor(o){
     <div class="stack">
       <label class="field"><span class="small">${t("barber_name")} ${i+1}</span><input type="text" id="bn_${b.id}" data-bar="${b.id}" data-k="name" value="${esc(b.name)}"></label>
       <label class="field"><span class="small">${t("speciality")} <em>(${t("optional")})</em></span><input type="text" id="bs_${b.id}" data-bar="${b.id}" data-k="spec" value="${esc(b.spec)}" placeholder="${t("spec_ph")}"></label>
+      <div class="chips specrow" aria-label="${t("speciality")}">${BIZ[BIZ_ID].spec.filter(x=>!String(b.spec||"").includes(x)).map(x=>`<button class="chip" data-a="specSug" data-v="${esc(b.id)}|${esc(x)}">+ ${esc(x)}</button>`).join("")}</div>
       <div class="field"><span class="small">${t("g_serves")}</span><div class="chips" role="radiogroup" aria-label="${t("g_serves")}">${["m","f","both"].map(g=>`<button class="chip ${barberServes(b)===g?"on":""}" role="radio" aria-checked="${barberServes(b)===g}" data-a="barServes" data-v="${b.id}|${g}">${t("g_"+g)}</button>`).join("")}</div></div>
       ${pickField(o,b)}
       <label class="field"><span class="small">${t("barber_phone")} <em>(${t("optional")})</em></span><input type="tel" inputmode="tel" id="bp_${b.id}" data-bc="${b.id}" data-k="phone" value="${esc((contactsOf()[b.id]||{}).phone||"")}" placeholder="98XXXXXXXX"></label>
-      <label class="field"><span class="small">${t("barber_email")} <em>(${t("optional")})</em></span><input type="email" inputmode="email" id="be_${b.id}" data-bc="${b.id}" data-k="email" value="${esc((contactsOf()[b.id]||{}).email||b.email||"")}" placeholder="barber@gmail.com"></label>
+      <label class="field"><span class="small">${t("barber_email")} <em>(${t("optional")})</em></span><input type="email" inputmode="email" id="be_${b.id}" data-bc="${b.id}" data-k="email" value="${esc((contactsOf()[b.id]||{}).email||b.email||"")}" placeholder="name@gmail.com"></label>
       <p class="small muted">${t("private_note")}</p>
       <button class="btn ghost sm" style="align-self:flex-start" data-a="delBarber" data-v="${b.id}">${t("remove")}</button>
     </div></div>`).join("")}</div>
@@ -1411,6 +1420,8 @@ const A = {
     UI.busy=false; render(); },
   pickBiz:v=>go(()=>{ try{ localStorage.setItem("ss_biz",v); }catch(e){} setBiz(v); }),
   wsSwitch:v=>{ try{ localStorage.setItem("ss_biz",v); }catch(e){} location.reload(); },
+  specSug:v=>{ const i = v.indexOf("|"), id = v.slice(0,i), txt = v.slice(i+1); const o = editTarget(); const b = o.barbers.find(x=>x.id===id); if (!b) return;
+    const cur = String(b.spec||"").trim(); b.spec = cur ? (cur.includes(txt) ? cur : cur+", "+txt) : txt; render(); if (o===S.salon) queueSave(); },
   changeBiz:()=>go(()=>{ try{ localStorage.removeItem("ss_biz"); }catch(e){} setBiz("salon"); }),
   logout: async ()=>{ await signOut(auth); },
   adminOnly:()=>go(()=>{ pushNav(); UI.view="adminOnly"; watchAdmin(); window.scrollTo(0,0); }),

@@ -413,3 +413,4 @@ main > .btn.sm{align-self:flex-start}
 .biztile[data-biz="spa"]{border-color:#B9879E}
 .biztile[data-biz="other"]{border-color:#C28B2E}
 .biztile[data-biz="salon"]{border-color:#B08A3E}
+.specrow{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}.specrow .chip{flex:none;white-space:nowrap}
