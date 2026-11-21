@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.23-3";
+const APP_VERSION = "2026.11.23-4";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -463,6 +463,7 @@ function render(){
     else if (UI.view==="setup") html += viewSetup();
     else if (UI.view==="adminOnly") html += `<button class="btn sm" data-a="adminBack">← ${t("back")}</button>` + viewAdmin();
     else html += ({home:viewHome, queue:viewQueue, doctor:viewDoctor, calendar:viewCalendar, book:viewBook, barber:viewBarber, rewards:viewRewards, plan:viewPlan, settings:viewSettings, admin:viewAdmin, clients:viewClients, closing:viewClosing}[UI.tab]||viewHome)();
+    if (UI.view==="main" && S.staff && S.user) html += `<div class="staffbar"><div class="grow"><span class="small muted">${t("signed_as")}</span><br><b>${esc(S.user.email||"")}</b></div><button class="btn sm" data-a="logout">⎋ ${t("logout")}</button></div>`;
     html += "</main>";
     if (UI.view==="main") html += navBar() + viewSheet();
   }

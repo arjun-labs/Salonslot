@@ -442,3 +442,5 @@ main > .btn.sm{align-self:flex-start}
 .docdone{width:100%;font-size:24px;padding:22px 12px;border-radius:18px;background:#2E6B45;border-color:#2E6B45;color:#fff;box-shadow:0 6px 16px rgba(0,0,0,.14)}
 .docdone.next{background:var(--accent);border-color:var(--accent);font-size:20px}
 .docdone:disabled{background:var(--line);border-color:var(--line);color:var(--muted);box-shadow:none}
+
+.staffbar{display:flex;align-items:center;gap:10px;margin:18px 0 8px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:16px}
