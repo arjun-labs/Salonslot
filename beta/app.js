@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.24-4";
+const APP_VERSION = "2026.11.24-5";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -264,13 +264,13 @@ function bizTr(k, s){
 }
 
 Object.assign(T.en,{ nav_queue:"Tokens", q_h:"Token queue", q_p:"Patients in order of token. The doctor taps Done and the next token starts.", q_mode:"Doctor mode", q_back:"Full app",
-  q_in:"In consultation", q_done:"Done", q_call:"Call next", q_none:"No patient waiting", q_fin:"Done", who_lbl:"Customer", by_lbl:"Barber", gst_h:"GST billing", gst_on:"ON", gst_off:"OFF", gst_p:"Turn on to give GST tax invoices with your GSTIN and tax breakup. Off = plain bill as before.", gst_legal:"Business name on invoice", gst_bad:"Enter a valid 15-character GSTIN to issue GST invoices.", gst_rate:"GST rate %", gst_price:"Your service prices are", gst_incl:"GST included", gst_excl:"GST extra", gst_note:"The GSTIN is checked for format and check digit only; you are responsible for using your own registered number. Please confirm the rate and SAC code with your CA. This makes invoices only, it does not file GST returns.", gst_taxable:"Taxable value", exp_h:"Download data for your CA", exp_p:"Last 2 years of bookings and bills in one Excel/CSV file: invoice numbers, GST split, payments.", exp_btn:"Download 2-year data", exp_done:"{n} rows downloaded", popup_off:"Allow pop-ups to open the bill.", prob_h:"Describe the problem", prob_ph:"e.g. fever for 3 days, child is 5 years old", prob_priv:"Only the doctor and clinic can see this.", mic_start:"Speak", mic_stop:"Stop", mic_na:"Tip: use the 🎤 on your keyboard to speak.", mic_denied:"Microphone permission is off.", q_seen_s:"Seen", q_ready:"Ready for next patient", q_wait_s:"Waiting", q_waiting:"{n} waiting", q_next:"Next", q_nodoc:"Add a doctor in Settings first.", q_pickdoc:"Doctor",
+  q_in:"In consultation", q_done:"Done", q_call:"Call next", q_none:"No patient waiting", q_fin:"Done", pdf_wait:"Making the PDF…", pdf_saved:"PDF saved. Attach it in WhatsApp.", pdf_fail:"Could not make the PDF. Check internet and try again.", who_lbl:"Customer", by_lbl:"Barber", gst_h:"GST billing", gst_on:"ON", gst_off:"OFF", gst_p:"Turn on to give GST tax invoices with your GSTIN and tax breakup. Off = plain bill as before.", gst_legal:"Business name on invoice", gst_bad:"Enter a valid 15-character GSTIN to issue GST invoices.", gst_rate:"GST rate %", gst_price:"Your service prices are", gst_incl:"GST included", gst_excl:"GST extra", gst_note:"The GSTIN is checked for format and check digit only; you are responsible for using your own registered number. Please confirm the rate and SAC code with your CA. This makes invoices only, it does not file GST returns.", gst_taxable:"Taxable value", exp_h:"Download data for your CA", exp_p:"Last 2 years of bookings and bills in one Excel/CSV file: invoice numbers, GST split, payments.", exp_btn:"Download 2-year data", exp_done:"{n} rows downloaded", popup_off:"Allow pop-ups to open the bill.", prob_h:"Describe the problem", prob_ph:"e.g. fever for 3 days, child is 5 years old", prob_priv:"Only the doctor and clinic can see this.", mic_start:"Speak", mic_stop:"Stop", mic_na:"Tip: use the 🎤 on your keyboard to speak.", mic_denied:"Microphone permission is off.", q_seen_s:"Seen", q_ready:"Ready for next patient", q_wait_s:"Waiting", q_waiting:"{n} waiting", q_next:"Next", q_nodoc:"Add a doctor in Settings first.", q_pickdoc:"Doctor",
   q_idle:"Doctor is free", q_ahead:"{n} ahead", q_nextup:"Next to go in", q_remind:"Send reminder", q_sent:"Reminder sent", q_nobk:"No tokens today yet.", q_tok:"Token",
   q_msg:"Hello {name}, {clinic}: your token is #{tk}. {ahead} patient(s) before you. Please reach the clinic soon.\nLive status: {link}", q_msg0:"Hello {name}, {clinic}: you are next, token #{tk}. Please be ready.\nLive status: {link}",
   q_your:"Your token", q_now:"Now in", q_yourturn:"It is your turn. Please go in.", q_seen:"Your consultation is done.", q_before:"Patients before you", q_live:"Live token status", q_notyet:"Not started yet", q_open:"See live token",
   team_h:"Team access", team_p:"Add staff by their Google email. They log in with their own account and see only what you allow.", team_email:"Staff Google email", team_name:"Name", team_role:"Role", r_reception:"Reception", r_doctor:"Doctor", r_manager:"Manager", team_doc:"Which doctor profile?", team_rev:"Can see earnings", team_add:"Add staff", team_none:"No staff added yet.", team_bad:"Enter a valid Gmail address.", team_tip:"Doctor who owns the clinic? You already have everything. Use Doctor mode." });
 Object.assign(T.hi,{ nav_queue:"टोकन", q_h:"टोकन कतार", q_p:"मरीज़ टोकन के क्रम में। डॉक्टर Done दबाए तो अगला टोकन चालू हो जाता है।", q_mode:"डॉक्टर मोड", q_back:"पूरा ऐप",
-  q_in:"अभी अंदर", q_done:"Done", q_call:"अगला बुलाएँ", q_none:"कोई मरीज़ इंतज़ार में नहीं", q_fin:"पूरा हुआ", who_lbl:"ग्राहक", by_lbl:"Barber", gst_h:"GST बिलिंग", gst_on:"चालू", gst_off:"बंद", gst_p:"चालू करने पर आपके GSTIN और टैक्स ब्रेकअप के साथ GST टैक्स इनवॉइस बनेगा। बंद = पहले जैसा सादा बिल।", gst_legal:"इनवॉइस पर व्यापार का नाम", gst_bad:"GST इनवॉइस के लिए सही 15 अक्षर का GSTIN डालें।", gst_rate:"GST दर %", gst_price:"आपकी सर्विस के दाम", gst_incl:"GST समेत", gst_excl:"GST ऊपर से", gst_note:"GSTIN की जाँच सिर्फ़ फ़ॉर्मैट और चेक-अंक से होती है; अपना ही रजिस्टर्ड नंबर डालना आपकी ज़िम्मेदारी है। दर और SAC कोड अपने CA से पक्का कर लें। यह सिर्फ़ इनवॉइस बनाता है, GST रिटर्न नहीं भरता।", gst_taxable:"टैक्स योग्य राशि", exp_h:"CA के लिए डेटा डाउनलोड", exp_p:"पिछले 2 साल की बुकिंग और बिल एक Excel/CSV फ़ाइल में: इनवॉइस नंबर, GST का बँटवारा, भुगतान।", exp_btn:"2 साल का डेटा डाउनलोड", exp_done:"{n} पंक्तियाँ डाउनलोड हुईं", popup_off:"बिल खोलने के लिए pop-up की अनुमति दें।", prob_h:"समस्या बताएँ", prob_ph:"जैसे: 3 दिन से बुखार है, बच्चा 5 साल का है", prob_priv:"इसे सिर्फ़ डॉक्टर और क्लिनिक देखेंगे।", mic_start:"बोलकर लिखें", mic_stop:"रोकें", mic_na:"सुझाव: कीबोर्ड के 🎤 से बोलकर लिखें।", mic_denied:"माइक की अनुमति बंद है।", q_seen_s:"देखे गए", q_ready:"अगला मरीज़ बुलाएँ", q_wait_s:"इंतज़ार", q_waiting:"{n} इंतज़ार में", q_next:"अगला", q_nodoc:"पहले Settings में डॉक्टर जोड़ें।", q_pickdoc:"डॉक्टर",
+  q_in:"अभी अंदर", q_done:"Done", q_call:"अगला बुलाएँ", q_none:"कोई मरीज़ इंतज़ार में नहीं", q_fin:"पूरा हुआ", pdf_wait:"PDF बन रहा है…", pdf_saved:"PDF सेव हो गया। WhatsApp में अटैच करें।", pdf_fail:"PDF नहीं बन पाया। इंटरनेट देखकर दोबारा कोशिश करें।", who_lbl:"ग्राहक", by_lbl:"Barber", gst_h:"GST बिलिंग", gst_on:"चालू", gst_off:"बंद", gst_p:"चालू करने पर आपके GSTIN और टैक्स ब्रेकअप के साथ GST टैक्स इनवॉइस बनेगा। बंद = पहले जैसा सादा बिल।", gst_legal:"इनवॉइस पर व्यापार का नाम", gst_bad:"GST इनवॉइस के लिए सही 15 अक्षर का GSTIN डालें।", gst_rate:"GST दर %", gst_price:"आपकी सर्विस के दाम", gst_incl:"GST समेत", gst_excl:"GST ऊपर से", gst_note:"GSTIN की जाँच सिर्फ़ फ़ॉर्मैट और चेक-अंक से होती है; अपना ही रजिस्टर्ड नंबर डालना आपकी ज़िम्मेदारी है। दर और SAC कोड अपने CA से पक्का कर लें। यह सिर्फ़ इनवॉइस बनाता है, GST रिटर्न नहीं भरता।", gst_taxable:"टैक्स योग्य राशि", exp_h:"CA के लिए डेटा डाउनलोड", exp_p:"पिछले 2 साल की बुकिंग और बिल एक Excel/CSV फ़ाइल में: इनवॉइस नंबर, GST का बँटवारा, भुगतान।", exp_btn:"2 साल का डेटा डाउनलोड", exp_done:"{n} पंक्तियाँ डाउनलोड हुईं", popup_off:"बिल खोलने के लिए pop-up की अनुमति दें।", prob_h:"समस्या बताएँ", prob_ph:"जैसे: 3 दिन से बुखार है, बच्चा 5 साल का है", prob_priv:"इसे सिर्फ़ डॉक्टर और क्लिनिक देखेंगे।", mic_start:"बोलकर लिखें", mic_stop:"रोकें", mic_na:"सुझाव: कीबोर्ड के 🎤 से बोलकर लिखें।", mic_denied:"माइक की अनुमति बंद है।", q_seen_s:"देखे गए", q_ready:"अगला मरीज़ बुलाएँ", q_wait_s:"इंतज़ार", q_waiting:"{n} इंतज़ार में", q_next:"अगला", q_nodoc:"पहले Settings में डॉक्टर जोड़ें।", q_pickdoc:"डॉक्टर",
   q_idle:"डॉक्टर ख़ाली हैं", q_ahead:"आगे {n}", q_nextup:"अगला अंदर जाएगा", q_remind:"रिमाइंडर भेजें", q_sent:"रिमाइंडर भेजा", q_nobk:"आज अभी कोई टोकन नहीं।", q_tok:"टोकन",
   q_msg:"नमस्ते {name}, {clinic}: आपका टोकन #{tk} है। आपसे पहले {ahead} मरीज़ हैं। कृपया जल्दी क्लिनिक पहुँचें।\nलाइव स्थिति: {link}", q_msg0:"नमस्ते {name}, {clinic}: अगला नंबर आपका है, टोकन #{tk}। कृपया तैयार रहें।\nलाइव स्थिति: {link}",
   q_your:"आपका टोकन", q_now:"अभी अंदर", q_yourturn:"आपकी बारी है। कृपया अंदर जाइए।", q_seen:"आपका परामर्श हो चुका है।", q_before:"आपसे पहले मरीज़", q_live:"टोकन की लाइव स्थिति", q_notyet:"अभी शुरू नहीं हुआ", q_open:"लाइव टोकन देखें",
@@ -652,7 +652,7 @@ function bookingRow(k, o){
     <div class="row" style="gap:8px">${digits(k.phone).length===10?`<button class="cname grow" data-a="cHist" data-v="${digits(k.phone)}"><b>${esc(k.cust)}</b></button>`:`<b class="grow">${esc(k.cust)}</b>`}${k.src==="online"?`<span class="pill">${t("online")}</span>`:""}${k.bill?`<span class="pill">${k.bill.gst?esc(k.bill.gst.inv):t("bill_no",{n:k.bill.no})}</span>`:""}${pill}</div>
     <div class="row small muted" style="gap:6px">${avatar(b,"sm")}<span>${niceRange(k.time,bkDur(s,k))} · ${esc(b.name)} · ${esc(svc.name)} · ${rs(bkEarn(s,k))}${k.bill?" "+(k.bill.pay==="upi"?"UPI":"Cash"):""} · ${esc(k.phone)}${k.email?" · "+esc(k.email):""}</span></div>
     ${k.status==="done" && manage?`<div class="row" style="gap:6px">
-      ${k.bill?`<a class="btn sm primary" data-a="billResent" data-v="${k.id}" href="${waLink(k.phone, billText(s,k,{...k.bill, edited:!!k.bill.edited}))}" target="_blank" rel="noopener">${t("bill_resend")}</a><button class="btn sm" data-a="billOpen" data-v="${k.id}">${t("bill_edit")}</button><button class="btn sm" data-a="billPdf" data-v="${k.id}">🧾 PDF</button><span class="small muted">${billSentLbl(k.bill)}</span>`
+      ${k.bill?`<a class="btn sm primary" data-a="billResent" data-v="${k.id}" href="${waLink(k.phone, billText(s,k,{...k.bill, edited:!!k.bill.edited}))}" target="_blank" rel="noopener">${t("bill_resend")}</a><button class="btn sm" data-a="billOpen" data-v="${k.id}">${t("bill_edit")}</button><button class="btn sm primary" data-a="billPdf" data-v="${k.id}">📄 PDF</button><span class="small muted">${billSentLbl(k.bill)}</span>`
         :`<button class="btn sm primary" data-a="billOpen" data-v="${k.id}">${t("bill_make")}</button>`}</div>`:""}
     ${k.status==="booked"?`<div class="row" style="gap:6px">
       <button class="btn sm primary" data-a="done" data-v="${k.id}">${t("mark_done")}</button>
@@ -837,7 +837,7 @@ function viewSheet(){
     body = `<div class="stack" style="gap:8px">
       ${k.status==="booked"?`<button class="btn primary block" data-a="done" data-v="${k.id}">${t("mark_done")}</button>
       <div class="row" style="gap:8px"><button class="btn grow" data-a="sheetMode" data-v="${k.id}|extend">${t("sh_extend")}</button><button class="btn grow" data-a="sheetMode" data-v="${k.id}|move">${t("sh_move")}</button></div>`:""}
-      ${k.status==="done"?(k.bill?`<div class="row" style="gap:8px"><a class="btn primary grow" data-a="billResent" data-v="${k.id}" href="${waLink(k.phone, billText(s,k,k.bill))}" target="_blank" rel="noopener">${t("bill_resend")}</a><button class="btn grow" data-a="billOpen" data-v="${k.id}">${t("bill_edit")}</button><button class="btn grow" data-a="billPdf" data-v="${k.id}">🧾 PDF</button></div><p class="small muted">${k.bill.gst?k.bill.gst.inv:t("bill_no",{n:k.bill.no})} · ${billSentLbl(k.bill)}</p>`
+      ${k.status==="done"?(k.bill?`<div class="row" style="gap:8px"><a class="btn primary grow" data-a="billResent" data-v="${k.id}" href="${waLink(k.phone, billText(s,k,k.bill))}" target="_blank" rel="noopener">${t("bill_resend")}</a><button class="btn grow" data-a="billOpen" data-v="${k.id}">${t("bill_edit")}</button><button class="btn grow primary" data-a="billPdf" data-v="${k.id}">📄 PDF</button></div><p class="small muted">${k.bill.gst?k.bill.gst.inv:t("bill_no",{n:k.bill.no})} · ${billSentLbl(k.bill)}</p>`
         :`<button class="btn primary block" data-a="billOpen" data-v="${k.id}">${t("bill_make")}</button>`):""}
       <div class="row" style="gap:8px"><a class="btn grow" href="${waLink(k.phone, m.remind)}" target="_blank" rel="noopener">${t("whatsapp")}</a><a class="btn grow" href="${barberWa(k.barberId,m.barber)}" target="_blank" rel="noopener">${t("send_barber")}</a></div>
       ${k.status==="booked"?`<button class="btn ghost block" data-a="cancelBk" data-v="${k.id}">${t("cancel")}</button>`:""}</div>`;
@@ -858,7 +858,7 @@ async function updateBk(k, patch){
 }
 // save the bill on the booking (and mark it done); with send, WhatsApp opens first so the browser treats it as the tap's own window
 const gstSplitHtml = m => `${t("gst_taxable")} ${rs2(m.taxable)} · CGST ${m.rate/2}% ${rs2(m.cgst)} · SGST ${m.rate/2}% ${rs2(m.sgst)}`;
-function invoiceHtml(s, k, bill){
+function invoiceHtml(s, k, bill, noPrint){
   const hi = LANG==="hi", g = bill.gst, E = esc, dt = new Date(bill.at||Date.now()), addr = fullAddr(s);
   const rows = bill.items.map((x,i)=>`<tr><td>${i+1}</td><td>${E(x.n)}</td>${g?`<td>${E(g.sac||"")}</td>`:""}<td class="r">${g?rs2(x.p):rs(x.p)}</td></tr>`).join("");
   const sum = g ? `<tr><td colspan="3" class="r">${hi?"छूट":"Discount"}</td><td class="r">−${rs2(bill.disc||0)}</td></tr>
@@ -881,7 +881,43 @@ table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px;borde
 ${waShop(s)?`<div>WhatsApp: <a href="${E(waShop(s))}">${E(s.phone)}</a></div>`:""}
 <div>${hi?"रास्ता (Map)":"Map"}: <a href="${E(mapUrl(s))}">${E(mapUrl(s).length>70?(hi?"Google Maps पर खोलें":"Open in Google Maps"):mapUrl(s))}</a></div></div>
 <p class="foot">${hi?"धन्यवाद, फिर आइए!":"Thank you, see you again!"}${g?`<br>${hi?"यह कंप्यूटर से बना बिल है, हस्ताक्षर आवश्यक नहीं।":"This is a computer-generated invoice."}`:""}</p>
-<script>window.onload=function(){setTimeout(function(){window.print()},350)}<\/script></body></html>`;
+${noPrint?"":`<script>window.onload=function(){setTimeout(function(){window.print()},350)}<\/script>`}</body></html>`;
+}
+// real PDF file: draw the invoice with the browser (so Hindi works), turn it into a PDF, hand it to the phone's share sheet (WhatsApp etc.)
+const PDF_LIBS = ["https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js","https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"];
+const LIBP = {};
+const loadJs = u => LIBP[u] || (LIBP[u] = new Promise((res,rej)=>{ const e = document.createElement("script"); e.src = u; e.onload = res; e.onerror = ()=>{ delete LIBP[u]; rej(new Error("load")); }; document.head.appendChild(e); }));
+const preloadPdf = () => Promise.all(PDF_LIBS.map(loadJs)).catch(()=>{});
+const canFileShare = () => { try{ return !!(navigator.canShare && navigator.canShare({ files:[new File(["x"],"a.pdf",{type:"application/pdf"})] })); }catch(e){ return false; } };
+async function invoicePdfFile(s, k, bill){
+  await Promise.all(PDF_LIBS.map(loadJs));
+  const fr = document.createElement("iframe"); fr.style.cssText = "position:fixed;left:-9999px;top:0;width:720px;height:1400px;border:0"; document.body.appendChild(fr);
+  try{
+    const ready = new Promise(r=>{ fr.onload = r; }); fr.srcdoc = invoiceHtml(s,k,bill,true); await ready;
+    const doc2 = fr.contentDocument; if (doc2.fonts && doc2.fonts.ready) await doc2.fonts.ready;
+    const cv = await window.html2canvas(doc2.body, { scale:2, backgroundColor:"#ffffff", windowWidth:720 });
+    const { jsPDF } = window.jspdf, pdf = new jsPDF({ unit:"mm", format:"a4" }), W = 210, H = 297, m = 8, iw = W-2*m, pxMm = cv.width/iw, pageH = H-2*m;
+    for (let sy=0, p=0; sy<cv.height; sy += pageH*pxMm, p++){
+      const c = document.createElement("canvas"); c.width = cv.width; c.height = Math.min(pageH*pxMm, cv.height-sy);
+      const cx = c.getContext("2d"); cx.fillStyle = "#fff"; cx.fillRect(0,0,c.width,c.height); cx.drawImage(cv, 0, sy, cv.width, c.height, 0, 0, cv.width, c.height);
+      if (p) pdf.addPage(); pdf.addImage(c.toDataURL("image/jpeg",0.92), "JPEG", m, m, iw, c.height/pxMm);
+    }
+    const name = (bill.gst ? bill.gst.inv.replace(/\//g,"-") : "Bill-"+bill.no) + ".pdf";
+    return new File([pdf.output("blob")], name, { type:"application/pdf" });
+  } finally { fr.remove(); }
+}
+async function sharePdf(k){
+  const s = S.salon, bill = k.bill, hi = LANG==="hi"; if (!bill) return;
+  toast(t("pdf_wait"));
+  try{
+    const f = await invoicePdfFile(s, k, bill);
+    const cap = [`*${bill.gst?bill.gst.inv:"#"+bill.no}* · ${bill.gst?rs2(bill.total):rs(bill.total)}`, hi?"धन्यवाद, फिर आइए!":"Thank you, see you again!", ...billTail(s)].join("\n");
+    if (canFileShare() && navigator.canShare({ files:[f] })){
+      try{ await navigator.share({ files:[f], text:cap, title:f.name }); return; }catch(e){ if (e && e.name==="AbortError") return; }
+    }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    toast(t("pdf_saved"));
+  }catch(e){ console.error(e); toast(t("pdf_fail")); }
 }
 function saveBill(send){
   const k = curK(), s = S.salon, d = UI.bill; if (!k || !d) return;
@@ -898,12 +934,13 @@ function saveBill(send){
     : { inv:"INV/"+fy+"/"+String(gq+1).padStart(4,"0"), seq:gq+1, fy, rate:sm.rate, incl:gCfg.incl, taxable:sm.taxable, cgst:sm.cgst, sgst:sm.sgst, gstin:String(gs.gstin).trim().toUpperCase(), legal:String(gs.legal||"").trim().slice(0,80), sac:String(gs.sac||"").trim().slice(0,10) };
   const bill = { no, items, disc, total, pay: d.pay==="upi"?"upi":"cash", at: old&&old.at ? old.at : Date.now(),
     sent: (old ? Number(old.sent)||0 : 0) + (send?1:0), edited: !!old && (!!old.edited || (changed && (Number(old.sent)||0)>0)), ...(gstInfo?{gst:gstInfo}:{}) };
-  if (send) window.open(waLink(k.phone, billText(s, k, bill)), "_blank", "noopener");
+  const asPdf = send && canFileShare();
+  if (send && !asPdf) window.open(waLink(k.phone, billText(s, k, bill)), "_blank", "noopener");
   const b = writeBatch(db);
   b.update(doc(db,"salons",S.sid,"bookings",k.id), { status:"done", bill });
   if (!old){ b.update(doc(db,"salons",S.sid), { billSeq: no, ...(gstInfo?{gstSeq:{fy,n:gstInfo.seq}}:{}) }); s.billSeq = no; if (gstInfo) s.gstSeq = { fy, n:gstInfo.seq }; }
   Object.assign(k, { status:"done", bill });
-  UI.sheet = null; UI.bill = null; render();
+  UI.sheet = null; UI.bill = null; render(); if (asPdf) sharePdf(k);
   b.commit().then(()=>toast(send?t("bill_sent"):t("bill_saved"))).catch(e=>{ console.error(e); toast(t("save_fail")); });
 }
 async function doExtend(k, add, svcId, force){
@@ -1635,7 +1672,7 @@ const A = {
   done:v=>{ const k = S.bookings.find(x=>x.id===v);
     if (k){ A.billOpen(v); return; }
     if (UI.sheet){ UI.sheet=null; render(); } updateDoc(doc(db,"salons",S.sid,"bookings",v),{status:"done"}).catch(()=>toast(t("save_fail"))); },
-  billOpen:v=>{ const k = S.bookings.find(x=>x.id===v); if (!k) return; UI.bill = billDraft(S.salon, k); UI.sheet = { id:v, mode:"bill" }; render(); },
+  billOpen:v=>{ const k = S.bookings.find(x=>x.id===v); if (!k) return; UI.bill = billDraft(S.salon, k); UI.sheet = { id:v, mode:"bill" }; render(); preloadPdf(); },
   billAdd:v=>{ const sv = svcOf(S.salon,v); if (!sv || !UI.bill) return; UI.bill.items.push({n:sv.name, p:String(Number(sv.price)||0)}); render(); },
   billDel:v=>{ if (!UI.bill || UI.bill.items.length<2) return; UI.bill.items.splice(Number(v),1); render(); },
   billPay:v=>go(()=>{ if (UI.bill) UI.bill.pay = v==="upi"?"upi":"cash"; }),
@@ -1666,7 +1703,7 @@ const A = {
   gstOn:()=>{ const s = S.salon, d = GST_DEF[s.bizType||"salon"]||GST_DEF.salon; s.gst = s.gst || {}; s.gst.on = !s.gst.on; if (s.gst.on){ if (s.gst.rate==null) s.gst.rate = d.rate; if (s.gst.sac==null) s.gst.sac = d.sac; if (s.gst.incl==null) s.gst.incl = true; if (!s.gst.legal) s.gst.legal = s.name||""; } render(); queueSave(); },
   gstIncl:v=>{ const s = S.salon; s.gst = s.gst || {}; s.gst.incl = v==="1"; render(); queueSave(); },
   exportData:()=>{ exportData(); },
-  billPdf:v=>{ const k = S.bookings.find(x=>x.id===v); if (!k || !k.bill) return; const w = window.open("","_blank"); if (!w){ toast(t("popup_off")); return; } w.document.open(); w.document.write(invoiceHtml(S.salon,k,k.bill)); w.document.close(); },
+  billPdf:v=>{ const k = S.bookings.find(x=>x.id===v); if (!k || !k.bill) return; sharePdf(k); },
   mic:()=>{
     if (!SR) return;
     const btn = () => document.getElementById("micBtn");
