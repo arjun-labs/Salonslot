@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.22-3";
+const APP_VERSION = "2026.11.23-1";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -262,6 +262,19 @@ function bizTr(k, s){
   for (const [re, to] of (b.rep[LANG]||b.rep.en)) s = s.replace(re, to);
   return s;
 }
+
+Object.assign(T.en,{ nav_queue:"Tokens", q_h:"Token queue", q_p:"Patients in order of token. The doctor taps Done and the next token starts.", q_mode:"Doctor mode", q_back:"Full app",
+  q_in:"In consultation", q_done:"Done", q_call:"Call next", q_none:"No patient waiting", q_waiting:"{n} waiting", q_next:"Next", q_nodoc:"Add a doctor in Settings first.", q_pickdoc:"Doctor",
+  q_idle:"Doctor is free", q_ahead:"{n} ahead", q_nextup:"Next to go in", q_remind:"Send reminder", q_sent:"Reminder sent", q_nobk:"No tokens today yet.", q_tok:"Token",
+  q_msg:"Hello {name}, {clinic}: your token is #{tk}. {ahead} patient(s) before you. Please reach the clinic soon.\nLive status: {link}", q_msg0:"Hello {name}, {clinic}: you are next, token #{tk}. Please be ready.\nLive status: {link}",
+  q_your:"Your token", q_now:"Now in", q_yourturn:"It is your turn. Please go in.", q_seen:"Your consultation is done.", q_before:"Patients before you", q_live:"Live token status", q_notyet:"Not started yet", q_open:"See live token",
+  team_h:"Team access", team_p:"Add staff by their Google email. They log in with their own account and see only what you allow.", team_email:"Staff Google email", team_name:"Name", team_role:"Role", r_reception:"Reception", r_doctor:"Doctor", r_manager:"Manager", team_doc:"Which doctor profile?", team_rev:"Can see earnings", team_add:"Add staff", team_none:"No staff added yet.", team_bad:"Enter a valid Gmail address.", team_tip:"Doctor who owns the clinic? You already have everything. Use Doctor mode." });
+Object.assign(T.hi,{ nav_queue:"टोकन", q_h:"टोकन कतार", q_p:"मरीज़ टोकन के क्रम में। डॉक्टर Done दबाए तो अगला टोकन चालू हो जाता है।", q_mode:"डॉक्टर मोड", q_back:"पूरा ऐप",
+  q_in:"अभी अंदर", q_done:"Done", q_call:"अगला बुलाएँ", q_none:"कोई मरीज़ इंतज़ार में नहीं", q_waiting:"{n} इंतज़ार में", q_next:"अगला", q_nodoc:"पहले Settings में डॉक्टर जोड़ें।", q_pickdoc:"डॉक्टर",
+  q_idle:"डॉक्टर ख़ाली हैं", q_ahead:"आगे {n}", q_nextup:"अगला अंदर जाएगा", q_remind:"रिमाइंडर भेजें", q_sent:"रिमाइंडर भेजा", q_nobk:"आज अभी कोई टोकन नहीं।", q_tok:"टोकन",
+  q_msg:"नमस्ते {name}, {clinic}: आपका टोकन #{tk} है। आपसे पहले {ahead} मरीज़ हैं। कृपया जल्दी क्लिनिक पहुँचें।\nलाइव स्थिति: {link}", q_msg0:"नमस्ते {name}, {clinic}: अगला नंबर आपका है, टोकन #{tk}। कृपया तैयार रहें।\nलाइव स्थिति: {link}",
+  q_your:"आपका टोकन", q_now:"अभी अंदर", q_yourturn:"आपकी बारी है। कृपया अंदर जाइए।", q_seen:"आपका परामर्श हो चुका है।", q_before:"आपसे पहले मरीज़", q_live:"टोकन की लाइव स्थिति", q_notyet:"अभी शुरू नहीं हुआ", q_open:"लाइव टोकन देखें",
+  team_h:"टीम एक्सेस", team_p:"स्टाफ़ को उनके Google ईमेल से जोड़ें। वे अपने ख़ुद के अकाउंट से लॉगिन करेंगे और सिर्फ़ वही देखेंगे जो आप तय करें।", team_email:"स्टाफ़ का Google ईमेल", team_name:"नाम", team_role:"रोल", r_reception:"रिसेप्शन", r_doctor:"डॉक्टर", r_manager:"मैनेजर", team_doc:"कौन-सा डॉक्टर प्रोफ़ाइल?", team_rev:"कमाई देख सके", team_add:"स्टाफ़ जोड़ें", team_none:"अभी कोई स्टाफ़ नहीं जुड़ा।", team_bad:"सही Gmail पता डालें।", team_tip:"क्लिनिक के मालिक ख़ुद डॉक्टर हैं? आपके पास सब कुछ है, बस डॉक्टर मोड खोलिए।" });
 /* ================= helpers ================= */
 let LANG = "hi"; try{ LANG = localStorage.getItem("ss_lang") || "hi"; }catch(e){}
 const t = (k, v) => { let s = (T[LANG]||T.en)[k]; if (s===undefined) s = T.en[k]; if (k==="sugg" && BIZ[BIZ_ID].sugg) return BIZ[BIZ_ID].sugg; if (k==="spec_ph" && BIZ[BIZ_ID].specPh) return BIZ[BIZ_ID].specPh[LANG]||BIZ[BIZ_ID].specPh.en; if (k==="tagline" && BIZ[BIZ_ID].tag) s = BIZ[BIZ_ID].tag[LANG]||BIZ[BIZ_ID].tag.en; s = bizTr(k, s); if (typeof s==="string" && v) for (const x in v) s = s.split("{"+x+"}").join(v[x]); return s; };
@@ -299,6 +312,7 @@ const OF0 = () => ({ kind:"days", title:"", desc:"", days:"3", reveal:"", note:"
 UI.of = OF0();
 let D = null; // setup draft
 
+const canRev = () => !S.staff || S.staff.rev===true;
 const isAdmin = () => !!(S.user && S.user.email === ADMIN_EMAIL);
 const linkFor = sid => location.origin + location.pathname.replace(/index\.html$/,"").replace(/\/beta\/$/,"/") + "?s=" + sid;
 function subInfo(s){ s = s || S.salon; if (!s) return {active:false,days:0,kind:"none"};
@@ -373,7 +387,9 @@ async function createBooking(sid, salon, b, force){
   await runTransaction(db, async tx => {
     const d = await tx.get(dref); const slots = d.exists() ? (d.data().slots||{}) : {};
     if (!force && !isFree(busyList(slots), b.barberId, toMin(b.time), dur)) throw new Error("taken");
-    if (d.exists()) tx.update(dref, { ["slots."+key]: dur }); else tx.set(dref, { slots: { [key]: dur } });
+    const clinic = salon.bizType==="clinic"; let tk = 0;
+    if (clinic){ const tok = (d.exists() && d.data().tok) || {}; tk = (Number(tok[b.barberId])||0)+1; b.token = tk; }
+    if (d.exists()) tx.update(dref, { ["slots."+key]: dur, ...(clinic?{["tok."+b.barberId]: tk}:{}) }); else tx.set(dref, { slots: { [key]: dur }, ...(clinic?{tok:{[b.barberId]:tk}}:{}) });
     tx.set(bref, b);
   });
   return bref.id;
@@ -381,6 +397,11 @@ async function createBooking(sid, salon, b, force){
 
 /* ================= messages ================= */
 function msgs(salon, k){
+  const m = msgs0(salon, k);
+  if (isClinic(salon) && k.token){ m.cust += "\n"+t("q_your")+": #"+k.token+"\n"+t("q_live")+": "+queueLink(salon,k); m.salon += "\n#"+k.token; }
+  return m;
+}
+function msgs0(salon, k){
   const svc = {name:bkNames(salon,k), price:bkPrice(salon,k)}, b = barberOf(salon,k.barberId)||{name:""}, when = dayLabel(k.date)+", "+nice(k.time), hi = LANG==="hi";
   return {
     cust: `${hi?"नमस्ते":"Hi"} ${k.cust}! ${hi?"आपकी booking पक्की है":"Your booking is confirmed"}.\n${salon.name}\n${svc.name} · ${b.name}\n${when}\n₹${svc.price}${fullAddr(salon)?"\n"+(hi?"पता: ":"Address: ")+fullAddr(salon):""}\n${hi?"रास्ता":"Map"}: ${mapUrl(salon)}`,
@@ -441,7 +462,7 @@ function render(){
     else if (UI.view==="login") html += viewLogin();
     else if (UI.view==="setup") html += viewSetup();
     else if (UI.view==="adminOnly") html += `<button class="btn sm" data-a="adminBack">← ${t("back")}</button>` + viewAdmin();
-    else html += ({home:viewHome, calendar:viewCalendar, book:viewBook, barber:viewBarber, rewards:viewRewards, plan:viewPlan, settings:viewSettings, admin:viewAdmin, clients:viewClients, closing:viewClosing}[UI.tab]||viewHome)();
+    else html += ({home:viewHome, queue:viewQueue, doctor:viewDoctor, calendar:viewCalendar, book:viewBook, barber:viewBarber, rewards:viewRewards, plan:viewPlan, settings:viewSettings, admin:viewAdmin, clients:viewClients, closing:viewClosing}[UI.tab]||viewHome)();
     html += "</main>";
     if (UI.view==="main") html += navBar() + viewSheet();
   }
@@ -459,9 +480,12 @@ function navBar(){
     rewards:'<rect x="3" y="8.5" width="18" height="12.5" rx="1.5"/><path d="M3 12.5h18M12 8.5V21M12 8.5C10.6 5.3 7.2 4.4 6.8 6.4 6.4 8.4 9.8 8.5 12 8.5zm0 0c1.4-3.2 4.8-4.1 5.2-2.1.4 2-3 2.1-5.2 2.1z"/>',
     plan:'<rect x="2.5" y="5.5" width="19" height="13" rx="2"/><path d="M2.5 10h19M6.5 15h4"/>',
     settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
-    admin:'<path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>'
+    admin:'<path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+    queue:'<path d="M4 7h16v4a2 2 0 0 0 0 4v4H4v-4a2 2 0 0 0 0-4z"/><path d="M9 7v12M9 10v1M9 13v1"/>'
   };
-  const tabs = ["home","calendar","book","rewards","plan","settings"].concat(isAdmin()?["admin"]:[]);
+  let tabs = ["home","calendar","book","rewards","plan","settings"].concat(isAdmin()?["admin"]:[]);
+  if (isClinic(S.salon)) tabs.splice(1,0,"queue");
+  if (S.staff){ if (S.staff.role==="doctor") return ""; tabs = ["home"].concat(isClinic(S.salon)?["queue"]:[], ["book"], (S.staff.role==="manager"&&canRev())?["calendar"]:[]); }
   const fresh = freshOffers().length;
   return `<nav class="nav ${tabs.length>6?"seven":tabs.length>5?"six":""}" aria-label="Main"><div>${tabs.map(k=>
     `<button data-a="tab" data-v="${k}" class="${UI.tab===k?"on":""}" aria-current="${UI.tab===k?"page":"false"}"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic[k]}</svg>${k==="rewards"&&fresh?`<i class="dot" aria-label="${fresh}"></i>`:""}</span>${t("nav_"+k)}</button>`).join("")}</div></nav>`;
@@ -632,14 +656,14 @@ function viewHome(){
   const later = S.bookings.filter(k=>k.date>td && k.status==="booked").sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).slice(0,8);
   let last = "";
   const fresh = freshOffers().length;
-  return `${subBanner()}
-  ${fresh?`<button class="giftbar" data-a="tab" data-v="rewards"><span class="gi" aria-hidden="true">🎁</span><span class="grow">${fresh===1?t("rw_home"):t("rw_home_n",{n:fresh})}</span><b>${t("rw_open_btn")} →</b></button>`:""}
-  ${!String(S.salon.address||"").trim()?`<div class="banner warn"><span style="flex:1">${t("addr_missing")}</span><button class="btn sm saffron" data-a="tab" data-v="settings">${t("nav_settings")}</button></div>`:""}
+  return `${S.staff?"":subBanner()}
+  ${fresh&&!S.staff?`<button class="giftbar" data-a="tab" data-v="rewards"><span class="gi" aria-hidden="true">🎁</span><span class="grow">${fresh===1?t("rw_home"):t("rw_home_n",{n:fresh})}</span><b>${t("rw_open_btn")} →</b></button>`:""}
+  ${!S.staff&&!String(S.salon.address||"").trim()?`<div class="banner warn"><span style="flex:1">${t("addr_missing")}</span><button class="btn sm saffron" data-a="tab" data-v="settings">${t("nav_settings")}</button></div>`:""}
   <div><p class="muted">${t("hello")}${S.salon.owner?", "+esc(S.salon.owner):""}</p><h1>${dayLabel(td)}</h1></div>
   <div class="stats"><div class="stat"><b>${today.filter(k=>k.status!=="cancelled").length}</b><span>${t("today_bk")}</span></div>
-    <div class="stat"><b>${up}</b><span>${t("upcoming")}</span></div><div class="stat"><b>${rs(earned)}</b><span>${t("earned")}</span></div></div>
+    <div class="stat"><b>${up}</b><span>${t("upcoming")}</span></div>${canRev()?`<div class="stat"><b>${rs(earned)}</b><span>${t("earned")}</span></div>`:""}</div>
   <button class="btn primary block" data-a="walkin">+ ${t("add_walkin")}</button>
-  <div class="homebtns"><button class="btn" data-a="tab" data-v="closing">📊 ${t("home_closing")}</button><button class="btn" data-a="tab" data-v="clients">👥 ${t("home_clients")}${S.allBk?(n=>n?` <span class="pill warn">${n}</span>`:"")(lostOf(clientsOf(allBkList()),30).length):""}</button></div>
+  <div class="homebtns">${canRev()?`<button class="btn" data-a="tab" data-v="closing">📊 ${t("home_closing")}</button>`:""}<button class="btn" data-a="tab" data-v="clients">👥 ${t("home_clients")}${S.allBk?(n=>n?` <span class="pill warn">${n}</span>`:"")(lostOf(clientsOf(allBkList()),30).length):""}</button></div>
   <div class="cols"><div class="colA">
   <div class="card"><div class="row" style="gap:6px"><h2 class="grow">${t("tl_h")}</h2>
       <button class="btn sm ghost" data-a="tlDay" data-v="-1" ${tlDate<=tlMin?"disabled":""} aria-label="${t("back")}">‹</button><b style="min-width:96px;text-align:center">${dayLabel(tlDate)}</b>
@@ -1157,12 +1181,27 @@ function viewSettings(){
   <div class="card"><h2>${t("salon_details")}</h2>${salonFields(s)}${hoursFields(s)}</div>
   <div class="card"><h2>${t("services")}</h2>${servicesEditor(s)}</div>
   <div class="card"><h2>${t("barbers")}</h2>${barbersEditor(s)}</div>
+  ${teamCard()}
   ${linkCard()}
   <div class="card"><h3>${t("install_h")}</h3><p class="small muted">${t("install_p")}</p></div>
   <div class="card"><h3>${t("account")}</h3><div class="who">${S.user.photoURL?`<img src="${esc(S.user.photoURL)}" alt="">`:""}<div><span class="small muted">${t("signed_as")}</span><br><b>${esc(S.user.email)}</b></div></div>
     <button class="btn" data-a="logout">${t("logout")}</button></div>`;
 }
 
+function teamCard(){
+  if (S.staff) return "";
+  const clinic = isClinic(S.salon), roles = ["reception","doctor","manager"].filter(r=>clinic||r!=="doctor"), role = roles.includes(UI.tmRole)?UI.tmRole:"reception";
+  const docs = S.salon.barbers||[];
+  return `<div class="card"><h2>${t("team_h")}</h2><p class="small muted">${t("team_p")}</p>${clinic?`<p class="small muted">${t("team_tip")}</p>`:""}
+    ${(S.team||[]).length?`<div>${S.team.map(m=>`<div class="srow"><div class="row" style="gap:8px"><b class="grow">${esc(m.name||m.id)}</b><span class="pill">${t("r_"+m.role)}</span></div><span class="small muted">${esc(m.id)}${m.barberId&&barberOf(S.salon,m.barberId)?" · "+esc(barberOf(S.salon,m.barberId).name):""}${m.rev?" · ₹":""}</span><button class="btn sm ghost" style="align-self:flex-start" data-a="tmDel" data-v="${esc(m.id)}">${t("remove")}</button></div>`).join("")}</div>`:`<p class="small muted">${t("team_none")}</p>`}
+    <label class="field"><span class="small">${t("team_email")}</span><input type="email" inputmode="email" data-ui="tmEmail" value="${esc(UI.tmEmail||"")}" placeholder="name@gmail.com"></label>
+    <label class="field"><span class="small">${t("team_name")} <em>(${t("optional")})</em></span><input type="text" data-ui="tmName" value="${esc(UI.tmName||"")}"></label>
+    <div class="field"><span class="small">${t("team_role")}</span><div class="chips">${roles.map(r=>`<button class="chip ${role===r?"on":""}" data-a="tmRole" data-v="${r}">${t("r_"+r)}</button>`).join("")}</div></div>
+    ${role==="doctor"&&docs.length?`<div class="field"><span class="small">${t("team_doc")}</span><div class="chips">${docs.map(d=>`<button class="chip ${(UI.tmDoc||docs[0].id)===d.id?"on":""}" data-a="tmDoc" data-v="${d.id}">${esc(d.name||"—")}</button>`).join("")}</div></div>`:""}
+    <div class="chips"><button class="chip ${UI.tmRev?"on":""}" data-a="tmRev">₹ ${t("team_rev")}</button></div>
+    ${UI.err&&UI.tab==="settings"?`<div class="banner bad" role="alert">${UI.err}</div>`:""}
+    <button class="btn primary" data-a="tmAdd">${t("team_add")}</button></div>`;
+}
 /* ================= rewards ================= */
 // offers/{id}: kind "days" (scratch card that adds free days) or "deal" (partner/brand code + link)
 function offerLive(o){ return !!o && o.active===true && (!o.endsAt || o.endsAt > Date.now()); }
@@ -1358,11 +1397,13 @@ function renderCustomer(){
   if (C.state==="nf") return topBar(bizName())+`<main><div class="card lock"><div class="big" aria-hidden="true">🔍</div><h2>${t("nf_h")}</h2><p class="muted">${t("nf_p")}</p></div></main>`;
   const s = C.salon, i = subInfo(s);
   let body = "";
-  if (!i.active) body = `<div class="card lock"><div class="big" aria-hidden="true">📞</div><h2>${t("bk_closed_h")}</h2><p class="muted">${t("bk_closed_p")}</p>
+  if (C.q) body = viewPatientQueue();
+  else if (!i.active) body = `<div class="card lock"><div class="big" aria-hidden="true">📞</div><h2>${t("bk_closed_h")}</h2><p class="muted">${t("bk_closed_p")}</p>
       ${s.phone?`<div class="copy"><code>${esc(s.phone)}</code><button class="btn sm" data-a="copy" data-v="${esc(s.phone)}">${t("copy")}</button></div><a class="btn primary" href="${waLink(s.phone,"")}" target="_blank" rel="noopener">${t("whatsapp")}</a>`:""}</div>${addrCard(s)}`;
   else if (UI.bookedData){ const k = UI.bookedData, m = msgs(s,k), svc = svcOf(s,k.serviceId), b = barberOf(s,k.barberId);
     body = `<div class="card lock"><div class="big" aria-hidden="true">✅</div><h2>${t("booked_h")}</h2>
       <p>${t("booked_p",{svc:esc(bkNames(s,k)),barber:esc(b.name),date:dayLabel(k.date),time:nice(k.time)})}</p>
+      ${k.token?`<p class="label">${t("q_your")}</p><div class="tokbig">#${k.token}</div><a class="btn primary" href="${queueLink(s,k)}">${t("q_open")}</a>`:""}
       <a class="btn" href="${calLink(s,k,custGuests(s,k))}" target="_blank" rel="noopener">${t("calendar")}</a>
       <p class="small muted">${t("cal_note_c")}</p></div>
       ${addrCard(s, t("how_reach"))}
@@ -1379,7 +1420,9 @@ function loadDay(date){
 }
 async function initCustomer(){
   try{ const d = await getDoc(doc(db,"salons",CUSTOMER_SID)); if (!d.exists()) { C.state="nf"; render(); return; }
-    C.salon = {id:d.id, ...d.data()}; setBiz(C.salon.bizType); C.state="ok"; document.title = C.salon.name+" · "+bizName(); render(); }
+    C.salon = {id:d.id, ...d.data()}; setBiz(C.salon.bizType);
+    if (params.get("q")==="1" && params.get("d") && params.get("dt") && Number(params.get("tk"))){ C.q = {d:params.get("d"), dt:params.get("dt"), tk:Number(params.get("tk"))};
+      onSnapshot(doc(db,"salons",CUSTOMER_SID,"queue",C.q.dt), dd => { C.queue = dd.exists() ? dd.data() : {}; render(); }, e => console.error(e)); } C.state="ok"; document.title = C.salon.name+" · "+bizName(); render(); }
   catch(e){ console.error(e); C.state="nf"; render(); }
 }
 
@@ -1420,6 +1463,21 @@ const A = {
     UI.busy=false; render(); },
   pickBiz:v=>go(()=>{ try{ localStorage.setItem("ss_biz",v); }catch(e){} setBiz(v); }),
   wsSwitch:v=>{ try{ localStorage.setItem("ss_biz",v); }catch(e){} location.reload(); },
+  docMode:()=>go(()=>{ pushNav(); UI.tab="doctor"; window.scrollTo(0,0); }),
+  docBack:()=>go(()=>{ UI.tab = isClinic(S.salon) ? "queue" : "home"; }),
+  docPick:v=>go(()=>{ UI.docId=v; }),
+  qDone:v=>{ qAdvance(v,true); },
+  qCall:v=>{ qAdvance(v,false); },
+  qRemind:v=>{ const [id,l] = v.split("|"); const k = S.bookings.find(x=>x.id===id); if (!k) return; const at = Date.now(); k.rem = {...(k.rem||{}), [l]:at}; setTimeout(render,300);
+    updateDoc(doc(db,"salons",S.sid,"bookings",id), {["rem."+l]:at}).catch(()=>{}); },
+  tmRole:v=>go(()=>{ UI.tmRole=v; }),
+  tmRev:()=>go(()=>{ UI.tmRev=!UI.tmRev; }),
+  tmDoc:v=>go(()=>{ UI.tmDoc=v; }),
+  tmAdd: async ()=>{ const em = String(UI.tmEmail||"").trim().toLowerCase(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){ UI.err = t("team_bad"); render(); return; }
+    const role = UI.tmRole||"reception"; const rec = { sid:S.sid, role, name:String(UI.tmName||"").trim().slice(0,60), at:Date.now() };
+    if (role==="doctor") rec.barberId = UI.tmDoc || ((S.salon.barbers||[])[0]||{}).id || ""; if (UI.tmRev) rec.rev = true;
+    try{ await setDoc(doc(db,"staffIndex",em), rec); UI.tmEmail=""; UI.tmName=""; UI.tmRev=false; UI.err=""; toast(t("saved")); }catch(e){ console.error(e); UI.err=t("save_fail"); } render(); },
+  tmDel: async v=>{ try{ await deleteDoc(doc(db,"staffIndex",v)); }catch(e){ toast(t("save_fail")); } },
   specSug:v=>{ const i = v.indexOf("|"), id = v.slice(0,i), txt = v.slice(i+1); const o = editTarget(); const b = o.barbers.find(x=>x.id===id); if (!b) return;
     const cur = String(b.spec||"").trim(); b.spec = cur ? (cur.includes(txt) ? cur : cur+", "+txt) : txt; render(); if (o===S.salon) queueSave(); },
   changeBiz:()=>go(()=>{ try{ localStorage.removeItem("ss_biz"); }catch(e){} setBiz("salon"); }),
@@ -1474,7 +1532,8 @@ const A = {
   billResent:v=>{ const k = S.bookings.find(x=>x.id===v); if (!k || !k.bill) return; const n = (Number(k.bill.sent)||0)+1;
     k.bill.sent = n; setTimeout(render, 300); updateDoc(doc(db,"salons",S.sid,"bookings",v),{"bill.sent":n}).catch(()=>{}); },
   cancelBk:async v=>{ const k = S.bookings.find(x=>x.id===v); if (!k) return; if (UI.sheet){ UI.sheet=null; render(); }
-    try{ await updateDoc(doc(db,"salons",S.sid,"bookings",v),{status:"cancelled"}); await updateDoc(doc(db,"salons",S.sid,"days",k.date),{["slots."+slotKey(k.barberId,k.time)]:deleteField()}).catch(()=>{}); }catch(e){ toast(t("save_fail")); } },
+    try{ await updateDoc(doc(db,"salons",S.sid,"bookings",v),{status:"cancelled"}); await updateDoc(doc(db,"salons",S.sid,"days",k.date),{["slots."+slotKey(k.barberId,k.time)]:deleteField()}).catch(()=>{});
+      if (isClinic(S.salon) && k.token && k.date===qDay()) setDoc(doc(db,"salons",S.sid,"queue",k.date),{gone:{[k.barberId]:arrayUnion(k.token)}},{merge:true}).catch(()=>{}); }catch(e){ toast(t("save_fail")); } },
   bSvc:v=>{ go(()=>{ const B = UI.book, sl = CUSTOMER_SID ? C.salon : S.salon; B.svc=v; UI.addMode=false;
       B.extra = (B.extra||[]).filter(id=>id!==v); const ok = new Set(addOpts(sl,{svc:v}).map(x=>x.id)); B.extra = B.extra.filter(id=>ok.has(id) && sl.barbers.some(b=>canDoAll(bkList(sl,{svc:v,extra:B.extra}),b)));
       { const bb = B.barber && B.barber!=="any" && barberOf(sl,B.barber); if (bb && !canDoAll(bkList(sl,B),bb)) B.barber = "any"; } B.time=B.prefTime||null; UI.flashSvc=false; if (CUSTOMER_SID) loadDay(B.date); });
@@ -1660,25 +1719,27 @@ app.addEventListener("change", e => { const el = e.target; const o = editTarget(
 /* ================= owner boot ================= */
 function stopOwner(){ S.unsub.forEach(f=>{try{f()}catch(e){}}); S.unsub=[]; if (S.adminUnsub){ S.adminUnsub(); S.adminUnsub=null; }
   ["adminClaimsUnsub","offersUnsub","adminLeadsUnsub"].forEach(k=>{ if (S[k]){ try{ S[k](); }catch(e){} S[k]=null; } });
+  if (S.qUnsub){ try{ S.qUnsub(); }catch(e){} S.qUnsub=null; } S.qDate=null; S.queue=null; if (S.teamUnsub){ try{ S.teamUnsub(); }catch(e){} S.teamUnsub=null; } S.team=[];
   S.salon=null; S.bookings=[]; S.allSalons=null; S.contacts={}; S.offers=null; S.claims={}; S.allClaims=null; }
 function startOwner(sid){
   S.sid = sid; S.firstSnap = true;
   S.unsub.push(onSnapshot(doc(db,"salons",sid), d => {
     if (!d.exists()){ if (UI.view!=="setup" && UI.view!=="adminOnly"){ setBiz(BIZ_CHOSEN()||"salon"); D = { bizType:BIZ_ID, name:"", owner:S.user.displayName||"", phone:"", address:"", mapLink:"", area:"", open:"10:00", close:"21:00", days:[0,1,2,3,4,5,6], services:[], barbers:[] }; UI.view="setup"; UI.step=1; render(); } return; }
-    const fresh = {id:d.id, ...d.data()}; setBiz(fresh.bizType);
+    const fresh = {id:d.id, ...d.data()}; setBiz(fresh.bizType); if (isClinic(fresh)) setTimeout(watchQueue,0);
     if (S.salon && (saveTimer || document.activeElement && document.activeElement.closest && document.activeElement.closest("[data-salon],[data-svc],[data-bar]"))){
       // keep local edits, take server-owned fields
       S.salon.sub = fresh.sub; S.salon.active = fresh.active; S.salon.leave = fresh.leave; S.salon.payReq = fresh.payReq; S.salon.payments = fresh.payments;
     } else S.salon = fresh;
-    if (UI.view!=="main"){ UI.view="main"; UI.tab="home"; }
+    if (UI.view!=="main"){ UI.view="main"; UI.tab = S.staff && S.staff.role==="doctor" ? "doctor" : "home"; }
     if (!(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select,textarea"))) render();
   }, err => { console.error(err); }));
-  S.unsub.push(onSnapshot(doc(db,"salons",sid,"private","contacts"), d => {
+  if (!S.staff) S.teamUnsub = onSnapshot(query(collection(db,"staffIndex"), where("sid","==",sid)), snap => { S.team = snap.docs.map(d=>({id:d.id,...d.data()})); if (UI.view==="main" && UI.tab==="settings" && !typing()) render(); }, e => console.error(e));
+  if (!S.staff) S.unsub.push(onSnapshot(doc(db,"salons",sid,"private","contacts"), d => {
     if (saveTimer) return; S.contacts = d.exists() ? (d.data().barbers||{}) : {};
     if (UI.view==="main" && !(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select,textarea"))) render();
   }, err => console.error(err)));
-  watchOffers();
-  S.unsub.push(onSnapshot(collection(db,"salons",sid,"claims"), snap => {
+  if (!S.staff) watchOffers();
+  if (!S.staff) S.unsub.push(onSnapshot(collection(db,"salons",sid,"claims"), snap => {
     S.claims = {}; snap.docs.forEach(d=>{ S.claims[d.id] = d.data(); });
     if (UI.view==="main" && !typing()) render();
   }, err => console.error(err)));
@@ -1690,6 +1751,83 @@ function startOwner(sid){
   }, err => console.error(err)));
 }
 
+
+/* ================= clinic token queue ================= */
+const isClinic = sl => !!sl && sl.bizType==="clinic";
+const qCur = b => Number(((S.queue||{}).cur||{})[b])||0;
+const qIn = b => !!((S.queue||{}).in||{})[b];
+const qDay = () => ymd(new Date());
+const qNowK = b => { const c = qCur(b); return c && qIn(b) ? S.bookings.find(k=>k.date===qDay() && k.barberId===b && k.token===c) || null : null; };
+const qWait = b => { const c = qCur(b); return S.bookings.filter(k=>k.date===qDay() && k.barberId===b && k.status==="booked" && k.token && k.token>c).sort((a,x)=>a.token-x.token); };
+function watchQueue(){
+  const td = qDay(); if (S.qDate===td && S.qUnsub) return; if (S.qUnsub){ try{ S.qUnsub(); }catch(e){} }
+  S.qDate = td; S.queue = null;
+  S.qUnsub = onSnapshot(doc(db,"salons",S.sid,"queue",td), d => { S.queue = d.exists() ? d.data() : {}; if (UI.view==="main" && !typing()) render(); }, e => console.error(e));
+}
+setInterval(()=>{ if (S.salon && isClinic(S.salon) && S.sid) watchQueue(); }, 60000);
+// call the next waiting patient in (and finish the one inside, if any)
+async function qAdvance(b, finish){
+  const now = qNowK(b); const waits = qWait(b).filter(k=>!now || k.id!==now.id);
+  const batch = writeBatch(db); const qref = doc(db,"salons",S.sid,"queue",qDay());
+  if (finish && now) batch.update(doc(db,"salons",S.sid,"bookings",now.id), { status:"done" });
+  const nx = waits[0];
+  if (nx) batch.set(qref, { cur:{[b]:nx.token}, in:{[b]:true} }, { merge:true });
+  else batch.set(qref, { in:{[b]:false}, ...(now?{cur:{[b]:now.token}}:{}) }, { merge:true });
+  try{ await batch.commit(); if (now && finish) now.status = "done"; }catch(e){ console.error(e); toast(t("save_fail")); }
+}
+function queueLink(sl, k){
+  const base = location.origin + location.pathname.replace(/index\.html$/,"");
+  return base + "?s="+(sl.id||S.sid||CUSTOMER_SID)+"&q=1&d="+k.barberId+"&dt="+k.date+"&tk="+k.token+(IS_BETA?"&t=1":"");
+}
+function qRemindMsg(k, ahead){
+  const sl = S.salon, link = queueLink({id:S.sid}, k);
+  return t(ahead<=0?"q_msg0":"q_msg",{name:k.cust, clinic:sl.name, tk:k.token, ahead:ahead, link:link});
+}
+function tokenRow(k, ahead, o){
+  const lvl = ahead; const sent = (k.rem||{})[String(lvl)];
+  const can = o && o.remind && (ahead===2 || ahead===1) && digits(k.phone).length===10;
+  return `<div class="tkrow"><span class="tkno">#${k.token}</span><div class="grow"><b>${esc(k.cust)}</b><div class="small muted">${t("q_ahead",{n:ahead})}${digits(k.phone).length===10?" · "+esc(k.phone):""}</div></div>
+    ${can?(sent?`<span class="pill ok">${t("q_sent")}</span>`:`<a class="btn sm saffron" data-a="qRemind" data-v="${k.id}|${lvl}" href="${waLink(k.phone, qRemindMsg(k, ahead))}" target="_blank" rel="noopener">${t("q_remind")}</a>`):""}
+    <a class="btn sm ghost" href="${waLink(k.phone, qRemindMsg(k, ahead))}" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a></div>`;
+}
+const canDoctor = () => !S.staff || S.staff.role==="doctor";
+function viewQueue(){
+  const s = S.salon;
+  return `<div><h1>${t("q_h")}</h1><p class="small muted" style="margin-top:4px">${t("q_p")}</p></div>
+  <div class="row" style="gap:8px"><button class="btn primary grow" data-a="walkin">+ ${t("add_walkin")}</button>${canDoctor()?`<button class="btn grow" data-a="docMode">🩺 ${t("q_mode")}</button>`:""}</div>
+  ${(s.barbers||[]).map(b=>{ const now = qNowK(b.id), waits = qWait(b.id).filter(k=>!now||k.id!==now.id);
+    return `<div class="card"><div class="row" style="gap:10px">${avatar(b,"lg")}<div class="grow"><h2>${esc(b.name)}</h2>${b.spec?`<p class="small muted">${esc(b.spec)}</p>`:""}</div><span class="pill ${waits.length?"warn":""}">${t("q_waiting",{n:waits.length})}</span></div>
+      ${now?`<div class="tkin"><span class="label">${t("q_in")}</span><div class="row" style="gap:10px"><span class="tkno big">#${now.token}</span><b class="grow">${esc(now.cust)}</b></div></div>`:`<p class="muted">${t("q_idle")}</p>`}
+      ${waits.length?`<div>${waits.map((k,i)=>tokenRow(k,i,{remind:true})).join("")}</div>`:`<p class="small muted">${t("q_none")}</p>`}</div>`; }).join("")}`;
+}
+function viewDoctor(){
+  const s = S.salon, docs = s.barbers||[];
+  const bid = S.staff && S.staff.barberId ? S.staff.barberId : (UI.docId && barberOf(s,UI.docId) ? UI.docId : (docs[0]||{}).id);
+  const b = barberOf(s,bid);
+  if (!b) return `<div class="card lock"><p class="muted">${t("q_nodoc")}</p></div>`;
+  const now = qNowK(bid), waits = qWait(bid).filter(k=>!now||k.id!==now.id), nx = waits[0];
+  const back = !S.staff ? `<button class="btn sm ghost" data-a="docBack">← ${t("q_back")}</button>` : "";
+  const pick = !S.staff && docs.length>1 ? `<div class="chips">${docs.map(x=>`<button class="chip ${x.id===bid?"on":""}" data-a="docPick" data-v="${x.id}">${esc(x.name)}</button>`).join("")}</div>` : "";
+  return `<div class="docpage">${back}${pick}
+    <div class="docwho">${avatar(b,"lg")}<b>${esc(b.name)}</b>${b.spec?`<span class="small muted">${esc(b.spec)}</span>`:""}</div>
+    ${now?`<div class="docnow"><span class="label">${t("q_in")}</span><div class="tokbig">#${now.token}</div><h1>${esc(now.cust)}</h1>
+        <button class="btn primary docdone" data-a="qDone" data-v="${bid}">✓ ${t("q_done")}</button></div>`
+      : nx?`<div class="docnow idle"><span class="label">${t("q_idle")}</span><div class="tokbig">#${nx.token}</div><h1>${esc(nx.cust)}</h1>
+        <button class="btn primary docdone" data-a="qCall" data-v="${bid}">${t("q_call")}</button></div>`
+      : `<div class="docnow idle"><div class="tokbig">–</div><h1>${t("q_none")}</h1></div>`}
+    <p class="docfoot">${t("q_waiting",{n:waits.length})}${now&&nx?` · ${t("q_next")}: #${nx.token} ${esc(nx.cust)}`:""}</p></div>`;
+}
+// patient's own live page (no login): ?s=..&q=1&d=<doctor>&dt=<date>&tk=<token>
+function viewPatientQueue(){
+  const s = C.salon, Q = C.q, qd = C.queue || {}, cur = Number((qd.cur||{})[Q.d])||0, inn = !!(qd.in||{})[Q.d], gone = ((qd.gone||{})[Q.d])||[], tk = Q.tk;
+  const dr = barberOf(s,Q.d);
+  const seen = tk<cur || (tk===cur && !inn), turn = tk===cur && inn;
+  const ahead = Math.max(0, tk-cur-1-gone.filter(g=>g>cur && g<tk).length);
+  return `<div class="card lock"><p class="label">${t("q_your")}</p><div class="tokbig">#${tk}</div>
+    ${seen?`<h2>${t("q_seen")}</h2>`:turn?`<div class="banner ok"><b>${t("q_yourturn")}</b></div>`:`<p class="label" style="margin-top:6px">${t("q_before")}</p><div class="tokbig" style="font-size:56px">${ahead}</div>`}
+    <p class="muted">${t("q_now")}: <b>${cur?"#"+cur:t("q_notyet")}</b>${dr?" · "+esc(dr.name):""}</p>
+    <p class="small muted">${esc(s.name)}</p></div>${addrCard(s)}`;
+}
 /* ================= reminders ================= */
 const remDone = new Set(); try{ JSON.parse(localStorage.getItem("ss_rem")||"[]").forEach(x=>remDone.add(x)); }catch(e){}
 function markReminded(id){ remDone.add(id); try{ localStorage.setItem("ss_rem", JSON.stringify([...remDone].slice(-300))); }catch(e){} }
@@ -1724,7 +1862,7 @@ setInterval(checkVersion, 5*60*1000);
 document.addEventListener("visibilitychange", ()=>{ if (document.visibilityState==="visible"){ checkVersion(); checkReminders(); } });
 setTimeout(checkVersion, 8000);
 // only the admin stays on the test version; everyone else is sent to the main link
-function betaGate(){ if (!IS_BETA) return; if (S.user && !isAdmin()) { location.replace(MAIN_URL()); return; }
+function betaGate(){ if (!IS_BETA) return; if (S.user && !isAdmin() && !S.staff) { location.replace(MAIN_URL()); return; }
   if (isAdmin() && !document.querySelector(".betabar")) overlay.insertAdjacentHTML("afterbegin", `<div class="betabar">${t("beta")}</div>`); }
 
 /* ================= start ================= */
@@ -1733,7 +1871,14 @@ if (CUSTOMER_SID){ render(); initCustomer().then(()=>loadDay(ymd(new Date()))); 
 else {
   render();
   getRedirectResult(auth).catch(()=>{ UI.err = t("signin_fail"); });
-  onAuthStateChanged(auth, u => { stopOwner(); S.user = u; betaGate();
-    if (!u){ setBiz(BIZ_CHOSEN()||"salon"); UI.view="login"; UI.busy=false; render(); return; }
-    UI.view="loading"; render(); startOwner(wsSid(u.uid)); if (isAdmin()) watchAdmin(); });
+  onAuthStateChanged(auth, async u => { stopOwner(); S.user = u; S.staff = null;
+    if (!u){ betaGate(); setBiz(BIZ_CHOSEN()||"salon"); UI.view="login"; UI.busy=false; render(); return; }
+    UI.view="loading"; render();
+    // a staff member (added by an owner with their Google email) has no salon of their own
+    if (!isAdmin()){ try{ const own = await getDoc(doc(db,"salons",u.uid));
+      if (!own.exists()){ const si = await getDoc(doc(db,"staffIndex",String(u.email||"").toLowerCase())); if (si.exists()) S.staff = si.data(); } }catch(e){ console.error(e); } }
+    if (S.user !== u) return;
+    betaGate();
+    if (S.staff){ startOwner(S.staff.sid); return; }
+    startOwner(wsSid(u.uid)); if (isAdmin()) watchAdmin(); });
 }

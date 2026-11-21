@@ -11,6 +11,12 @@ service cloud.firestore {
       return request.auth != null && (request.auth.uid == sid
         || (isAdmin() && sid.matches(request.auth.uid + '_(clinic|spa|other)')));
     }
+    // staff: a Google email the owner added in staffIndex (doc id = lowercase email) pointing at this salon
+    function isStaff(sid) {
+      return request.auth != null && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/staffIndex/$(request.auth.token.email.lower()))
+        && get(/databases/$(database)/documents/staffIndex/$(request.auth.token.email.lower())).data.sid == sid;
+    }
     function salonOpen(sid) {
       let s = get(/databases/$(database)/documents/salons/$(sid)).data;
       return s.active == true && s.sub.expires > request.time.toMillis();
@@ -68,6 +74,15 @@ service cloud.firestore {
       );
     }
 
+    match /staffIndex/{em} {
+      allow get: if isAdmin() || (request.auth != null && request.auth.token.email_verified == true && request.auth.token.email.lower() == em);
+      allow list: if isAdmin() || (request.auth != null && resource.data.sid == request.auth.uid);
+      allow create, update: if isOwner(request.resource.data.sid)
+        && request.resource.data.keys().hasOnly(['sid', 'role', 'barberId', 'name', 'rev', 'at'])
+        && request.resource.data.role in ['reception', 'doctor', 'manager'];
+      allow delete: if isOwner(resource.data.sid) || isAdmin();
+    }
+
     match /offers/{oid} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
@@ -90,11 +105,13 @@ service cloud.firestore {
       allow delete: if isAdmin();
 
       match /bookings/{bid} {
-        allow read, update, delete: if isOwner(sid) || isAdmin();
-        allow create: if isOwner(sid) || isAdmin() || (
+        allow read, update: if isOwner(sid) || isAdmin() || isStaff(sid);
+        allow delete: if isOwner(sid) || isAdmin();
+        allow create: if isOwner(sid) || isAdmin() || isStaff(sid) || (
           salonOpen(sid)
-          && request.resource.data.keys().hasOnly(['date', 'time', 'serviceId', 'barberId', 'cust', 'phone', 'email', 'status', 'created', 'src', 'extra', 'dur'])
+          && request.resource.data.keys().hasOnly(['date', 'time', 'serviceId', 'barberId', 'cust', 'phone', 'email', 'status', 'created', 'src', 'extra', 'dur', 'token'])
           && (!('extra' in request.resource.data) || (request.resource.data.extra is list && request.resource.data.extra.size() <= 10))
+          && (!('token' in request.resource.data) || (request.resource.data.token is int && request.resource.data.token > 0))
           && (!('dur' in request.resource.data) || (request.resource.data.dur is int && request.resource.data.dur > 0 && request.resource.data.dur <= 720))
           && request.resource.data.status == 'booked'
           && request.resource.data.src == 'online'
@@ -117,14 +134,21 @@ service cloud.firestore {
         allow read, write: if isOwner(sid) || isAdmin();
       }
 
+      match /queue/{date} {
+        allow read: if true;
+        allow write: if isOwner(sid) || isAdmin() || isStaff(sid);
+      }
+
       match /days/{date} {
         allow read: if true;
-        allow write: if isOwner(sid) || isAdmin();
+        allow write: if isOwner(sid) || isAdmin() || isStaff(sid);
         allow create: if salonOpen(sid)
-          && request.resource.data.keys().hasOnly(['slots'])
-          && request.resource.data.slots.size() == 1;
+          && request.resource.data.keys().hasOnly(['slots', 'tok'])
+          && request.resource.data.slots.size() == 1
+          && (!('tok' in request.resource.data) || request.resource.data.tok.size() == 1);
         allow update: if salonOpen(sid)
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['slots'])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['slots', 'tok'])
+          && (!('tok' in request.resource.data) || request.resource.data.tok.diff(resource.data.get('tok', {})).affectedKeys().size() <= 1)
           && request.resource.data.slots.diff(resource.data.slots).addedKeys().size() == 1
           && request.resource.data.slots.diff(resource.data.slots).changedKeys().size() == 0
           && request.resource.data.slots.diff(resource.data.slots).removedKeys().size() == 0;

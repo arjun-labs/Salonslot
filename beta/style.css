@@ -414,3 +414,15 @@ main > .btn.sm{align-self:flex-start}
 .biztile[data-biz="other"]{border-color:#C28B2E}
 .biztile[data-biz="salon"]{border-color:#B08A3E}
 .specrow{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}.specrow .chip{flex:none;white-space:nowrap}
+
+/* ===== clinic token queue ===== */
+.tokbig{font-family:var(--display);font-size:72px;line-height:1;color:var(--accent);letter-spacing:1px}
+.tkno{font-family:var(--display);font-size:22px;color:var(--accent);min-width:46px}.tkno.big{font-size:34px}
+.tkrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.tkrow:first-child{border-top:0}
+.tkin{background:var(--accent-soft);border-radius:12px;padding:10px 12px}
+.docpage{display:flex;flex-direction:column;gap:16px;align-items:stretch;padding-top:4px}
+.docwho{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.docwho b{font-family:var(--display);font-size:20px}
+.docnow{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.docnow h1{font-size:30px;word-break:break-word}.docnow.idle .tokbig{opacity:.55}
+.docdone{width:100%;font-size:30px;padding:26px 12px;border-radius:18px;margin-top:10px;background:#2E6B45;border-color:#2E6B45;color:#fff}
+.docfoot{text-align:center;color:var(--muted)}
