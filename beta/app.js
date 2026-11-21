@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.23-2";
+const APP_VERSION = "2026.11.23-3";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -264,13 +264,13 @@ function bizTr(k, s){
 }
 
 Object.assign(T.en,{ nav_queue:"Tokens", q_h:"Token queue", q_p:"Patients in order of token. The doctor taps Done and the next token starts.", q_mode:"Doctor mode", q_back:"Full app",
-  q_in:"In consultation", q_done:"Done", q_call:"Call next", q_none:"No patient waiting", q_waiting:"{n} waiting", q_next:"Next", q_nodoc:"Add a doctor in Settings first.", q_pickdoc:"Doctor",
+  q_in:"In consultation", q_done:"Done", q_call:"Call next", q_none:"No patient waiting", q_fin:"Done", q_seen_s:"Seen", q_ready:"Ready for next patient", q_wait_s:"Waiting", q_waiting:"{n} waiting", q_next:"Next", q_nodoc:"Add a doctor in Settings first.", q_pickdoc:"Doctor",
   q_idle:"Doctor is free", q_ahead:"{n} ahead", q_nextup:"Next to go in", q_remind:"Send reminder", q_sent:"Reminder sent", q_nobk:"No tokens today yet.", q_tok:"Token",
   q_msg:"Hello {name}, {clinic}: your token is #{tk}. {ahead} patient(s) before you. Please reach the clinic soon.\nLive status: {link}", q_msg0:"Hello {name}, {clinic}: you are next, token #{tk}. Please be ready.\nLive status: {link}",
   q_your:"Your token", q_now:"Now in", q_yourturn:"It is your turn. Please go in.", q_seen:"Your consultation is done.", q_before:"Patients before you", q_live:"Live token status", q_notyet:"Not started yet", q_open:"See live token",
   team_h:"Team access", team_p:"Add staff by their Google email. They log in with their own account and see only what you allow.", team_email:"Staff Google email", team_name:"Name", team_role:"Role", r_reception:"Reception", r_doctor:"Doctor", r_manager:"Manager", team_doc:"Which doctor profile?", team_rev:"Can see earnings", team_add:"Add staff", team_none:"No staff added yet.", team_bad:"Enter a valid Gmail address.", team_tip:"Doctor who owns the clinic? You already have everything. Use Doctor mode." });
 Object.assign(T.hi,{ nav_queue:"टोकन", q_h:"टोकन कतार", q_p:"मरीज़ टोकन के क्रम में। डॉक्टर Done दबाए तो अगला टोकन चालू हो जाता है।", q_mode:"डॉक्टर मोड", q_back:"पूरा ऐप",
-  q_in:"अभी अंदर", q_done:"Done", q_call:"अगला बुलाएँ", q_none:"कोई मरीज़ इंतज़ार में नहीं", q_waiting:"{n} इंतज़ार में", q_next:"अगला", q_nodoc:"पहले Settings में डॉक्टर जोड़ें।", q_pickdoc:"डॉक्टर",
+  q_in:"अभी अंदर", q_done:"Done", q_call:"अगला बुलाएँ", q_none:"कोई मरीज़ इंतज़ार में नहीं", q_fin:"पूरा हुआ", q_seen_s:"देखे गए", q_ready:"अगला मरीज़ बुलाएँ", q_wait_s:"इंतज़ार", q_waiting:"{n} इंतज़ार में", q_next:"अगला", q_nodoc:"पहले Settings में डॉक्टर जोड़ें।", q_pickdoc:"डॉक्टर",
   q_idle:"डॉक्टर ख़ाली हैं", q_ahead:"आगे {n}", q_nextup:"अगला अंदर जाएगा", q_remind:"रिमाइंडर भेजें", q_sent:"रिमाइंडर भेजा", q_nobk:"आज अभी कोई टोकन नहीं।", q_tok:"टोकन",
   q_msg:"नमस्ते {name}, {clinic}: आपका टोकन #{tk} है। आपसे पहले {ahead} मरीज़ हैं। कृपया जल्दी क्लिनिक पहुँचें।\nलाइव स्थिति: {link}", q_msg0:"नमस्ते {name}, {clinic}: अगला नंबर आपका है, टोकन #{tk}। कृपया तैयार रहें।\nलाइव स्थिति: {link}",
   q_your:"आपका टोकन", q_now:"अभी अंदर", q_yourturn:"आपकी बारी है। कृपया अंदर जाइए।", q_seen:"आपका परामर्श हो चुका है।", q_before:"आपसे पहले मरीज़", q_live:"टोकन की लाइव स्थिति", q_notyet:"अभी शुरू नहीं हुआ", q_open:"लाइव टोकन देखें",
@@ -468,7 +468,7 @@ function render(){
   }
   document.body.classList.toggle("owner", !CUSTOMER_SID && UI.view==="main");
   app.innerHTML = html; window.scrollTo(0,y);
-  drawQRs(); initScratch(); initWheels(); initDocWheel();
+  drawQRs(); initScratch(); initWheels();
   document.querySelectorAll(".ownpick .hscroll").forEach(r=>{ const on = r.querySelector(".ochip.on"); if (on) r.scrollLeft = Math.max(0, on.offsetLeft - 16); });
 }
 function navBar(){
@@ -1769,11 +1769,17 @@ setInterval(()=>{ if (S.salon && isClinic(S.salon) && S.sid) watchQueue(); }, 60
 async function qAdvance(b, finish){
   const now = qNowK(b); const waits = qWait(b).filter(k=>!now || k.id!==now.id);
   const batch = writeBatch(db); const qref = doc(db,"salons",S.sid,"queue",qDay());
-  if (finish && now) batch.update(doc(db,"salons",S.sid,"bookings",now.id), { status:"done" });
-  const nx = waits[0];
-  if (nx) batch.set(qref, { cur:{[b]:nx.token}, in:{[b]:true} }, { merge:true });
-  else batch.set(qref, { in:{[b]:false}, ...(now?{cur:{[b]:now.token}}:{}) }, { merge:true });
-  try{ await batch.commit(); if (now && finish) now.status = "done"; }catch(e){ console.error(e); toast(t("save_fail")); }
+  if (finish){
+    // Done: close the visit only. Nobody is called until the doctor taps "Next".
+    if (!now) return;
+    batch.update(doc(db,"salons",S.sid,"bookings",now.id), { status:"done" });
+    batch.set(qref, { in:{[b]:false}, cur:{[b]:now.token} }, { merge:true });
+  } else {
+    const nx = waits[0]; if (!nx) return;
+    if (now) batch.update(doc(db,"salons",S.sid,"bookings",now.id), { status:"done" });
+    batch.set(qref, { cur:{[b]:nx.token}, in:{[b]:true} }, { merge:true });
+  }
+  try{ await batch.commit(); if (now && (finish || waits[0])) now.status = "done"; }catch(e){ console.error(e); toast(t("save_fail")); }
 }
 function queueLink(sl, k){
   const base = location.origin + location.pathname.replace(/index\.html$/,"");
@@ -1801,39 +1807,36 @@ function viewQueue(){
       ${waits.length?`<div>${waits.map((k,i)=>tokenRow(k,i,{remind:true})).join("")}</div>`:`<p class="small muted">${t("q_none")}</p>`}</div>`; }).join("")}`;
 }
 
-// vertical token wheel: done ones fade above, the one inside is centred and highlighted, waiting ones blur out below
-function docWheel(bid, now, waits){
-  const td = qDay(), all = S.bookings.filter(k=>k.date===td && k.barberId===bid && k.token && k.status!=="cancelled").sort((a,x)=>a.token-x.token);
-  const nxId = !now && waits[0] ? waits[0].id : null; const cur = qCur(bid);
-  const done = all.filter(k=>k.status==="done" && (!now || k.id!==now.id)).slice(-3), wait = all.filter(k=>k.status!=="done" && (!now || k.id!==now.id));
-  const rows = [...done.map(k=>({k,c:"done"})), ...(now?[{k:now,c:"cur"}]:[]), ...wait.map((k,i)=>({k,c:"wait d"+Math.min(3,(now?i+1:i)) + (k.id===nxId?" nx":"")}))];
-  if (!rows.length) return `<div class="docwheel empty"></div>`;
-  return `<div class="docwheel" id="docWheel" aria-live="polite">${rows.map(r=>`<div class="tk ${r.c}" data-tk="${r.k.token}"><span class="tn">#${r.k.token}</span><span class="tc">${esc(r.k.cust)}</span></div>`).join("")}</div>`;
-}
-function initDocWheel(){
-  const w = document.getElementById("docWheel"); if (!w){ UI.dwTok = null; return; }
-  const items = [...w.querySelectorAll(".tk")]; const target = w.querySelector(".tk.cur") || w.querySelector(".tk.nx") || w.querySelector(".tk.wait") || items[items.length-1]; if (!target) return;
-  const ctr = el => el.offsetTop - (w.clientHeight - el.offsetHeight)/2;
-  const prev = UI.dwTok!=null ? items.find(x=>x.dataset.tk===String(UI.dwTok)) : null;
-  if (prev && prev!==target){ w.scrollTop = ctr(prev); requestAnimationFrame(()=>requestAnimationFrame(()=>w.scrollTo({top:ctr(target), behavior:"smooth"}))); }
-  else w.scrollTop = ctr(target);
-  UI.dwTok = target.dataset.tk;
-}
+// doctor page: one compact card. Seen (faded) above, patient inside (highlighted) in the middle, waiting (blurred) below.
+function docRow(k, c){ return `<div class="dk ${c}"><span class="dn">#${k.token}</span><span class="dc">${esc(k.cust)}</span></div>`; }
 function viewDoctor(){
   const s = S.salon, docs = s.barbers||[];
   const bid = S.staff && S.staff.barberId ? S.staff.barberId : (UI.docId && barberOf(s,UI.docId) ? UI.docId : (docs[0]||{}).id);
   const b = barberOf(s,bid);
   if (!b) return `<div class="card lock"><p class="muted">${t("q_nodoc")}</p></div>`;
-  const now = qNowK(bid), waits = qWait(bid).filter(k=>!now||k.id!==now.id), nx = waits[0];
+  const td = qDay(), now = qNowK(bid), waits = qWait(bid).filter(k=>!now||k.id!==now.id), nx = waits[0];
+  const seen = S.bookings.filter(k=>k.date===td && k.barberId===bid && k.token && k.status==="done").sort((a,x)=>a.token-x.token);
+  const cur = qCur(bid);
+  const last = !now && cur ? seen.find(k=>k.token===cur) : null;           // just finished, waiting for "Next"
+  const above = seen.filter(k=>!last || k.id!==last.id).slice(-2);
+  const key = bid+":"+cur+":"+(qIn(bid)?1:0)+":"+seen.length; const pop = UI.dwKey!==key ? " pop" : ""; UI.dwKey = key;
   const back = !S.staff ? `<button class="btn sm ghost" data-a="docBack">← ${t("q_back")}</button>` : "";
   const pick = !S.staff && docs.length>1 ? `<div class="chips">${docs.map(x=>`<button class="chip ${x.id===bid?"on":""}" data-a="docPick" data-v="${x.id}">${esc(x.name)}</button>`).join("")}</div>` : "";
+  const mid = now ? `<div class="dmid in${pop}"><span class="dlab">${t("q_in")}</span><div class="dbig">#${now.token}</div><div class="dname">${esc(now.cust)}</div></div>`
+    : last ? `<div class="dmid fin${pop}"><span class="dlab">✓ ${t("q_fin")}</span><div class="dbig">#${last.token}</div><div class="dname">${esc(last.cust)}</div></div>`
+    : `<div class="dmid idle${pop}"><span class="dlab">${t("q_ready")}</span><div class="dbig">—</div><div class="dname">${nx?"":t("q_none")}</div></div>`;
+  const btn = now ? `<button class="btn primary docdone" data-a="qDone" data-v="${bid}">✓ ${t("q_done")}</button>`
+    : nx ? `<button class="btn primary docdone next" data-a="qCall" data-v="${bid}">${t("q_call")} · #${nx.token} ${esc(nx.cust)} →</button>`
+    : `<button class="btn docdone" disabled>${t("q_none")}</button>`;
   return `<div class="docpage">${back}${pick}
-    <div class="docwho">${avatar(b,"lg")}<b>${esc(b.name)}</b>${b.spec?`<span class="small muted">${esc(b.spec)}</span>`:""}</div>
-    ${docWheel(bid, now, waits)}
-    ${now?`<button class="btn primary docdone" data-a="qDone" data-v="${bid}">✓ ${t("q_done")}</button>`
-      : nx?`<button class="btn primary docdone" data-a="qCall" data-v="${bid}">${t("q_call")} #${nx.token}</button>`
-      : `<p class="muted" style="text-align:center">${t("q_none")}</p>`}
-    <p class="docfoot">${t("q_waiting",{n:waits.length})}${now&&nx?` · ${t("q_next")}: #${nx.token} ${esc(nx.cust)}`:""}</p></div>`;
+    <div class="dochead">${avatar(b,"lg")}<div class="grow"><b>${esc(b.name)}</b>${b.spec?`<div class="small muted">${esc(b.spec)}</div>`:""}</div>
+      <div class="dstat"><b>${seen.length}</b><span>${t("q_seen_s")}</span></div><div class="dstat"><b>${waits.length}</b><span>${t("q_wait_s")}</span></div></div>
+    <div class="dstage">
+      <div class="dabove">${above.map(k=>docRow(k,"done")).join("")}</div>
+      ${mid}
+      <div class="dbelow">${waits.slice(0,3).map((k,i)=>docRow(k,"wait d"+(i+1)+(i===0&&now?" first":""))).join("")}${waits.length>3?`<div class="dmore">+${waits.length-3}</div>`:""}</div>
+    </div>
+    ${btn}</div>`;
 }
 // patient's own live page (no login): ?s=..&q=1&d=<doctor>&dt=<date>&tk=<token>
 function viewPatientQueue(){
