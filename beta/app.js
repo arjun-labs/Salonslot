@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.20-1";
+const APP_VERSION = "2026.11.22-1b";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -32,6 +32,7 @@ const db = getFirestore(fb);
 const T = {
  en:{
   tagline:"Salon booking, made simple",
+  biz_h:"What kind of business do you run?", biz_p:"Pick one. The app will use your words, services and look.", biz_change:"Change business type", biz_for:"For",
   welcome_h:"Run your salon's bookings from one phone",
   welcome_p:"Customers open your link, pick a barber, a service and a time. You see every booking the moment it comes in.",
   signin:"Sign in with Google", signin_note:"Open this page in Chrome to sign in. Sign-in doesn't work inside WhatsApp or Instagram.", free_trial:"Welcome offer: 10 days free. No card needed.",
@@ -123,6 +124,7 @@ const T = {
  },
  hi:{
   tagline:"सैलून बुकिंग, आसान",
+  biz_h:"आप कौन-सा बिज़नेस चलाते हैं?", biz_p:"एक चुनिए। ऐप आपके बिज़नेस की भाषा, services और माहौल में बदल जाएगा।", biz_change:"बिज़नेस टाइप बदलें", biz_for:"के लिए",
   welcome_h:"अपने सैलून की सारी बुकिंग एक फ़ोन से चलाइए",
   welcome_p:"ग्राहक आपका link खोलकर barber, service और time चुनता है। Booking आते ही आपको दिख जाती है।",
   signin:"Google से login करें", signin_note:"Login के लिए ये page Chrome में खोलें। WhatsApp या Instagram के अंदर login नहीं होता।", free_trial:"Welcome offer: 10 दिन FREE. कोई card नहीं चाहिए।",
@@ -214,9 +216,46 @@ const T = {
  }
 };
 
+
+/* ================= business types (Slot platform) ================= */
+// One platform, many branches. Existing salons have no bizType and stay "salon".
+const BIZ = {
+  salon:{ icon:"💈", name:{en:"SalonSlot",hi:"SalonSlot"}, pick:{en:"Salon",hi:"सैलून"}, hint:{en:"Barber · Salon · Beauty parlour",hi:"बारबर · सैलून · ब्यूटी पार्लर"}, color:"#24211F", rep:{en:[],hi:[]} },
+  clinic:{ icon:"🩺", name:{en:"Clinic Slot",hi:"क्लिनिक स्लॉट"}, pick:{en:"Clinic",hi:"क्लिनिक"}, hint:{en:"Doctor · Token · Appointment",hi:"डॉक्टर · टोकन · अपॉइंटमेंट"}, color:"#0F5C5C",
+    tag:{en:"Clinic appointments and tokens, made simple",hi:"क्लिनिक की अपॉइंटमेंट और टोकन, आसान"},
+    sugg:[["General consultation",300,15],["Follow-up visit",150,10],["Fever / cold check",300,15],["Child check-up",400,20],["Blood pressure check",100,10],["Dressing / injection",150,10],["Health check-up",800,30]],
+    rep:{en:[[/Barbers/g,"Doctors"],[/barbers/g,"doctors"],[/Barber/g,"Doctor"],[/barber/g,"doctor"],[/Salons/g,"Clinics"],[/salons/g,"clinics"],[/Salon/g,"Clinic"],[/salon/g,"clinic"],[/Customers/g,"Patients"],[/customers/g,"patients"],[/Customer/g,"Patient"],[/customer/g,"patient"],[/Clients/g,"Patients"],[/clients/g,"patients"],[/Client/g,"Patient"],[/client/g,"patient"],[/Services/g,"Treatments"],[/services/g,"treatments"],[/Service/g,"Treatment"],[/service/g,"treatment"],[/Bookings/g,"Appointments"],[/bookings/g,"appointments"],[/Booking/g,"Appointment"],[/booking/g,"appointment"]],
+         hi:[[/Barbers/g,"डॉक्टर"],[/barbers/g,"डॉक्टर"],[/Barber/g,"डॉक्टर"],[/barber/g,"डॉक्टर"],[/सैलून/g,"क्लिनिक"],[/Salon/g,"Clinic"],[/salon/g,"clinic"],[/ग्राहक/g,"मरीज़"],[/Customers/g,"मरीज़"],[/customers/g,"मरीज़"],[/Customer/g,"मरीज़"],[/customer/g,"मरीज़"],[/Clients/g,"मरीज़"],[/clients/g,"मरीज़"],[/Client/g,"मरीज़"],[/client/g,"मरीज़"],[/Services/g,"इलाज"],[/services/g,"इलाज"],[/Service/g,"इलाज"],[/service/g,"इलाज"],[/Bookings/g,"अपॉइंटमेंट"],[/bookings/g,"अपॉइंटमेंट"],[/Booking/g,"अपॉइंटमेंट"],[/booking/g,"अपॉइंटमेंट"]] } },
+  spa:{ icon:"🧖", name:{en:"Spa Slot",hi:"स्पा स्लॉट"}, pick:{en:"Spa",hi:"स्पा"}, hint:{en:"Therapy · Packages · Wellness",hi:"थेरेपी · पैकेज · वेलनेस"}, color:"#6B4E71",
+    tag:{en:"Spa and wellness bookings, made simple",hi:"स्पा और वेलनेस की बुकिंग, आसान"},
+    sugg:[["Swedish massage",1500,60],["Deep tissue massage",2000,60],["Head & shoulder massage",600,30],["Aromatherapy",1800,60],["Facial",1200,45],["Body scrub",1800,60],["Foot reflexology",700,30],["Couple package",4500,90]],
+    rep:{en:[[/Barbers/g,"Therapists"],[/barbers/g,"therapists"],[/Barber/g,"Therapist"],[/barber/g,"therapist"],[/Salons/g,"Spas"],[/salons/g,"spas"],[/Salon/g,"Spa"],[/salon/g,"spa"],[/Customers/g,"Guests"],[/customers/g,"guests"],[/Customer/g,"Guest"],[/customer/g,"guest"],[/Clients/g,"Guests"],[/clients/g,"guests"],[/Client/g,"Guest"],[/client/g,"guest"],[/Services/g,"Therapies"],[/services/g,"therapies"],[/Service/g,"Therapy"],[/service/g,"therapy"]],
+         hi:[[/Barbers/g,"थेरेपिस्ट"],[/barbers/g,"थेरेपिस्ट"],[/Barber/g,"थेरेपिस्ट"],[/barber/g,"थेरेपिस्ट"],[/सैलून/g,"स्पा"],[/Salon/g,"Spa"],[/salon/g,"spa"],[/ग्राहक/g,"मेहमान"],[/Customers/g,"मेहमान"],[/customers/g,"मेहमान"],[/Customer/g,"मेहमान"],[/customer/g,"मेहमान"],[/Clients/g,"मेहमान"],[/clients/g,"मेहमान"],[/Client/g,"मेहमान"],[/client/g,"मेहमान"],[/Services/g,"थेरेपी"],[/services/g,"थेरेपी"],[/Service/g,"थेरेपी"],[/service/g,"थेरेपी"]] } },
+  other:{ icon:"✨", name:{en:"Slot",hi:"स्लॉट"}, pick:{en:"Other",hi:"अन्य"}, hint:{en:"Any service business",hi:"कोई भी सर्विस बिज़नेस"}, color:"#3E5A47",
+    tag:{en:"Bookings for any service business",hi:"किसी भी सर्विस बिज़नेस की बुकिंग"},
+    sugg:[["Consultation",500,30],["Standard service",800,60],["Premium service",1500,60],["Quick visit",200,15]],
+    rep:{en:[[/Barbers/g,"Staff"],[/barbers/g,"staff"],[/Barber/g,"Staff"],[/barber/g,"staff"],[/Salons/g,"Businesses"],[/salons/g,"businesses"],[/Salon/g,"Business"],[/salon/g,"business"],[/Customers/g,"Clients"],[/customers/g,"clients"],[/Customer/g,"Client"],[/customer/g,"client"]],
+         hi:[[/Barbers/g,"स्टाफ़"],[/barbers/g,"स्टाफ़"],[/Barber/g,"स्टाफ़"],[/barber/g,"स्टाफ़"],[/सैलून/g,"बिज़नेस"],[/Salon/g,"Business"],[/salon/g,"business"],[/ग्राहक/g,"क्लाइंट"],[/Customers/g,"क्लाइंट"],[/customers/g,"क्लाइंट"],[/Customer/g,"क्लाइंट"],[/customer/g,"क्लाइंट"]] } }
+};
+let BIZ_ID = "salon";
+const BIZ_CHOSEN = () => { try{ const v = localStorage.getItem("ss_biz"); return BIZ[v] && v!=="" ? v : ""; }catch(e){ return ""; } };
+function setBiz(id){ BIZ_ID = BIZ[id] ? id : "salon"; const b = BIZ[BIZ_ID];
+  document.documentElement.dataset.biz = BIZ_ID;
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = b.color; }
+const bizName = () => BIZ[BIZ_ID].name[LANG] || BIZ[BIZ_ID].name.en;
+const bizIcon = () => BIZ[BIZ_ID].icon;
+// brand-name swap + word swap for non-salon types; admin/lead/offer screens stay as they are
+const BIZ_SKIP = /^(adm|lead|of_|ofr|rw_|pay|plan)/;
+function bizTr(k, s){
+  if (BIZ_ID==="salon" || typeof s!=="string" || BIZ_SKIP.test(k)) return s;
+  const b = BIZ[BIZ_ID];
+  s = s.replace(/SalonSlot/g, b.name.en);
+  for (const [re, to] of (b.rep[LANG]||b.rep.en)) s = s.replace(re, to);
+  return s;
+}
 /* ================= helpers ================= */
 let LANG = "hi"; try{ LANG = localStorage.getItem("ss_lang") || "hi"; }catch(e){}
-const t = (k, v) => { let s = (T[LANG]||T.en)[k]; if (s===undefined) s = T.en[k]; if (typeof s==="string" && v) for (const x in v) s = s.split("{"+x+"}").join(v[x]); return s; };
+const t = (k, v) => { let s = (T[LANG]||T.en)[k]; if (s===undefined) s = T.en[k]; if (k==="sugg" && BIZ[BIZ_ID].sugg) return BIZ[BIZ_ID].sugg; if (k==="tagline" && BIZ[BIZ_ID].tag) s = BIZ[BIZ_ID].tag[LANG]||BIZ[BIZ_ID].tag.en; s = bizTr(k, s); if (typeof s==="string" && v) for (const x in v) s = s.split("{"+x+"}").join(v[x]); return s; };
 const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid = () => Math.random().toString(36).slice(2,9);
 const pad = n => String(n).padStart(2,"0");
@@ -379,7 +418,7 @@ function daySummary(s, date, onlyBarber){
 
 /* ================= shell ================= */
 function topBar(name, sub){
-  return `<header class="top"><div class="in"><span class="pole" aria-hidden="true"></span><div class="brand">${esc(name||"SalonSlot")}<small>${esc(sub||t("tagline"))}</small></div><span class="spacer"></span>
+  return `<header class="top"><div class="in"><span class="pole" aria-hidden="true"></span><div class="brand">${esc(name||bizName())}<small>${esc(sub||t("tagline"))}</small></div><span class="spacer"></span>
   <div class="lang" role="group" aria-label="Language"><button data-a="lang" data-v="hi" class="${LANG==="hi"?"on":""}">हिंदी</button><button data-a="lang" data-v="en" class="${LANG==="en"?"on":""}">EN</button></div></div></header>`;
 }
 function render(){
@@ -387,7 +426,7 @@ function render(){
   const y = window.scrollY; let html = "";
   if (CUSTOMER_SID){ html = renderCustomer(); }
   else {
-    const name = S.salon ? S.salon.name : "SalonSlot", sub = S.salon ? (S.salon.area||t("tagline")) : t("tagline");
+    const name = S.salon ? S.salon.name : bizName(), sub = S.salon ? (S.salon.area||t("tagline")) : t("tagline");
     html = topBar(name, sub)+`<main class="t-${UI.view==="main"?UI.tab:UI.view}">`;
     if (UI.view==="loading") html += `<div class="center"><div class="spin" aria-label="${t("loading")}"></div></div>`;
     else if (UI.view==="login") html += viewLogin();
@@ -419,16 +458,21 @@ function navBar(){
     `<button data-a="tab" data-v="${k}" class="${UI.tab===k?"on":""}" aria-current="${UI.tab===k?"page":"false"}"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic[k]}</svg>${k==="rewards"&&fresh?`<i class="dot" aria-label="${fresh}"></i>`:""}</span>${t("nav_"+k)}</button>`).join("")}</div></nav>`;
 }
 
-const brandFoot = () => `<p class="brandfoot">${t("booked_by")} <a href="https://www.instagram.com/salon.slot/" target="_blank" rel="noopener"><b>SalonSlot</b> · @salon.slot</a><br><span>Powered by <a href="https://www.instagram.com/visualzonefilms/" target="_blank" rel="noopener">Visual Zone Films</a></span></p>`;
+const brandFoot = () => `<p class="brandfoot">${t("booked_by")} <a href="https://www.instagram.com/salon.slot/" target="_blank" rel="noopener"><b>${esc(bizName().replace(/ /g,""))}</b> · @salon.slot</a><br><span>Powered by <a href="https://www.instagram.com/visualzonefilms/" target="_blank" rel="noopener">Visual Zone Films</a></span></p>`;
 
 /* ================= login ================= */
 const G_ICON = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
+function bizPicker(){
+  return `<section class="bizpick"><h1>${t("biz_h")}</h1><p class="muted">${t("biz_p")}</p><div class="bizgrid">${["salon","clinic","spa","other"].map(id=>`<button class="biztile" data-a="pickBiz" data-v="${id}" data-biz="${id}"><span class="bi" aria-hidden="true">${BIZ[id].icon}</span><b>${BIZ[id].pick[LANG]||BIZ[id].pick.en}</b><small>${BIZ[id].hint[LANG]||BIZ[id].hint.en}</small></button>`).join("")}</div></section>${brandFoot()}`;
+}
 function viewLogin(){
-  return `<section class="hero"><p class="label">${t("tagline")}</p><h1>${t("welcome_h")}</h1><p>${t("welcome_p")}</p>
+  if (!BIZ_CHOSEN()) return bizPicker();
+  return `<section class="hero"><span class="bizbadge" aria-hidden="true">${bizIcon()}</span><p class="label">${t("tagline")}</p><h1>${t("welcome_h")}</h1><p>${t("welcome_p")}</p><p class="label">${t("tagline")}</p><h1>${t("welcome_h")}</h1><p>${t("welcome_p")}</p>
     <button class="btn block gbtn" data-a="login" ${UI.busy?"disabled":""}>${G_ICON} ${t("signin")}</button></section>
     ${UI.err?`<div class="banner bad" role="alert">${UI.err}</div>`:""}
     <p class="rule small">${t("free_trial")}</p>
     <p class="small muted" style="text-align:center">${t("signin_note")}</p>
+    <p style="text-align:center"><button class="btn sm ghost" data-a="changeBiz">${bizIcon()} ${t("biz_change")}</button></p>
     <div class="card"><p class="label">${t("plan_h")}</p><div class="plans">
       ${["monthly","halfyearly","yearly"].map(p=>`<div class="plan"><span class="label">${t(p)}</span><b>₹${PLANS[p].price.toLocaleString("en-IN")}</b><span class="small muted">${t(p==="monthly"?"per_month":p==="yearly"?"per_year":"per_half")}</span></div>`).join("")}</div></div>${brandFoot()}`;
 }
@@ -499,7 +543,7 @@ function viewSetup(){
   if (n===2) body = `<h2>${t("s2_h")}</h2>${hoursFields(D)}`;
   if (n===3) body = `<h2>${t("s3_h")}</h2><p class="muted small">${t("s3_p")}</p>${servicesEditor(D)}`;
   if (n===4) body = `<h2>${t("s4_h")}</h2><p class="muted small">${t("s4_p")}</p>${barbersEditor(D)}`;
-  if (n===5) body = `<div class="lock stack"><div class="big" aria-hidden="true">✂️</div><h2>${t("s5_h")}</h2><p class="muted">${t("s5_p")}</p></div>
+  if (n===5) body = `<div class="lock stack"><div class="big" aria-hidden="true">${BIZ_ID==="salon"?"✂️":bizIcon()}</div><h2>${t("s5_h")}</h2><p class="muted">${t("s5_p")}</p></div>
     <div class="barbers">${D.barbers.map(b=>`<div class="bcard">${avatar(b,"lg")}<b>${esc(b.name)}</b>${b.spec?`<small>${esc(b.spec)}</small>`:""}</div>`).join("")}</div>`;
   return `${isAdmin()?`<button class="btn primary block" data-a="adminOnly">🛡️ ${t("nav_admin")}</button>`:""}<div class="stack"><p class="label">${t("step")} ${n} ${t("of")} ${total}</p><div class="steps">${Array.from({length:total},(_,i)=>`<i class="${i<n?"on":""}"></i>`).join("")}</div></div>
   <div class="card">${body}</div>
@@ -1024,7 +1068,7 @@ function bookingForm(salon, slotsFor, ownerMode){
     ${list.length>1?`<div class="addsum" role="status"><span><b>${t("add_tot")}:</b> ${list.map(v=>esc(v.name)).join(" + ")}</span><span class="addtot">⏱ ${dur} ${t("min")} · ₹${list.reduce((a,v)=>a+(Number(v.price)||0),0)}</span></div>`:""}
     <button class="btn primary block" data-a="toBarber">${t("add_next")} ↓</button></div>` : ""}
   <div class="card" id="barberCard"><h3>${t("pick_barber")}</h3><div class="barbers">
-    <button class="bcard ${(!B.barber||B.barber==="any")?"on":""}" data-a="bBarber" data-v="any"><span class="av lg" style="background:var(--surface2);color:var(--muted)" aria-hidden="true">✂</span><b>${t("any_barber")}</b><small>${t("any_sub")}</small></button>
+    <button class="bcard ${(!B.barber||B.barber==="any")?"on":""}" data-a="bBarber" data-v="any"><span class="av lg" style="background:var(--surface2);color:var(--muted)" aria-hidden="true">${BIZ_ID==="salon"?"✂":bizIcon()}</span><b>${t("any_barber")}</b><small>${t("any_sub")}</small></button>
     ${salon.barbers.filter(b=>!B.svc || canDoAll(list,b)).map(b=>{ const off = onLeave(salon,b.id,B.date); return `<button class="bcard ${B.barber===b.id?"on":""} ${off?"off":""}" data-a="bBarber" data-v="${b.id}">${avatar(b,"lg")}<b>${esc(b.name)}</b>${off?`<span class="pill bad">${t("on_leave")}</span>`:b.spec?`<small>${esc(b.spec)}</small>`:""}</button>`; }).join("")}</div>
     ${B.barber && B.barber!=="any" && onLeave(salon,B.barber,B.date)?`<div class="banner warn">${t("barber_off",{name:esc((barberOf(salon,B.barber)||{}).name||""), date:dayLabel(B.date)})}</div>`:""}</div>
   <div class="card" id="dateCard"><h3>${t("pick_date")}</h3><div class="hscroll">${days.map(d=>{const dt=new Date(d+"T00:00");const closed=!(salon.days||[]).includes(dt.getDay());
@@ -1298,8 +1342,8 @@ function watchOffers(){
 /* ================= customer page ================= */
 const C = { salon:null, state:"loading", days:{} };
 function renderCustomer(){
-  if (C.state==="loading") return topBar("SalonSlot")+`<main><div class="center"><div class="spin"></div></div></main>`;
-  if (C.state==="nf") return topBar("SalonSlot")+`<main><div class="card lock"><div class="big" aria-hidden="true">🔍</div><h2>${t("nf_h")}</h2><p class="muted">${t("nf_p")}</p></div></main>`;
+  if (C.state==="loading") return topBar(bizName())+`<main><div class="center"><div class="spin"></div></div></main>`;
+  if (C.state==="nf") return topBar(bizName())+`<main><div class="card lock"><div class="big" aria-hidden="true">🔍</div><h2>${t("nf_h")}</h2><p class="muted">${t("nf_p")}</p></div></main>`;
   const s = C.salon, i = subInfo(s);
   let body = "";
   if (!i.active) body = `<div class="card lock"><div class="big" aria-hidden="true">📞</div><h2>${t("bk_closed_h")}</h2><p class="muted">${t("bk_closed_p")}</p>
@@ -1323,7 +1367,7 @@ function loadDay(date){
 }
 async function initCustomer(){
   try{ const d = await getDoc(doc(db,"salons",CUSTOMER_SID)); if (!d.exists()) { C.state="nf"; render(); return; }
-    C.salon = {id:d.id, ...d.data()}; C.state="ok"; document.title = C.salon.name+" · SalonSlot"; render(); }
+    C.salon = {id:d.id, ...d.data()}; setBiz(C.salon.bizType); C.state="ok"; document.title = C.salon.name+" · "+bizName(); render(); }
   catch(e){ console.error(e); C.state="nf"; render(); }
 }
 
@@ -1362,6 +1406,8 @@ const A = {
     catch(e){ if (e && /popup-blocked|operation-not-supported|cancelled-popup/.test(e.code||"")) { try{ await signInWithRedirect(auth,p); return; }catch(e2){} }
       if (e && e.code!=="auth/popup-closed-by-user") UI.err = t("signin_fail"); }
     UI.busy=false; render(); },
+  pickBiz:v=>go(()=>{ try{ localStorage.setItem("ss_biz",v); }catch(e){} setBiz(v); }),
+  changeBiz:()=>go(()=>{ try{ localStorage.removeItem("ss_biz"); }catch(e){} setBiz("salon"); }),
   logout: async ()=>{ await signOut(auth); },
   adminOnly:()=>go(()=>{ pushNav(); UI.view="adminOnly"; watchAdmin(); window.scrollTo(0,0); }),
   adminBack:()=>goBack(()=>{ UI.view="setup"; }),
@@ -1603,8 +1649,8 @@ function stopOwner(){ S.unsub.forEach(f=>{try{f()}catch(e){}}); S.unsub=[]; if (
 function startOwner(sid){
   S.sid = sid; S.firstSnap = true;
   S.unsub.push(onSnapshot(doc(db,"salons",sid), d => {
-    if (!d.exists()){ if (UI.view!=="setup" && UI.view!=="adminOnly"){ D = { name:"", owner:S.user.displayName||"", phone:"", address:"", mapLink:"", area:"", open:"10:00", close:"21:00", days:[0,1,2,3,4,5,6], services:[], barbers:[] }; UI.view="setup"; UI.step=1; render(); } return; }
-    const fresh = {id:d.id, ...d.data()};
+    if (!d.exists()){ if (UI.view!=="setup" && UI.view!=="adminOnly"){ setBiz(BIZ_CHOSEN()||"salon"); D = { bizType:BIZ_ID, name:"", owner:S.user.displayName||"", phone:"", address:"", mapLink:"", area:"", open:"10:00", close:"21:00", days:[0,1,2,3,4,5,6], services:[], barbers:[] }; UI.view="setup"; UI.step=1; render(); } return; }
+    const fresh = {id:d.id, ...d.data()}; setBiz(fresh.bizType);
     if (S.salon && (saveTimer || document.activeElement && document.activeElement.closest && document.activeElement.closest("[data-salon],[data-svc],[data-bar]"))){
       // keep local edits, take server-owned fields
       S.salon.sub = fresh.sub; S.salon.active = fresh.active; S.salon.leave = fresh.leave; S.salon.payReq = fresh.payReq; S.salon.payments = fresh.payments;
@@ -1667,11 +1713,12 @@ function betaGate(){ if (!IS_BETA) return; if (S.user && !isAdmin()) { location.
   if (isAdmin() && !document.querySelector(".betabar")) overlay.insertAdjacentHTML("afterbegin", `<div class="betabar">${t("beta")}</div>`); }
 
 /* ================= start ================= */
+if (!CUSTOMER_SID) setBiz(BIZ_CHOSEN()||"salon");
 if (CUSTOMER_SID){ render(); initCustomer().then(()=>loadDay(ymd(new Date()))); }
 else {
   render();
   getRedirectResult(auth).catch(()=>{ UI.err = t("signin_fail"); });
   onAuthStateChanged(auth, u => { stopOwner(); S.user = u; betaGate();
-    if (!u){ UI.view="login"; UI.busy=false; render(); return; }
+    if (!u){ setBiz(BIZ_CHOSEN()||"salon"); UI.view="login"; UI.busy=false; render(); return; }
     UI.view="loading"; render(); startOwner(u.uid); if (isAdmin()) watchAdmin(); });
 }

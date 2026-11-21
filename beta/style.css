@@ -393,3 +393,23 @@ main > .btn.sm{align-self:flex-start}
 .sugi small{color:var(--muted);font-size:12.5px}
 .sugi:hover,.sugi:focus-visible{background:var(--gold-soft)}
 #cSug:empty{display:none}
+
+/* ===== business types (Slot platform) ===== */
+[data-biz="clinic"]{--ink:#0B3D3D;--ink-fg:#EAF6F4;--accent:#0F5C5C;--accent-fg:#EAF6F4;--accent-soft:#D8EEEA;--gold:#2A9D8F;--gold-deep:#1B746A;--gold-soft:#D8EEEA;--saffron:#2A9D8F;--saffron-soft:#D8EEEA;--bg:#F2F7F6;--surface2:#E3EEEC;--line:#D3E2DF;--pole-red:#2A9D8F;--pole-blue:#0F5C5C}
+[data-biz="spa"]{--ink:#3E2B45;--ink-fg:#F6EEF7;--accent:#6B4E71;--accent-fg:#F6EEF7;--accent-soft:#EADFEC;--gold:#B9879E;--gold-deep:#8E5F77;--gold-soft:#F2E3EA;--saffron:#B9879E;--saffron-soft:#F2E3EA;--bg:#F8F3F6;--surface2:#EFE6EC;--line:#E6D8E0;--pole-red:#B9879E;--pole-blue:#6B4E71}
+[data-biz="other"]{--ink:#233A2D;--ink-fg:#EEF4EF;--accent:#3E5A47;--accent-fg:#EEF4EF;--accent-soft:#E0EBE3;--gold:#C28B2E;--gold-deep:#8F6420;--gold-soft:#F4E7CC;--saffron:#C28B2E;--saffron-soft:#F4E7CC;--bg:#F4F6F1;--surface2:#E8EDE4;--line:#D9E0D3;--pole-red:#C28B2E;--pole-blue:#3E5A47}
+[data-biz]:not([data-biz="salon"]) .pole{border-radius:50%;width:30px;height:30px;background:var(--gold);border-color:var(--ink)}
+[data-biz]:not([data-biz="salon"]) .hero::before{display:none}
+.bizbadge{position:absolute;right:16px;top:14px;font-size:30px;line-height:1}
+.bizpick{display:flex;flex-direction:column;gap:12px;padding-top:6px}
+.bizpick h1{font-size:28px}
+.bizgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.biztile{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:18px 10px 14px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;cursor:pointer;font:inherit;color:var(--fg)}
+.biztile:active{transform:scale(.97)}
+.biztile .bi{font-size:36px;line-height:1}
+.biztile b{font-family:var(--display);font-size:18px}
+.biztile small{color:var(--muted);font-size:12px;line-height:1.3}
+.biztile[data-biz="clinic"]{border-color:#2A9D8F}
+.biztile[data-biz="spa"]{border-color:#B9879E}
+.biztile[data-biz="other"]{border-color:#C28B2E}
+.biztile[data-biz="salon"]{border-color:#B08A3E}
