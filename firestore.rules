@@ -156,5 +156,80 @@ service cloud.firestore {
           && request.resource.data.slots.diff(resource.data.slots).removedKeys().size() == 0;
       }
     }
+
+    // ---------- Field team app (/field): attendance, visits with photo ----------
+    // field_staff doc id = lowercase Gmail. Admin adds people; the person only records their own consent.
+    function fEmail() { return request.auth.token.email.lower(); }
+    function fStaffDoc() { return get(/databases/$(database)/documents/field_staff/$(request.auth.token.email.lower())).data; }
+    function isFieldStaff() {
+      return request.auth != null && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/field_staff/$(request.auth.token.email.lower()))
+        && fStaffDoc().active == true;
+    }
+    function fieldReady() { return isFieldStaff() && fStaffDoc().get('consentAt', 0) > 0; }
+    function nowNear(ms) { return ms is int && ms > request.time.toMillis() - 600000 && ms < request.time.toMillis() + 600000; }
+    function isLoc(l) { return l is map && l.lat is number && l.lng is number; }
+
+    match /field_staff/{em} {
+      allow read: if isAdmin() || (request.auth != null && request.auth.token.email_verified == true && request.auth.token.email.lower() == em);
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (request.auth != null && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() == em && resource.data.active == true
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['consentAt', 'consentVer'])
+        && nowNear(request.resource.data.consentAt));
+    }
+
+    // field_days doc id = email + '_' + yyyy-mm-dd. Staff can start a day and close it once; only admin can fix a day.
+    match /field_days/{did} {
+      allow read: if isAdmin() || (isFieldStaff() && resource.data.email == fEmail());
+      allow create: if fieldReady()
+        && request.resource.data.keys().hasOnly(['email', 'name', 'kind', 'date', 'start', 'out', 'hours', 'startLoc'])
+        && request.resource.data.email == fEmail()
+        && request.resource.data.date is string && request.resource.data.date.matches('20[0-9]{2}-[0-9]{2}-[0-9]{2}')
+        && did == request.resource.data.email + '_' + request.resource.data.date
+        && nowNear(request.resource.data.start)
+        && request.resource.data.out == 0
+        && isLoc(request.resource.data.startLoc);
+      allow update: if isAdmin() || (isFieldStaff() && resource.data.email == fEmail() && resource.data.out == 0
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['out', 'hours', 'outLoc'])
+        && nowNear(request.resource.data.out)
+        && request.resource.data.hours is number && request.resource.data.hours >= 0 && request.resource.data.hours <= 24
+        && (!('outLoc' in request.resource.data) || isLoc(request.resource.data.outLoc)));
+      allow delete: if isAdmin();
+    }
+
+    // A visit needs its photo doc written in the same batch, an open day, a valid phone and a location.
+    match /field_visits/{vid} {
+      allow read: if isAdmin() || (isFieldStaff() && resource.data.email == fEmail());
+      allow create: if fieldReady()
+        && request.resource.data.keys().hasOnly(['email', 'name', 'date', 'dayId', 'salon', 'owner', 'phone', 'demo', 'result', 'follow', 'thumb', 'loc', 'at'])
+        && request.resource.data.email == fEmail()
+        && request.resource.data.date is string && request.resource.data.date.matches('20[0-9]{2}-[0-9]{2}-[0-9]{2}')
+        && request.resource.data.dayId == request.resource.data.email + '_' + request.resource.data.date
+        && get(/databases/$(database)/documents/field_days/$(request.resource.data.dayId)).data.out == 0
+        && request.resource.data.salon is string && request.resource.data.salon.size() > 0 && request.resource.data.salon.size() <= 80
+        && request.resource.data.owner is string && request.resource.data.owner.size() > 0 && request.resource.data.owner.size() <= 60
+        && request.resource.data.phone is string && request.resource.data.phone.matches('[6-9][0-9]{9}')
+        && request.resource.data.demo is bool
+        && request.resource.data.result in ['interest', 'later', 'refused', 'signup']
+        && request.resource.data.follow is string && request.resource.data.follow.size() <= 10
+        && request.resource.data.thumb is string && request.resource.data.thumb.size() <= 30000
+        && request.resource.data.thumb.matches('data:image/jpeg;base64,.*')
+        && isLoc(request.resource.data.loc)
+        && nowNear(request.resource.data.at)
+        && existsAfter(/databases/$(database)/documents/field_photos/$(vid));
+      allow update, delete: if isAdmin();
+    }
+
+    match /field_photos/{vid} {
+      allow read: if isAdmin() || (isFieldStaff() && resource.data.email == fEmail());
+      allow create: if fieldReady()
+        && request.resource.data.keys().hasOnly(['email', 'photo', 'at'])
+        && request.resource.data.email == fEmail()
+        && request.resource.data.photo is string && request.resource.data.photo.size() <= 700000
+        && request.resource.data.photo.matches('data:image/jpeg;base64,.*')
+        && nowNear(request.resource.data.at);
+      allow delete: if isAdmin();
+    }
   }
 }
