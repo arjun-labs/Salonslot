@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.26-4";
+const APP_VERSION = "2026.11.26-5";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -332,7 +332,8 @@ let D = null; // setup draft
 
 const canRev = () => !S.staff || S.staff.rev===true;
 const isAdmin = () => !!(S.user && S.user.email === ADMIN_EMAIL);
-const linkFor = sid => location.origin + location.pathname.replace(/index\.html$/,"").replace(/\/beta\/$/,"/") + "?s=" + sid;
+// test version: the link stays in /beta (with &t=1) so the page opens with the new theme and features; the main app gets it only after approval
+const linkFor = sid => IS_BETA ? location.origin + location.pathname.replace(/index\.html$/,"") + "?s=" + sid + "&t=1" : location.origin + location.pathname.replace(/index\.html$/,"") + "?s=" + sid;
 function subInfo(s){ s = s || S.salon; if (!s) return {active:false,days:0,kind:"none"};
   const exp = (s.sub&&s.sub.expires)||0, left = exp-Date.now();
   return { on: s.active!==false, active: s.active!==false && left>0, days: Math.max(0,Math.ceil(left/DAY)), kind: s.sub&&s.sub.plan ? "paid":"trial", expires:exp }; }
