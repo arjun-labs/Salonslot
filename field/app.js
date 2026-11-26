@@ -515,7 +515,7 @@ async function act(name, el) {
       say("");
       if (NATIVE) {
         try { const r = await NatAuth.signInWithGoogle(); const t = r.credential && r.credential.idToken; if (!t) throw new Error("no token"); await signInWithCredential(auth, GoogleAuthProvider.credential(t)); }
-        catch (e) { console.error(e); say("Google login नहीं हुआ। Internet और Google account जाँचें।", true); render(); }
+        catch (e) { console.error(e); say("Google login नहीं हुआ। [" + (e && (e.code || e.errorMessage) || "") + "] " + String((e && e.message) || e).slice(0, 220), true); render(); }
         return;
       }
       try { await signInWithPopup(auth, new GoogleAuthProvider()); }
