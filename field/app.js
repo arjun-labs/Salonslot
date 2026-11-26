@@ -110,8 +110,10 @@ function dist(a, b) {
 }
 /* ---- Android APK (Capacitor) bridge: native Google login + background GPS service ---- */
 const CAP = window.Capacitor, NATIVE = !!(CAP && CAP.isNativePlatform && CAP.isNativePlatform());
-const NatAuth = NATIVE ? CAP.registerPlugin("FirebaseAuthentication") : null;
-const NatGeo = NATIVE ? CAP.registerPlugin("BackgroundGeolocation") : null;
+// no bundler here: the native bridge exposes plugins on Capacitor.Plugins (registerPlugin only exists in the bundled JS package)
+const plug = n => (CAP.registerPlugin ? CAP.registerPlugin(n) : CAP.Plugins[n]);
+const NatAuth = NATIVE ? plug("FirebaseAuthentication") : null;
+const NatGeo = NATIVE ? plug("BackgroundGeolocation") : null;
 const TRK = { id: null, day: null, buf: [], early: [], last: null, lastFix: 0, fix: null, bat: null, timer: null, flushT: null, lock: null, flushing: false };
 const bufKey = () => "fieldbuf_" + TRK.day.id, earlyKey = () => "fieldearly_" + TRK.day.id;
 const keep = () => { try { localStorage.setItem(bufKey(), JSON.stringify(TRK.buf)); localStorage.setItem(earlyKey(), JSON.stringify(TRK.early)); } catch (e) { /* storage full or blocked */ } };
