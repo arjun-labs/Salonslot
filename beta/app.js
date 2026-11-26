@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.26-2";
+const APP_VERSION = "2026.11.26-3";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -1172,9 +1172,10 @@ function ownTime(salon, B, list, dur){
   const nf = past ? null : nextFree(salon, B.date, list, dur, B.barber), tm = B.tm||"auto";
   const freeNow = !!nf && B.date===today && toMin(nf.time)<=nowM;
   if (nf && (tm==="next" || (tm==="auto" && !freeNow))) return { kind:"next", time:nf.time, barber:nf.barber, today:B.date===today };
-  return { kind:"now", time:nowHM(), barber: freeNow ? nf.barber : null };
+  return { kind:"now", time:nowHM(), barber: freeNow ? nf.barber : null, noNext: !nf };
 }
 function tmBlock(ot){
+  if (ot.noNext) return "";
   return `<div class="tmtog" role="group"><button class="btn sm ${ot.kind==="now"?"primary":""}" data-a="tmNow" aria-pressed="${ot.kind==="now"}">⏱ ${t("tm_now")}</button><button class="btn sm ${ot.kind==="next"?"primary":""}" data-a="tmNext" aria-pressed="${ot.kind==="next"}">⏭ ${t("tm_next")}</button></div>`
     + (ot.kind==="next" ? `<div class="nextbox" role="status"><b>⏭ ${t("tm_next")}: ${nice(ot.time)}</b><span class="small">${ot.today ? t("tm_next_note",{name:esc(ot.barber.name)}) : t("tm_next_day")}</span></div>` : "");
 }
@@ -1757,7 +1758,8 @@ const A = {
     if (isClinic(salon) && (B.problem||"").trim()) k.problem = B.problem.trim().slice(0,300);
     if (B.extra.length){ k.extra = B.extra.slice(0,10); k.dur = dur; }
     UI.busy=true; UI.err=""; render();
-    try{ await createBooking(sid, salon, k, own); UI.bookedData = k; if (CUSTOMER_SID){ delete C.days[B.date]; } window.scrollTo(0,0); }
+    const force = own && ot && (ot.kind==="own" || (ot.kind==="now" && !ot.barber));
+    try{ await createBooking(sid, salon, k, force); UI.bookedData = k; if (CUSTOMER_SID){ delete C.days[B.date]; } window.scrollTo(0,0); }
     catch(e){ console.error(e); UI.err = e.message==="taken" ? t("taken") : t("save_fail"); if (CUSTOMER_SID){ delete C.days[B.date]; loadDay(B.date); } }
     UI.busy=false; render(); },
   bNow: ()=>go(()=>{ UI.book.time = null; UI.book.prefTime = null; UI.book.tm = "now"; }),
