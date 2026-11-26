@@ -121,7 +121,7 @@ function startTracking(d) {
   TRK.lastFix = Date.now();
   if (NATIVE) { // foreground service: keeps giving GPS with the screen off
     TRK.id = "pending";
-    NatGeo.addWatcher({ backgroundTitle: "SalonSlot Field", backgroundMessage: "काम चालू है, लोकेशन दर्ज हो रही है", requestPermissions: true, stale: false, distanceFilter: 10 },
+    NatGeo.addWatcher({ backgroundTitle: "QuickSlot Field", backgroundMessage: "काम चालू है, लोकेशन दर्ज हो रही है", requestPermissions: true, stale: false, distanceFilter: 10 },
       (loc, err) => { if (loc) onPos({ coords: { latitude: loc.latitude, longitude: loc.longitude, accuracy: loc.accuracy || 50 } }); else if (err && err.code === "NOT_AUTHORIZED") say("Location की अनुमति \"हर समय\" पर करें (Settings → App → Permissions → Location)।", true); })
       .then(id => { if (TRK.id === "pending") TRK.id = id; else NatGeo.removeWatcher({ id }); }).catch(e => console.error(e));
   } else TRK.id = navigator.geolocation.watchPosition(onPos, () => {}, { enableHighAccuracy: true, maximumAge: 10000, timeout: 30000 });
@@ -247,7 +247,7 @@ getRedirectResult(auth).catch(() => {});
 
 /* ================= screens ================= */
 function header() {
-  return `<div class="top"><div class="in"><div class="brand">SalonSlot Field<small>${esc(S.staff ? S.staff.name : S.role === "admin" ? "Admin" : "")}</small></div><div class="spacer"></div>${S.user ? `<button class="link" data-act="logout">बाहर निकलें</button>` : ""}</div></div>`;
+  return `<div class="top"><div class="in"><div class="brand">QuickSlot Field<small>${esc(S.staff ? S.staff.name : S.role === "admin" ? "Admin" : "")}</small></div><div class="spacer"></div>${S.user ? `<button class="link" data-act="logout">बाहर निकलें</button>` : ""}</div></div>`;
 }
 function msgBox() { return S.msg ? `<div class="msg ${S.bad ? "bad" : ""}" role="status">${esc(S.msg)}</div>` : ""; }
 

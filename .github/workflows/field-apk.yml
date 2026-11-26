@@ -18,9 +18,9 @@ jobs:
       - run: pip install pillow
       - run: ./field-android/build.sh
       - uses: actions/upload-artifact@v4
-        with: { name: SalonSlot-Field-apk, path: field-android/out/SalonSlot-Field.apk }
+        with: { name: QuickSlot-Field.apk, path: field-android/out/QuickSlot-Field.apk }
       - name: Publish as release (easy phone download)
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
           gh release delete field-latest --yes --cleanup-tag || true
-          gh release create field-latest field-android/out/SalonSlot-Field.apk --title "SalonSlot Field APK (latest)" --notes "Built from ${GITHUB_SHA::7}. Download SalonSlot-Field.apk on the phone and install."
+          gh release create field-latest field-android/out/QuickSlot-Field.apk --title "QuickSlot Field APK (latest)" --notes "Built from ${GITHUB_SHA::7}. Download QuickSlot-Field.apk on the phone and install."

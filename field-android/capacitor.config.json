@@ -1,6 +1,6 @@
 {
-  "appId": "com.salonslot.field",
-  "appName": "SalonSlot Field",
+  "appId": "com.quickslot.field",
+  "appName": "QuickSlot Field",
   "webDir": "www",
   "android": { "allowMixedContent": false },
   "plugins": {
