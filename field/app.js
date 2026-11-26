@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut, signInWithCredential } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut, signInWithCredential, initializeAuth, indexedDBLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, orderBy, limit, getDocs, writeBatch, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ================= config ================= */
@@ -18,7 +18,9 @@ const CONSENT_VER = 1;
 const RETAIN_DAYS = 90;
 
 const fb = initializeApp(firebaseConfig);
-const auth = getAuth(fb);
+// In the Android app the popup/redirect helper never finishes loading (it waits on a Google iframe), so Auth would never report a user: use plain IndexedDB persistence there.
+const IS_APK = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const auth = IS_APK ? initializeAuth(fb, { persistence: indexedDBLocalPersistence }) : getAuth(fb);
 const db = getFirestore(fb);
 
 /* ================= small helpers ================= */
@@ -243,7 +245,10 @@ onAuthStateChanged(auth, async u => {
   } catch (e) { console.error(e); say("डेटा नहीं खुला। नेट देखकर दोबारा खोलें।", true); }
   S.ready = true; render();
 });
-getRedirectResult(auth).catch(() => {});
+if (!IS_APK) getRedirectResult(auth).catch(() => {});
+// safety net: if Auth never answers, show the login screen with a message instead of an endless 'loading'
+setTimeout(() => { if (!S.ready) { S.ready = true; say("Login सिस्टम जवाब नहीं दे रहा। Internet जाँचकर ऐप दोबारा खोलें।", true); render(); } }, 15000);
+window.addEventListener("error", e => { if (!S.ready) { const b = document.querySelector(".boot"); if (b) b.textContent = "Error: " + (e.message || "unknown"); } });
 
 /* ================= screens ================= */
 function header() {
