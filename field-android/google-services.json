@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1041857314935-0q2hk1d9tugbrpp8lg89stq12g2qrocf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.quickslot.field",
+            "certificate_hash": "5273b1862c87cec569f4fc301c7b90b6096758d0"
+          }
+        },
+        {
           "client_id": "1041857314935-rprjnk5jhguhi6m9lje0qb03r243hgun.apps.googleusercontent.com",
           "client_type": 3
         }
