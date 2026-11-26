@@ -473,3 +473,4 @@ main > .btn.sm{align-self:flex-start}
 .nextbox{display:flex;flex-direction:column;gap:2px;background:var(--gold-soft);border:2px solid var(--gold);border-radius:12px;padding:10px 14px;margin:8px 0;color:var(--gold-deep)}
 .nextbox b{font-size:18px}
 .nxtwrap{border:2px dashed var(--gold);border-radius:16px;padding:4px;margin-bottom:8px}
+.sndbtn{font-size:20px;padding:6px 10px;line-height:1}

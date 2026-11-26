@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.26-1";
+const APP_VERSION = "2026.11.26-2";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -51,7 +51,7 @@ const T = {
   nav_calendar:"Calendar", cal_h:"Calendar", cal_p:"Tap any day to see who came. Totals are for the whole month.", cal_total:"Bookings", cal_done:"Done", cal_cancel:"Cancelled", cal_earn:"Earned (done)",
   cal_by_barber:"By barber this month", cal_now:"This month", cal_none:"No bookings this day.", cal_pick:"Tap a day to see its bookings.",
   tl_h:"Day timeline", tl_p:"Tap an empty space to add a booking there. Tap a booking to add work or change its time.",
-  sh_extend:"+ Add work", sh_move:"Change time", sh_close:"Close", ck_help:"The clock runs on the current time. Slide the hour or minute box up or down to pick any time, earlier or later.", ck_h:"HOUR", ck_m:"MIN", ck_s:"SEC", ck_live:"Running on current time", ck_now:"Back to current time", tm_now:"Current time", tm_next:"Next free slot", tm_next_note:"This is the next free slot, not the current time. {name} is busy until then.", tm_next_day:"This is the first free slot of the day, not the current time.", ct_free:"Free slots", ct_own:"Own time (any)", ct_help:"Scroll the hour, minute and AM/PM. Past times work too, for a late client or a forgotten entry.", ct_clash:"{name} already has a booking at this time. You can still save it.", ct_hours:"This time is outside your opening hours.", ct_past:"This time has passed. If the work is done, tap Done after saving.", ct_pickb:"Barber: {name}. Pick another one above to change.",
+  sh_extend:"+ Add work", sh_move:"Change time", sh_close:"Close", ck_help:"The clock runs on the current time. Slide the hour or minute box up or down to pick any time, earlier or later.", ck_h:"HOUR", ck_m:"MIN", ck_s:"SEC", ck_live:"Running on current time", ck_now:"Back to current time", snd_lbl:"Call sound on / off", tm_now:"Current time", tm_next:"Next free slot", tm_next_note:"This is the next free slot, not the current time. {name} is busy until then.", tm_next_day:"This is the first free slot of the day, not the current time.", ct_free:"Free slots", ct_own:"Own time (any)", ct_help:"Scroll the hour, minute and AM/PM. Past times work too, for a late client or a forgotten entry.", ct_clash:"{name} already has a booking at this time. You can still save it.", ct_hours:"This time is outside your opening hours.", ct_past:"This time has passed. If the work is done, tap Done after saving.", ct_pickb:"Barber: {name}. Pick another one above to change.",
   sh_add_svc:"Add a service", sh_search:"Search a service", sh_none:"No service matches. Try a shorter word.", sh_add_min:"Or just add time", sh_mins:"+{n} min",
   cf_h:"This runs into {name}'s booking at {time}.", cf_other:"Give {name} to {barber}", cf_other_none:"No other barber is free at that time.",
   cf_shift:"Move {name} to {time}", cf_shift_none:"Can't push it back: the time after is also booked. Use Change time.", cf_keep:"Keep both as they are",
@@ -143,7 +143,7 @@ const T = {
   nav_calendar:"Calendar", cal_h:"Calendar", cal_p:"किसी भी दिन पर tap करें और देखें कौन आया। ऊपर पूरे महीने का हिसाब है।", cal_total:"Bookings", cal_done:"Done", cal_cancel:"Cancel हुईं", cal_earn:"कमाई (done)",
   cal_by_barber:"इस महीने barber के हिसाब से", cal_now:"इस महीने पर जाएं", cal_none:"इस दिन कोई booking नहीं।", cal_pick:"Bookings देखने के लिए किसी दिन पर tap करें।",
   tl_h:"दिन की timeline", tl_p:"ख़ाली जगह पर tap करें तो वहीं booking जुड़ेगी। किसी booking पर tap करके काम जोड़ें या समय बदलें।",
-  sh_extend:"+ काम जोड़ें", sh_move:"समय बदलें", sh_close:"बंद करें", ck_help:"घड़ी अभी के समय पर चल रही है। पहले या बाद का समय चाहिए तो घंटे या मिनट वाले box को ऊपर-नीचे slide करें।", ck_h:"घंटा", ck_m:"मिनट", ck_s:"सेकंड", ck_live:"अभी का समय चल रहा है", ck_now:"अभी के समय पर लाएँ", tm_now:"अभी का समय", tm_next:"अगला ख़ाली slot", tm_next_note:"ये अभी का समय नहीं है, ये अगला ख़ाली slot है। {name} तब तक busy हैं।", tm_next_day:"ये अभी का समय नहीं है, इस दिन का पहला ख़ाली slot है।", ct_free:"ख़ाली slots", ct_own:"अपना समय (कोई भी)", ct_help:"घंटा, मिनट और AM/PM ऊपर-नीचे scroll करके चुनें। पिछला समय भी चुन सकते हैं, जैसे client देर से आया या entry भूल गए।", ct_clash:"इस समय {name} की दूसरी booking है। फिर भी save कर सकते हैं।", ct_hours:"ये समय दुकान के खुलने के समय से बाहर है।", ct_past:"ये समय निकल चुका है। काम हो गया हो तो save के बाद Done कर दें।", ct_pickb:"Barber: {name}। बदलना हो तो ऊपर से दूसरा barber चुनें।",
+  sh_extend:"+ काम जोड़ें", sh_move:"समय बदलें", sh_close:"बंद करें", ck_help:"घड़ी अभी के समय पर चल रही है। पहले या बाद का समय चाहिए तो घंटे या मिनट वाले box को ऊपर-नीचे slide करें।", ck_h:"घंटा", ck_m:"मिनट", ck_s:"सेकंड", ck_live:"अभी का समय चल रहा है", ck_now:"अभी के समय पर लाएँ", snd_lbl:"Call की आवाज़ चालू / बंद", tm_now:"अभी का समय", tm_next:"अगला ख़ाली slot", tm_next_note:"ये अभी का समय नहीं है, ये अगला ख़ाली slot है। {name} तब तक busy हैं।", tm_next_day:"ये अभी का समय नहीं है, इस दिन का पहला ख़ाली slot है।", ct_free:"ख़ाली slots", ct_own:"अपना समय (कोई भी)", ct_help:"घंटा, मिनट और AM/PM ऊपर-नीचे scroll करके चुनें। पिछला समय भी चुन सकते हैं, जैसे client देर से आया या entry भूल गए।", ct_clash:"इस समय {name} की दूसरी booking है। फिर भी save कर सकते हैं।", ct_hours:"ये समय दुकान के खुलने के समय से बाहर है।", ct_past:"ये समय निकल चुका है। काम हो गया हो तो save के बाद Done कर दें।", ct_pickb:"Barber: {name}। बदलना हो तो ऊपर से दूसरा barber चुनें।",
   sh_add_svc:"Service जोड़ें", sh_search:"Service ढूँढें", sh_none:"ऐसी कोई service नहीं मिली। छोटा शब्द लिखकर देखें।", sh_add_min:"या सिर्फ़ समय बढ़ाएं", sh_mins:"+{n} मिनट",
   cf_h:"इससे {name} की {time} वाली booking से टकराव होगा।", cf_other:"{name} को {barber} के पास भेजें", cf_other_none:"उस समय कोई दूसरा barber ख़ाली नहीं है।",
   cf_shift:"{name} को {time} पर करें", cf_shift_none:"आगे नहीं खिसक सकता, उसके बाद भी booking है। \"समय बदलें\" से करें।", cf_keep:"दोनों को ऐसे ही रहने दें",
@@ -300,6 +300,20 @@ function avatar(b, cls){ if (b && b.photo) return `<img class="av ${cls||""}" sr
   const n = (b&&b.name||"?").trim(); const c = COLORS[(n.charCodeAt(0)||0)%COLORS.length];
   return `<span class="av ${cls||""}" style="background:${c}" aria-hidden="true">${esc(n.slice(0,1).toUpperCase())}</span>`; }
 function toast(m){ const el = document.createElement("div"); el.className="toast"; el.setAttribute("role","status"); el.textContent=m; document.body.appendChild(el); setTimeout(()=>el.remove(), 2600); }
+/* ---- doctor page sounds: "Next" = door-bell ding-dong, "Done" = short rising chime (loud, bell-like, heard at reception) ---- */
+let AC = null, ACOut = null;
+const sndOn = () => { try{ return localStorage.getItem("ss_snd")!=="0"; }catch(e){ return true; } };
+function acx(){ const C = window.AudioContext||window.webkitAudioContext; if (!C) return null;
+  if (!AC){ AC = new C(); const lp = AC.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=7000;
+    const cm = AC.createDynamicsCompressor(); cm.threshold.value=-18; cm.ratio.value=6; cm.attack.value=.003; cm.release.value=.25;
+    const mg = AC.createGain(); mg.gain.value=1.3; lp.connect(cm); cm.connect(mg); mg.connect(AC.destination); ACOut = lp; }
+  if (AC.state==="suspended") AC.resume(); return AC; }
+// one bell note: a few partials (bell-like, not a flat beep) with a fast strike and a long ring
+function bell(f, at, ring, vol){ const a = acx(); if (!a) return; const t0 = a.currentTime+at;
+  [[1,1],[2.01,.5],[2.76,.3],[4.07,.14],[5.4,.07]].forEach(([r,v])=>{ const o=a.createOscillator(), g=a.createGain(); o.type="sine"; o.frequency.value=f*r; o.connect(g); g.connect(ACOut);
+    const L = ring/(r>2?2.2:1); g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(vol*v,t0+.008); g.gain.exponentialRampToValueAtTime(.0008,t0+L); o.start(t0); o.stop(t0+L+.05); }); }
+function sndNext(){ if (!sndOn()) return; try{ bell(784,0,1.5,.55); bell(587.3,.62,2.1,.6); }catch(e){} }          // ding-dong: G5 then D5, door-bell
+function sndDone(){ if (!sndOn()) return; try{ bell(523.3,0,.5,.4); bell(659.3,.13,.5,.4); bell(1046.5,.26,1.0,.45); }catch(e){} } // quick rising C-E-C chime
 function beep(){ try{ const a = new (window.AudioContext||window.webkitAudioContext)(); [0,0.18].forEach(d=>{ const o=a.createOscillator(), g=a.createGain(); o.frequency.value=880; o.connect(g); g.connect(a.destination); g.gain.setValueAtTime(.2,a.currentTime+d); g.gain.exponentialRampToValueAtTime(.001,a.currentTime+d+.15); o.start(a.currentTime+d); o.stop(a.currentTime+d+.16); }); }catch(e){} }
 const slotKey = (barberId, time) => barberId+"_"+time.replace(":","");
 
@@ -1616,6 +1630,7 @@ const A = {
   docMode:()=>go(()=>{ pushNav(); UI.tab="doctor"; window.scrollTo(0,0); }),
   docBack:()=>go(()=>{ UI.tab = isClinic(S.salon) ? "queue" : "home"; }),
   docPick:v=>go(()=>{ UI.docId=v; }),
+  sndT:()=>go(()=>{ try{ localStorage.setItem("ss_snd", sndOn()?"0":"1"); }catch(e){} if (sndOn()) sndNext(); }),
   qDone:v=>{ qAdvance(v,true); },
   qCall:v=>{ qAdvance(v,false); },
   qRemind:v=>{ const [id,l] = v.split("|"); const k = S.bookings.find(x=>x.id===id); if (!k) return; const at = Date.now(); k.rem = {...(k.rem||{}), [l]:at}; setTimeout(render,300);
@@ -1953,11 +1968,11 @@ async function qAdvance(b, finish){
   const batch = writeBatch(db); const qref = doc(db,"salons",S.sid,"queue",qDay());
   if (finish){
     // Done: close the visit only. Nobody is called until the doctor taps "Next".
-    if (!now) return;
+    if (!now) return; sndDone();
     batch.update(doc(db,"salons",S.sid,"bookings",now.id), { status:"done" });
     batch.set(qref, { in:{[b]:false}, cur:{[b]:now.token} }, { merge:true });
   } else {
-    const nx = waits[0]; if (!nx) return;
+    const nx = waits[0]; if (!nx) return; sndNext();
     if (now) batch.update(doc(db,"salons",S.sid,"bookings",now.id), { status:"done" });
     batch.set(qref, { cur:{[b]:nx.token}, in:{[b]:true} }, { merge:true });
   }
@@ -2012,7 +2027,7 @@ function viewDoctor(){
     : `<button class="btn docdone" disabled>${t("q_none")}</button>`;
   return `<div class="docpage">${back}${pick}
     <div class="dochead">${avatar(b,"lg")}<div class="grow"><b>${esc(b.name)}</b>${b.spec?`<div class="small muted">${esc(b.spec)}</div>`:""}</div>
-      <div class="dstat"><b>${seen.length}</b><span>${t("q_seen_s")}</span></div><div class="dstat"><b>${waits.length}</b><span>${t("q_wait_s")}</span></div></div>
+      <button class="btn sm ghost sndbtn" data-a="sndT" aria-label="${t("snd_lbl")}" aria-pressed="${sndOn()}">${sndOn()?"🔔":"🔕"}</button><div class="dstat"><b>${seen.length}</b><span>${t("q_seen_s")}</span></div><div class="dstat"><b>${waits.length}</b><span>${t("q_wait_s")}</span></div></div>
     <div class="dstage">
       <div class="dabove">${above.map(k=>docRow(k,"done")).join("")}</div>
       ${mid}
