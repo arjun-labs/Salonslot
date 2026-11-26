@@ -17,6 +17,11 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/staffIndex/$(request.auth.token.email.lower()))
         && get(/databases/$(database)/documents/staffIndex/$(request.auth.token.email.lower())).data.sid == sid;
     }
+    // role of the staff member (reception, doctor, manager); a doctor is tied to one barberId (his own queue)
+    function staffRec() { return get(/databases/$(database)/documents/staffIndex/$(request.auth.token.email.lower())).data; }
+    function isFront(sid) { return isStaff(sid) && staffRec().role in ['reception', 'manager']; }
+    function isDocStaff(sid) { return isStaff(sid) && staffRec().role == 'doctor'; }
+    function ownPatient(sid) { return isDocStaff(sid) && resource.data.barberId == staffRec().get('barberId', ''); }
     function salonOpen(sid) {
       let s = get(/databases/$(database)/documents/salons/$(sid)).data;
       return s.active == true && s.sub.expires > request.time.toMillis();
@@ -79,7 +84,8 @@ service cloud.firestore {
       allow list: if isAdmin() || (request.auth != null && resource.data.sid == request.auth.uid);
       allow create, update: if isOwner(request.resource.data.sid)
         && request.resource.data.keys().hasOnly(['sid', 'role', 'barberId', 'name', 'rev', 'at'])
-        && request.resource.data.role in ['reception', 'doctor', 'manager'];
+        && request.resource.data.role in ['reception', 'doctor', 'manager']
+        && (request.resource.data.role != 'doctor' || (request.resource.data.get('barberId', '') is string && request.resource.data.get('barberId', '').size() > 0));
       allow delete: if isOwner(resource.data.sid) || isAdmin();
     }
 
@@ -101,14 +107,19 @@ service cloud.firestore {
         && request.resource.data.sub.expires <= request.time.toMillis() + 8 * 86400000;
       allow update: if isAdmin()
         || (isOwner(sid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['sub', 'active', 'ownerUid', 'payments', 'lastClaim', 'createdAt']))
-        || (isStaff(sid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['billSeq', 'gstSeq']))
+        || (isFront(sid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['billSeq', 'gstSeq']))
         || claimUpdate(sid);
       allow delete: if isAdmin();
 
       match /bookings/{bid} {
-        allow read, update: if isOwner(sid) || isAdmin() || isStaff(sid);
+        // owner, admin, reception, manager: all bookings. A doctor: only his own patients, and he can only mark one done.
+        allow read: if isOwner(sid) || isAdmin() || isFront(sid) || ownPatient(sid);
+        allow update: if isOwner(sid) || isAdmin() || isFront(sid)
+          || (ownPatient(sid)
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'doneAt'])
+              && request.resource.data.status == 'done');
         allow delete: if isOwner(sid) || isAdmin();
-        allow create: if isOwner(sid) || isAdmin() || isStaff(sid) || (
+        allow create: if isOwner(sid) || isAdmin() || isFront(sid) || (
           salonOpen(sid)
           && request.resource.data.keys().hasOnly(['date', 'time', 'serviceId', 'barberId', 'cust', 'phone', 'email', 'status', 'created', 'src', 'extra', 'dur', 'token', 'problem'])
           && (!('extra' in request.resource.data) || (request.resource.data.extra is list && request.resource.data.extra.size() <= 10))
@@ -143,7 +154,7 @@ service cloud.firestore {
 
       match /days/{date} {
         allow read: if true;
-        allow write: if isOwner(sid) || isAdmin() || isStaff(sid);
+        allow write: if isOwner(sid) || isAdmin() || isFront(sid);
         allow create: if salonOpen(sid)
           && request.resource.data.keys().hasOnly(['slots', 'tok'])
           && request.resource.data.slots.size() == 1

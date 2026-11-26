@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.26-3";
+const APP_VERSION = "2026.11.26-4";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -51,7 +51,7 @@ const T = {
   nav_calendar:"Calendar", cal_h:"Calendar", cal_p:"Tap any day to see who came. Totals are for the whole month.", cal_total:"Bookings", cal_done:"Done", cal_cancel:"Cancelled", cal_earn:"Earned (done)",
   cal_by_barber:"By barber this month", cal_now:"This month", cal_none:"No bookings this day.", cal_pick:"Tap a day to see its bookings.",
   tl_h:"Day timeline", tl_p:"Tap an empty space to add a booking there. Tap a booking to add work or change its time.",
-  sh_extend:"+ Add work", sh_move:"Change time", sh_close:"Close", ck_help:"The clock runs on the current time. Slide the hour or minute box up or down to pick any time, earlier or later.", ck_h:"HOUR", ck_m:"MIN", ck_s:"SEC", ck_live:"Running on current time", ck_now:"Back to current time", snd_lbl:"Call sound on / off", tm_now:"Current time", tm_next:"Next free slot", tm_next_note:"This is the next free slot, not the current time. {name} is busy until then.", tm_next_day:"This is the first free slot of the day, not the current time.", ct_free:"Free slots", ct_own:"Own time (any)", ct_help:"Scroll the hour, minute and AM/PM. Past times work too, for a late client or a forgotten entry.", ct_clash:"{name} already has a booking at this time. You can still save it.", ct_hours:"This time is outside your opening hours.", ct_past:"This time has passed. If the work is done, tap Done after saving.", ct_pickb:"Barber: {name}. Pick another one above to change.",
+  sh_extend:"+ Add work", sh_move:"Change time", sh_close:"Close", ck_help:"The clock runs on the current time. Slide the hour or minute box up or down to pick any time, earlier or later.", ck_h:"HOUR", ck_m:"MIN", ck_s:"SEC", ck_live:"Running on current time", ck_now:"Back to current time", rp_h:"Doctor-wise report", rp_p:"How many patients each doctor saw. Useful when more than one doctor or shift runs the clinic.", rp_today:"Today", rp_yest:"Yesterday", rp_seen:"Seen", rp_wait:"Waiting", rp_first:"First", rp_last:"Last", rp_avg:"Avg per patient", rp_none:"No doctors yet.", snd_lbl:"Call sound on / off", tm_now:"Current time", tm_next:"Next free slot", tm_next_note:"This is the next free slot, not the current time. {name} is busy until then.", tm_next_day:"This is the first free slot of the day, not the current time.", ct_free:"Free slots", ct_own:"Own time (any)", ct_help:"Scroll the hour, minute and AM/PM. Past times work too, for a late client or a forgotten entry.", ct_clash:"{name} already has a booking at this time. You can still save it.", ct_hours:"This time is outside your opening hours.", ct_past:"This time has passed. If the work is done, tap Done after saving.", ct_pickb:"Barber: {name}. Pick another one above to change.",
   sh_add_svc:"Add a service", sh_search:"Search a service", sh_none:"No service matches. Try a shorter word.", sh_add_min:"Or just add time", sh_mins:"+{n} min",
   cf_h:"This runs into {name}'s booking at {time}.", cf_other:"Give {name} to {barber}", cf_other_none:"No other barber is free at that time.",
   cf_shift:"Move {name} to {time}", cf_shift_none:"Can't push it back: the time after is also booked. Use Change time.", cf_keep:"Keep both as they are",
@@ -143,7 +143,7 @@ const T = {
   nav_calendar:"Calendar", cal_h:"Calendar", cal_p:"किसी भी दिन पर tap करें और देखें कौन आया। ऊपर पूरे महीने का हिसाब है।", cal_total:"Bookings", cal_done:"Done", cal_cancel:"Cancel हुईं", cal_earn:"कमाई (done)",
   cal_by_barber:"इस महीने barber के हिसाब से", cal_now:"इस महीने पर जाएं", cal_none:"इस दिन कोई booking नहीं।", cal_pick:"Bookings देखने के लिए किसी दिन पर tap करें।",
   tl_h:"दिन की timeline", tl_p:"ख़ाली जगह पर tap करें तो वहीं booking जुड़ेगी। किसी booking पर tap करके काम जोड़ें या समय बदलें।",
-  sh_extend:"+ काम जोड़ें", sh_move:"समय बदलें", sh_close:"बंद करें", ck_help:"घड़ी अभी के समय पर चल रही है। पहले या बाद का समय चाहिए तो घंटे या मिनट वाले box को ऊपर-नीचे slide करें।", ck_h:"घंटा", ck_m:"मिनट", ck_s:"सेकंड", ck_live:"अभी का समय चल रहा है", ck_now:"अभी के समय पर लाएँ", snd_lbl:"Call की आवाज़ चालू / बंद", tm_now:"अभी का समय", tm_next:"अगला ख़ाली slot", tm_next_note:"ये अभी का समय नहीं है, ये अगला ख़ाली slot है। {name} तब तक busy हैं।", tm_next_day:"ये अभी का समय नहीं है, इस दिन का पहला ख़ाली slot है।", ct_free:"ख़ाली slots", ct_own:"अपना समय (कोई भी)", ct_help:"घंटा, मिनट और AM/PM ऊपर-नीचे scroll करके चुनें। पिछला समय भी चुन सकते हैं, जैसे client देर से आया या entry भूल गए।", ct_clash:"इस समय {name} की दूसरी booking है। फिर भी save कर सकते हैं।", ct_hours:"ये समय दुकान के खुलने के समय से बाहर है।", ct_past:"ये समय निकल चुका है। काम हो गया हो तो save के बाद Done कर दें।", ct_pickb:"Barber: {name}। बदलना हो तो ऊपर से दूसरा barber चुनें।",
+  sh_extend:"+ काम जोड़ें", sh_move:"समय बदलें", sh_close:"बंद करें", ck_help:"घड़ी अभी के समय पर चल रही है। पहले या बाद का समय चाहिए तो घंटे या मिनट वाले box को ऊपर-नीचे slide करें।", ck_h:"घंटा", ck_m:"मिनट", ck_s:"सेकंड", ck_live:"अभी का समय चल रहा है", ck_now:"अभी के समय पर लाएँ", rp_h:"Doctor-wise रिपोर्ट", rp_p:"हर doctor ने कितने मरीज़ देखे। जब clinic में एक से ज़्यादा doctor या shift हों तब काम की।", rp_today:"आज", rp_yest:"कल", rp_seen:"देखे", rp_wait:"बाकी", rp_first:"पहला", rp_last:"आख़िरी", rp_avg:"प्रति मरीज़ औसत", rp_none:"अभी कोई doctor नहीं।", snd_lbl:"Call की आवाज़ चालू / बंद", tm_now:"अभी का समय", tm_next:"अगला ख़ाली slot", tm_next_note:"ये अभी का समय नहीं है, ये अगला ख़ाली slot है। {name} तब तक busy हैं।", tm_next_day:"ये अभी का समय नहीं है, इस दिन का पहला ख़ाली slot है।", ct_free:"ख़ाली slots", ct_own:"अपना समय (कोई भी)", ct_help:"घंटा, मिनट और AM/PM ऊपर-नीचे scroll करके चुनें। पिछला समय भी चुन सकते हैं, जैसे client देर से आया या entry भूल गए।", ct_clash:"इस समय {name} की दूसरी booking है। फिर भी save कर सकते हैं।", ct_hours:"ये समय दुकान के खुलने के समय से बाहर है।", ct_past:"ये समय निकल चुका है। काम हो गया हो तो save के बाद Done कर दें।", ct_pickb:"Barber: {name}। बदलना हो तो ऊपर से दूसरा barber चुनें।",
   sh_add_svc:"Service जोड़ें", sh_search:"Service ढूँढें", sh_none:"ऐसी कोई service नहीं मिली। छोटा शब्द लिखकर देखें।", sh_add_min:"या सिर्फ़ समय बढ़ाएं", sh_mins:"+{n} मिनट",
   cf_h:"इससे {name} की {time} वाली booking से टकराव होगा।", cf_other:"{name} को {barber} के पास भेजें", cf_other_none:"उस समय कोई दूसरा barber ख़ाली नहीं है।",
   cf_shift:"{name} को {time} पर करें", cf_shift_none:"आगे नहीं खिसक सकता, उसके बाद भी booking है। \"समय बदलें\" से करें।", cf_keep:"दोनों को ऐसे ही रहने दें",
@@ -918,7 +918,7 @@ function saveBill(send){
     sent: (old ? Number(old.sent)||0 : 0) + (send?1:0), edited: !!old && (!!old.edited || (changed && (Number(old.sent)||0)>0)), ...(gstInfo?{gst:gstInfo}:{}) };
   if (send) window.open(waLink(k.phone, billText(s, k, bill)), "_blank", "noopener");        // straight into this patient's chat
   const b = writeBatch(db);
-  b.update(doc(db,"salons",S.sid,"bookings",k.id), { status:"done", bill });
+  b.update(doc(db,"salons",S.sid,"bookings",k.id), { status:"done", bill, doneAt: (old&&old.doneAt) || Date.now() });
   if (!old){ b.update(doc(db,"salons",S.sid), { billSeq: no, ...(gstInfo?{gstSeq:{fy,n:gstInfo.seq}}:{}) }); s.billSeq = no; if (gstInfo) s.gstSeq = { fy, n:gstInfo.seq }; }
   Object.assign(k, { status:"done", bill });
   UI.sheet = null; UI.bill = null; render();
@@ -1629,8 +1629,9 @@ const A = {
   pickBiz:v=>go(()=>{ try{ localStorage.setItem("ss_biz",v); }catch(e){} setBiz(v); }),
   wsSwitch:v=>{ try{ localStorage.setItem("ss_biz",v); }catch(e){} location.reload(); },
   docMode:()=>go(()=>{ pushNav(); UI.tab="doctor"; window.scrollTo(0,0); }),
+  rpDay:v=>go(()=>{ UI.rpDay=v; }),
   docBack:()=>go(()=>{ UI.tab = isClinic(S.salon) ? "queue" : "home"; }),
-  docPick:v=>go(()=>{ UI.docId=v; }),
+  docPick:v=>go(()=>{ UI.docId=v; try{ localStorage.setItem("ss_mydoc_"+S.sid, v); }catch(e){} }),
   sndT:()=>go(()=>{ try{ localStorage.setItem("ss_snd", sndOn()?"0":"1"); }catch(e){} if (sndOn()) sndNext(); }),
   qDone:v=>{ qAdvance(v,true); },
   qCall:v=>{ qAdvance(v,false); },
@@ -1688,7 +1689,7 @@ const A = {
   delBarber:v=>{ const o = editTarget(); o.barbers=o.barbers.filter(b=>b.id!==v); render(); if (o===S.salon) queueSave(); },
   done:v=>{ const k = S.bookings.find(x=>x.id===v);
     if (k){ A.billOpen(v); return; }
-    if (UI.sheet){ UI.sheet=null; render(); } updateDoc(doc(db,"salons",S.sid,"bookings",v),{status:"done"}).catch(()=>toast(t("save_fail"))); },
+    if (UI.sheet){ UI.sheet=null; render(); } updateDoc(doc(db,"salons",S.sid,"bookings",v),{status:"done", doneAt:Date.now()}).catch(()=>toast(t("save_fail"))); },
   billOpen:v=>{ const k = S.bookings.find(x=>x.id===v); if (!k) return; UI.bill = billDraft(S.salon, k); UI.sheet = { id:v, mode:"bill" }; render(); },
   billAdd:v=>{ const sv = svcOf(S.salon,v); if (!sv || !UI.bill) return; UI.bill.items.push({n:sv.name, p:String(Number(sv.price)||0)}); render(); },
   billDel:v=>{ if (!UI.bill || UI.bill.items.length<2) return; UI.bill.items.splice(Number(v),1); render(); },
@@ -1943,9 +1944,10 @@ function startOwner(sid){
     if (UI.view==="main" && !typing()) render();
   }, err => console.error(err)));
   const since = ymd(new Date(Date.now()-DAY));
-  S.unsub.push(onSnapshot(query(collection(db,"salons",sid,"bookings"), where("date",">=",since)), snap => {
+  const docOnly = S.staff && S.staff.role==="doctor" && S.staff.barberId;   // a doctor reads only his own patients (the rules enforce it too)
+  S.unsub.push(onSnapshot(docOnly ? query(collection(db,"salons",sid,"bookings"), where("barberId","==",S.staff.barberId)) : query(collection(db,"salons",sid,"bookings"), where("date",">=",since)), snap => {
     if (!S.firstSnap) snap.docChanges().forEach(ch=>{ if (ch.type==="added"){ const k = ch.doc.data(); if (k.src==="online"){ beep(); toast(t("new_bk",{name:k.cust,time:dayLabel(k.date)+" "+nice(k.time)})); } } });
-    S.firstSnap = false; S.bookings = snap.docs.map(d=>({id:d.id,...d.data()})); setTimeout(checkReminders,0);
+    S.firstSnap = false; S.bookings = snap.docs.map(d=>({id:d.id,...d.data()})).filter(k=>k.date>=since); setTimeout(checkReminders,0);
     if (UI.view==="main" && !(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select,textarea"))) render();
   }, err => console.error(err)));
 }
@@ -1971,11 +1973,11 @@ async function qAdvance(b, finish){
   if (finish){
     // Done: close the visit only. Nobody is called until the doctor taps "Next".
     if (!now) return; sndDone();
-    batch.update(doc(db,"salons",S.sid,"bookings",now.id), { status:"done" });
+    batch.update(doc(db,"salons",S.sid,"bookings",now.id), { status:"done", doneAt:Date.now() });
     batch.set(qref, { in:{[b]:false}, cur:{[b]:now.token} }, { merge:true });
   } else {
     const nx = waits[0]; if (!nx) return; sndNext();
-    if (now) batch.update(doc(db,"salons",S.sid,"bookings",now.id), { status:"done" });
+    if (now) batch.update(doc(db,"salons",S.sid,"bookings",now.id), { status:"done", doneAt:Date.now() });
     batch.set(qref, { cur:{[b]:nx.token}, in:{[b]:true} }, { merge:true });
   }
   try{ await batch.commit(); if (now && (finish || waits[0])) now.status = "done"; }catch(e){ console.error(e); toast(t("save_fail")); }
@@ -1996,6 +1998,22 @@ function tokenRow(k, ahead, o){
     <a class="btn sm ghost" href="${waLink(k.phone, qRemindMsg(k, ahead))}" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a></div>`;
 }
 const canDoctor = () => !S.staff || S.staff.role==="doctor";
+// the owner may be a doctor too: the doctor page opens on the profile he picked last time
+function myDoc(s){ try{ const v = localStorage.getItem("ss_mydoc_"+S.sid); return v && barberOf(s,v) ? v : ""; }catch(e){ return ""; } }
+// doctor-wise transparency: how many each doctor saw, first/last time and pace (owner and manager only)
+function reportCard(){
+  if (S.staff && S.staff.role!=="manager") return "";
+  const s = S.salon, yest = UI.rpDay==="yest", day = ymd(new Date(yest ? Date.now()-DAY : Date.now()));
+  const tmv = ms => { if (!ms) return "–"; const d = new Date(ms); return nice(toHM(d.getHours()*60+d.getMinutes())); };
+  const rows = (s.barbers||[]).map(b=>{
+    const all = S.bookings.filter(k=>k.date===day && k.barberId===b.id && k.status!=="cancelled");
+    const seen = all.filter(k=>k.status==="done"), ts = seen.map(k=>Number(k.doneAt)||0).filter(Boolean).sort((a,x)=>a-x);
+    const avg = ts.length>1 ? Math.round((ts[ts.length-1]-ts[0])/(ts.length-1)/60000) : null;
+    return `<div class="srow"><div class="row" style="gap:10px">${avatar(b)}<b class="grow">${esc(b.name)}</b><span class="pill ok">${t("rp_seen")}: ${seen.length}</span></div>
+      <span class="small muted">${t("rp_wait")}: ${all.length-seen.length} · ${t("rp_first")}: ${tmv(ts[0])} · ${t("rp_last")}: ${tmv(ts[ts.length-1])}${avg!==null?" · "+t("rp_avg")+": "+avg+" "+t("min"):""}</span></div>`; }).join("");
+  return `<div class="card"><h2>${t("rp_h")}</h2><p class="small muted">${t("rp_p")}</p>
+    <div class="chips"><button class="chip ${yest?"":"on"}" data-a="rpDay" data-v="today">${t("rp_today")}</button><button class="chip ${yest?"on":""}" data-a="rpDay" data-v="yest">${t("rp_yest")}</button></div>${rows||`<p class="small muted">${t("rp_none")}</p>`}</div>`;
+}
 function viewQueue(){
   const s = S.salon;
   return `<div><h1>${t("q_h")}</h1><p class="small muted" style="margin-top:4px">${t("q_p")}</p></div>
@@ -2003,14 +2021,15 @@ function viewQueue(){
   ${(s.barbers||[]).map(b=>{ const now = qNowK(b.id), waits = qWait(b.id).filter(k=>!now||k.id!==now.id);
     return `<div class="card"><div class="row" style="gap:10px">${avatar(b,"lg")}<div class="grow"><h2>${esc(b.name)}</h2>${b.spec?`<p class="small muted">${esc(b.spec)}</p>`:""}</div><span class="pill ${waits.length?"warn":""}">${t("q_waiting",{n:waits.length})}</span></div>
       ${now?`<div class="tkin"><span class="label">${t("q_in")}</span><div class="row" style="gap:10px"><span class="tkno big">#${now.token}</span><div class="grow"><b>${esc(now.cust)}</b><div class="small">${esc(bkNames(S.salon,now))}</div>${now.problem?`<div class="small prob">“${esc(now.problem)}”</div>`:""}</div></div></div>`:`<p class="muted">${t("q_idle")}</p>`}
-      ${waits.length?`<div>${waits.map((k,i)=>tokenRow(k,i,{remind:true})).join("")}</div>`:`<p class="small muted">${t("q_none")}</p>`}</div>`; }).join("")}`;
+      ${waits.length?`<div>${waits.map((k,i)=>tokenRow(k,i,{remind:true})).join("")}</div>`:`<p class="small muted">${t("q_none")}</p>`}</div>`; }).join("")}
+  ${reportCard()}`;
 }
 
 // doctor page: one compact card. Seen (faded) above, patient inside (highlighted) in the middle, waiting (blurred) below.
 function docRow(k, c){ return `<div class="dk ${c}"><span class="dn">#${k.token}</span><span class="dtx"><span class="dc">${esc(k.cust)}</span><span class="dsv">${esc(bkNames(S.salon,k))}</span>${k.problem&&c.indexOf("wait")===0?`<span class="dpr">${esc(k.problem)}</span>`:""}</span></div>`; }
 function viewDoctor(){
   const s = S.salon, docs = s.barbers||[];
-  const bid = S.staff && S.staff.barberId ? S.staff.barberId : (UI.docId && barberOf(s,UI.docId) ? UI.docId : (docs[0]||{}).id);
+  const bid = S.staff && S.staff.barberId ? S.staff.barberId : (UI.docId && barberOf(s,UI.docId) ? UI.docId : (myDoc(s) || (docs[0]||{}).id));
   const b = barberOf(s,bid);
   if (!b) return `<div class="card lock"><p class="muted">${t("q_nodoc")}</p></div>`;
   const td = qDay(), now = qNowK(bid), waits = qWait(bid).filter(k=>!now||k.id!==now.id), nx = waits[0];
