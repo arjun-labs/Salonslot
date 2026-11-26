@@ -469,3 +469,7 @@ main > .btn.sm{align-self:flex-start}
 .accbd>.card{border:0;box-shadow:none;background:none;padding:0;margin:0}
 .accbd>.card>h2:first-child,.accbd>.card>.row:first-child>h2{display:none}
 .accbd>.card>.row:first-child{justify-content:flex-end}
+.tmtog{display:flex;gap:8px;margin:12px 0 8px}.tmtog .btn{flex:1;justify-content:center}
+.nextbox{display:flex;flex-direction:column;gap:2px;background:var(--gold-soft);border:2px solid var(--gold);border-radius:12px;padding:10px 14px;margin:8px 0;color:var(--gold-deep)}
+.nextbox b{font-size:18px}
+.nxtwrap{border:2px dashed var(--gold);border-radius:16px;padding:4px;margin-bottom:8px}

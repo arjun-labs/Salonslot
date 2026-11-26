@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.24-7";
+const APP_VERSION = "2026.11.26-1";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -51,7 +51,7 @@ const T = {
   nav_calendar:"Calendar", cal_h:"Calendar", cal_p:"Tap any day to see who came. Totals are for the whole month.", cal_total:"Bookings", cal_done:"Done", cal_cancel:"Cancelled", cal_earn:"Earned (done)",
   cal_by_barber:"By barber this month", cal_now:"This month", cal_none:"No bookings this day.", cal_pick:"Tap a day to see its bookings.",
   tl_h:"Day timeline", tl_p:"Tap an empty space to add a booking there. Tap a booking to add work or change its time.",
-  sh_extend:"+ Add work", sh_move:"Change time", sh_close:"Close", ck_help:"The clock runs on the current time. Slide the hour or minute box up or down to pick any time, earlier or later.", ck_h:"HOUR", ck_m:"MIN", ck_s:"SEC", ck_live:"Running on current time", ck_now:"Back to current time", ct_free:"Free slots", ct_own:"Own time (any)", ct_help:"Scroll the hour, minute and AM/PM. Past times work too, for a late client or a forgotten entry.", ct_clash:"{name} already has a booking at this time. You can still save it.", ct_hours:"This time is outside your opening hours.", ct_past:"This time has passed. If the work is done, tap Done after saving.", ct_pickb:"Barber: {name}. Pick another one above to change.",
+  sh_extend:"+ Add work", sh_move:"Change time", sh_close:"Close", ck_help:"The clock runs on the current time. Slide the hour or minute box up or down to pick any time, earlier or later.", ck_h:"HOUR", ck_m:"MIN", ck_s:"SEC", ck_live:"Running on current time", ck_now:"Back to current time", tm_now:"Current time", tm_next:"Next free slot", tm_next_note:"This is the next free slot, not the current time. {name} is busy until then.", tm_next_day:"This is the first free slot of the day, not the current time.", ct_free:"Free slots", ct_own:"Own time (any)", ct_help:"Scroll the hour, minute and AM/PM. Past times work too, for a late client or a forgotten entry.", ct_clash:"{name} already has a booking at this time. You can still save it.", ct_hours:"This time is outside your opening hours.", ct_past:"This time has passed. If the work is done, tap Done after saving.", ct_pickb:"Barber: {name}. Pick another one above to change.",
   sh_add_svc:"Add a service", sh_search:"Search a service", sh_none:"No service matches. Try a shorter word.", sh_add_min:"Or just add time", sh_mins:"+{n} min",
   cf_h:"This runs into {name}'s booking at {time}.", cf_other:"Give {name} to {barber}", cf_other_none:"No other barber is free at that time.",
   cf_shift:"Move {name} to {time}", cf_shift_none:"Can't push it back: the time after is also booked. Use Change time.", cf_keep:"Keep both as they are",
@@ -143,7 +143,7 @@ const T = {
   nav_calendar:"Calendar", cal_h:"Calendar", cal_p:"किसी भी दिन पर tap करें और देखें कौन आया। ऊपर पूरे महीने का हिसाब है।", cal_total:"Bookings", cal_done:"Done", cal_cancel:"Cancel हुईं", cal_earn:"कमाई (done)",
   cal_by_barber:"इस महीने barber के हिसाब से", cal_now:"इस महीने पर जाएं", cal_none:"इस दिन कोई booking नहीं।", cal_pick:"Bookings देखने के लिए किसी दिन पर tap करें।",
   tl_h:"दिन की timeline", tl_p:"ख़ाली जगह पर tap करें तो वहीं booking जुड़ेगी। किसी booking पर tap करके काम जोड़ें या समय बदलें।",
-  sh_extend:"+ काम जोड़ें", sh_move:"समय बदलें", sh_close:"बंद करें", ck_help:"घड़ी अभी के समय पर चल रही है। पहले या बाद का समय चाहिए तो घंटे या मिनट वाले box को ऊपर-नीचे slide करें।", ck_h:"घंटा", ck_m:"मिनट", ck_s:"सेकंड", ck_live:"अभी का समय चल रहा है", ck_now:"अभी के समय पर लाएँ", ct_free:"ख़ाली slots", ct_own:"अपना समय (कोई भी)", ct_help:"घंटा, मिनट और AM/PM ऊपर-नीचे scroll करके चुनें। पिछला समय भी चुन सकते हैं, जैसे client देर से आया या entry भूल गए।", ct_clash:"इस समय {name} की दूसरी booking है। फिर भी save कर सकते हैं।", ct_hours:"ये समय दुकान के खुलने के समय से बाहर है।", ct_past:"ये समय निकल चुका है। काम हो गया हो तो save के बाद Done कर दें।", ct_pickb:"Barber: {name}। बदलना हो तो ऊपर से दूसरा barber चुनें।",
+  sh_extend:"+ काम जोड़ें", sh_move:"समय बदलें", sh_close:"बंद करें", ck_help:"घड़ी अभी के समय पर चल रही है। पहले या बाद का समय चाहिए तो घंटे या मिनट वाले box को ऊपर-नीचे slide करें।", ck_h:"घंटा", ck_m:"मिनट", ck_s:"सेकंड", ck_live:"अभी का समय चल रहा है", ck_now:"अभी के समय पर लाएँ", tm_now:"अभी का समय", tm_next:"अगला ख़ाली slot", tm_next_note:"ये अभी का समय नहीं है, ये अगला ख़ाली slot है। {name} तब तक busy हैं।", tm_next_day:"ये अभी का समय नहीं है, इस दिन का पहला ख़ाली slot है।", ct_free:"ख़ाली slots", ct_own:"अपना समय (कोई भी)", ct_help:"घंटा, मिनट और AM/PM ऊपर-नीचे scroll करके चुनें। पिछला समय भी चुन सकते हैं, जैसे client देर से आया या entry भूल गए।", ct_clash:"इस समय {name} की दूसरी booking है। फिर भी save कर सकते हैं।", ct_hours:"ये समय दुकान के खुलने के समय से बाहर है।", ct_past:"ये समय निकल चुका है। काम हो गया हो तो save के बाद Done कर दें।", ct_pickb:"Barber: {name}। बदलना हो तो ऊपर से दूसरा barber चुनें।",
   sh_add_svc:"Service जोड़ें", sh_search:"Service ढूँढें", sh_none:"ऐसी कोई service नहीं मिली। छोटा शब्द लिखकर देखें।", sh_add_min:"या सिर्फ़ समय बढ़ाएं", sh_mins:"+{n} मिनट",
   cf_h:"इससे {name} की {time} वाली booking से टकराव होगा।", cf_other:"{name} को {barber} के पास भेजें", cf_other_none:"उस समय कोई दूसरा barber ख़ाली नहीं है।",
   cf_shift:"{name} को {time} पर करें", cf_shift_none:"आगे नहीं खिसक सकता, उसके बाद भी booking है। \"समय बदलें\" से करें।", cf_keep:"दोनों को ऐसे ही रहने दें",
@@ -1141,6 +1141,29 @@ setInterval(()=>{ const d = new Date();
     if (hc && Number(hc.dataset.sel)!==d.getHours()) setCol(hc, d.getHours(), true);
     if (mc && Number(mc.dataset.sel)!==d.getMinutes()) setCol(mc, d.getMinutes(), true); }); }, 1000);
 const roundNow = nowHM;
+// walk-in: earliest start (from now, or opening on another day) where a barber is free for the whole length
+function nextFree(salon, date, list, dur, pref){
+  const cands = (pref && pref!=="any" ? salon.barbers.filter(b=>b.id===pref) : salon.barbers).filter(b=>!onLeave(salon,b.id,date) && canDoAll(list,b));
+  const now = new Date(), nowM = now.getHours()*60+now.getMinutes(), open = toMin(salon.open||"10:00");
+  const base = date===ymd(now) ? Math.max(nowM, open) : open, busy = busyList(ownerSlotsMap(date)); let best = null;
+  cands.forEach(b=>{ let st = base; const mine = busy.filter(x=>x.b===b.id).sort((a,c)=>a.start-c.start);
+    for (const x of mine){ if (st+dur<=x.start) break; if (x.start+x.dur>st) st = x.start+x.dur; }
+    if (!best || st<best.m) best = { m:st, b }; });
+  return best ? { time:toHM(best.m), barberId:best.b.id, barber:best.b } : null;
+}
+// what the owner's walk-in form uses as the time: own (wheel touched), next free slot, or the live current time
+function ownTime(salon, B, list, dur){
+  const now = new Date(), nowM = now.getHours()*60+now.getMinutes(), today = ymd(now), past = B.date < today;
+  if (B.time) return { kind:"own", time:B.time };
+  const nf = past ? null : nextFree(salon, B.date, list, dur, B.barber), tm = B.tm||"auto";
+  const freeNow = !!nf && B.date===today && toMin(nf.time)<=nowM;
+  if (nf && (tm==="next" || (tm==="auto" && !freeNow))) return { kind:"next", time:nf.time, barber:nf.barber, today:B.date===today };
+  return { kind:"now", time:nowHM(), barber: freeNow ? nf.barber : null };
+}
+function tmBlock(ot){
+  return `<div class="tmtog" role="group"><button class="btn sm ${ot.kind==="now"?"primary":""}" data-a="tmNow" aria-pressed="${ot.kind==="now"}">⏱ ${t("tm_now")}</button><button class="btn sm ${ot.kind==="next"?"primary":""}" data-a="tmNext" aria-pressed="${ot.kind==="next"}">⏭ ${t("tm_next")}</button></div>`
+    + (ot.kind==="next" ? `<div class="nextbox" role="status"><b>⏭ ${t("tm_next")}: ${nice(ot.time)}</b><span class="small">${ot.today ? t("tm_next_note",{name:esc(ot.barber.name)}) : t("tm_next_day")}</span></div>` : "");
+}
 function pickBarberFor(salon, svcId, date, pref, list){
   if (pref && pref!=="any") return barberOf(salon, pref);
   const L = list && list.length ? list : [svcOf(salon, svcId)].filter(Boolean);
@@ -1166,6 +1189,7 @@ function bookingForm(salon, slotsFor, ownerMode){
   if (map===undefined && CUSTOMER_SID) setTimeout(()=>loadDay(B.date),0);
   B.extra = (B.extra||[]).filter(id=>id!==B.svc && svcOf(salon,id));
   const list = bkList(salon,B), dur = bkLen(salon,B), so = { dur, svcs:list }, adds = addOpts(salon,B);
+  const ot = ownerMode && B.svc ? ownTime(salon,B,list,dur) : null;
   const slots = B.svc ? (map===undefined ? undefined : freeSlots(salon, B.date, B.svc, B.barber||"any", map, so)) : [];
   return `
   <div class="card ${UI.flashSvc||UI.addMode?"flash":""}" id="svcCard"><h3>${t("pick_svc")}</h3>${UI.addMode?`<div class="banner ok addpick"><span class="grow">${t("add_pick")}</span><button class="btn sm" data-a="addCancel">${t("add_cancel")}</button></div>`:""}${!salon.services.length?`<p class="muted">${t("no_services")}</p>`:""}${svcGroups(salon).map(g=>`${g.head?`<p class="label svchead">${g.head}</p>`:""}<div class="svclist" role="radiogroup" ${g.head?`aria-label="${g.head}"`:""}>${g.list.map(s=>{ const on = B.svc===s.id || (B.extra||[]).includes(s.id), dis = UI.addMode && !on && !adds.some(v=>v.id===s.id);
@@ -1184,8 +1208,8 @@ function bookingForm(salon, slotsFor, ownerMode){
     ${B.barber && B.barber!=="any" && onLeave(salon,B.barber,B.date)?`<div class="banner warn">${t("barber_off",{name:esc((barberOf(salon,B.barber)||{}).name||""), date:dayLabel(B.date)})}</div>`:""}</div>
   <div class="card" id="dateCard"><h3>${t("pick_date")}</h3><div class="hscroll">${days.map(d=>{const dt=new Date(d+"T00:00");const closed=!(salon.days||[]).includes(dt.getDay());
     return `<button class="date ${B.date===d?"on":""}" data-a="bDate" data-v="${d}" ${closed?"disabled":""}><small>${t("dw")[dt.getDay()]}</small><b>${dt.getDate()}</b><small>${t("mon")[dt.getMonth()]}</small></button>`}).join("")}</div></div>
-  <div class="card" id="timeCard"><h3>${t("pick_time")}</h3>${ownerMode ? `<p class="small muted">${t("ck_help")}</p>${clockPicker("wkBook", B.time||nowHM(), !B.time)}${!B.svc?`<button class="btn block" data-a="toSvc">↑ ${t("pick_svc_first")}</button>`:(()=>{ const b = pickBarberFor(salon,B.svc,B.date,B.barber,list);
-      return customBox(salon, B.date, B.time||nowHM(), B.svc, b, dur, null, list.map(v=>v.name).join(" + ")) + ((!B.barber||B.barber==="any") && b ? `<p class="small muted">${t("ct_pickb",{name:esc(b.name)})}</p>` : ""); })()}` :
+  <div class="card" id="timeCard"><h3>${t("pick_time")}</h3>${ownerMode ? `<p class="small muted">${t("ck_help")}</p>${ot?tmBlock(ot):""}<div class="${ot&&ot.kind==="next"?"nxtwrap":""}">${clockPicker("wkBook", ot?ot.time:(B.time||nowHM()), ot?ot.kind==="now":!B.time)}</div>${!B.svc?`<button class="btn block" data-a="toSvc">↑ ${t("pick_svc_first")}</button>`:(()=>{ const b = (ot && ot.barber) || pickBarberFor(salon,B.svc,B.date,B.barber,list);
+      return customBox(salon, B.date, ot?ot.time:(B.time||nowHM()), B.svc, b, dur, null, list.map(v=>v.name).join(" + ")) + ((!B.barber||B.barber==="any") && b ? `<p class="small muted">${t("ct_pickb",{name:esc(b.name)})}</p>` : ""); })()}` :
     !B.svc?`<button class="btn block" data-a="toSvc">↑ ${t("pick_svc_first")}</button>`:slots===undefined?`<div class="spin"></div>`:slots===null?`<p class="muted">${t("closed_day")}</p>`:slots.length?slotGrid(slots, B.time, "bTime")+(()=>{ const f5 = freeSlots(salon, B.date, B.svc, B.barber||"any", map, {...so, step:5})||[]; return ``+ownPick(salon,B,f5,dur); })():`<p class="muted">${t("no_slots")}</p>`}</div>
   <div class="card" id="detailsCard"><h3>${t("your_details")}</h3>
     <label class="field"><span>${t("cust_name")}</span><input type="text" id="c_name" autocomplete="${ownerMode?"off":"name"}" data-book="name" value="${esc(B.name||"")}"></label>
@@ -1707,10 +1731,11 @@ const A = {
     if (!B.time && CUSTOMER_SID){ UI.err = t("pick_time"); render(); const el=document.getElementById("timeCard"); if (el) el.scrollIntoView({behavior:"smooth", block:"start"}); return; }
     if (!(B.name||"").trim() || digits(B.phone).length!==10){ UI.err = t("need_details"); render(); return; }
     const em = (B.email||"").trim().toLowerCase(); if (em && !isEmail(em)){ UI.err = t("bad_email"); render(); return; }
-    const own = !CUSTOMER_SID; if (own && !B.time) B.time = nowHM();
+    const own = !CUSTOMER_SID;
     const map = CUSTOMER_SID ? (C.days[B.date]||{}) : ownerSlotsMap(B.date);
     B.extra = (B.extra||[]).filter(id=>id!==B.svc && svcOf(salon,id)); const list = bkList(salon,B), dur = bkLen(salon,B);
-    const slot = own ? { time:B.time, barberId:(pickBarberFor(salon,B.svc,B.date,B.barber,list)||{}).id } : (freeSlots(salon,B.date,B.svc,B.barber||"any",map,{step:5, dur, svcs:list})||[]).find(s=>s.time===B.time);
+    const ot = own ? ownTime(salon,B,list,dur) : null; if (own && !B.time) B.time = ot.time;
+    const slot = own ? { time:B.time, barberId:((ot&&ot.barber)||pickBarberFor(salon,B.svc,B.date,B.barber,list)||{}).id } : (freeSlots(salon,B.date,B.svc,B.barber||"any",map,{step:5, dur, svcs:list})||[]).find(s=>s.time===B.time);
     if (!slot || !slot.barberId){ UI.err = t("taken"); render(); return; }
     const k = { date:B.date, time:B.time, serviceId:B.svc, barberId:slot.barberId, cust:B.name.trim().slice(0,60), phone:digits(B.phone), status:"booked", created:Date.now(), src: CUSTOMER_SID?"online":"walkin" };
     if (em) k.email = em.slice(0,100);
@@ -1720,7 +1745,9 @@ const A = {
     try{ await createBooking(sid, salon, k, own); UI.bookedData = k; if (CUSTOMER_SID){ delete C.days[B.date]; } window.scrollTo(0,0); }
     catch(e){ console.error(e); UI.err = e.message==="taken" ? t("taken") : t("save_fail"); if (CUSTOMER_SID){ delete C.days[B.date]; loadDay(B.date); } }
     UI.busy=false; render(); },
-  bNow: ()=>go(()=>{ UI.book.time = null; UI.book.prefTime = null; }),
+  bNow: ()=>go(()=>{ UI.book.time = null; UI.book.prefTime = null; UI.book.tm = "now"; }),
+  tmNow: ()=>go(()=>{ UI.book.time = null; UI.book.prefTime = null; UI.book.tm = "now"; }),
+  tmNext: ()=>go(()=>{ UI.book.time = null; UI.book.prefTime = null; UI.book.tm = "next"; }),
   mvNow: ()=>go(()=>{ if (UI.sheet) UI.sheet.mvTime = nowHM(); }),
   bookAgain:()=>go(()=>{ const keep = CUSTOMER_SID ? {name:UI.book.name, phone:UI.book.phone, email:UI.book.email} : {}; UI.bookedData=null; UI.book=keep; if (CUSTOMER_SID) loadDay(ymd(new Date())); }),
   pickBarber:v=>go(()=>{ UI.barberId=v; }),
