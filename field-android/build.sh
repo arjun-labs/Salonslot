@@ -34,6 +34,10 @@ rm -rf android/app/src/main/res/mipmap-anydpi-v26
 # fixed signing key so the SHA-1 never changes (needed for Google login)
 mkdir -p ~/.android && cp debug.keystore ~/.android/debug.keystore
 npx cap sync android
+# every build gets a higher versionCode so Android accepts it as an update
+G=android/app/build.gradle
+sed -i -E "s/versionCode [0-9]+/versionCode ${GITHUB_RUN_NUMBER:-1}/" "$G"
+grep -n versionCode "$G"
 (cd android && ./gradlew --no-daemon assembleDebug)
 mkdir -p out && cp android/app/build/outputs/apk/debug/app-debug.apk out/QuickSlot-Field.apk
 ls -la out
