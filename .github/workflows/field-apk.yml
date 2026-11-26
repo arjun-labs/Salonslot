@@ -1,0 +1,26 @@
+name: Field APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["field/**", "field-android/**", ".github/workflows/field-apk.yml"]
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: pip install pillow
+      - run: ./field-android/build.sh
+      - uses: actions/upload-artifact@v4
+        with: { name: SalonSlot-Field-apk, path: field-android/out/SalonSlot-Field.apk }
+      - name: Publish as release (easy phone download)
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          gh release delete field-latest --yes --cleanup-tag || true
+          gh release create field-latest field-android/out/SalonSlot-Field.apk --title "SalonSlot Field APK (latest)" --notes "Built from ${GITHUB_SHA::7}. Download SalonSlot-Field.apk on the phone and install."

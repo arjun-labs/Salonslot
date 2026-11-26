@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut, signInWithCredential } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, orderBy, limit, getDocs, writeBatch, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ================= config ================= */
@@ -105,26 +105,37 @@ function dist(a, b) {
   const h = Math.sin(dLa / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLo / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(h));
 }
+/* ---- Android APK (Capacitor) bridge: native Google login + background GPS service ---- */
+const CAP = window.Capacitor, NATIVE = !!(CAP && CAP.isNativePlatform && CAP.isNativePlatform());
+const NatAuth = NATIVE ? CAP.registerPlugin("FirebaseAuthentication") : null;
+const NatGeo = NATIVE ? CAP.registerPlugin("BackgroundGeolocation") : null;
 const TRK = { id: null, day: null, buf: [], early: [], last: null, lastFix: 0, fix: null, bat: null, timer: null, flushT: null, lock: null, flushing: false };
 const bufKey = () => "fieldbuf_" + TRK.day.id, earlyKey = () => "fieldearly_" + TRK.day.id;
 const keep = () => { try { localStorage.setItem(bufKey(), JSON.stringify(TRK.buf)); localStorage.setItem(earlyKey(), JSON.stringify(TRK.early)); } catch (e) { /* storage full or blocked */ } };
 
 function startTracking(d) {
-  if (TRK.id != null || !navigator.geolocation || !d || d.out) return;
+  if (TRK.id != null || (!NATIVE && !navigator.geolocation) || !d || d.out) return;
   TRK.day = d;
   try { TRK.buf = JSON.parse(localStorage.getItem(bufKey()) || "[]"); TRK.early = JSON.parse(localStorage.getItem(earlyKey()) || "[]"); } catch (e) { TRK.buf = []; TRK.early = []; }
   TRK.last = TRK.buf[TRK.buf.length - 1] || TRK.early[TRK.early.length - 1] || null;
   TRK.lastFix = Date.now();
-  TRK.id = navigator.geolocation.watchPosition(onPos, () => {}, { enableHighAccuracy: true, maximumAge: 10000, timeout: 30000 });
+  if (NATIVE) { // foreground service: keeps giving GPS with the screen off
+    TRK.id = "pending";
+    NatGeo.addWatcher({ backgroundTitle: "SalonSlot Field", backgroundMessage: "काम चालू है, लोकेशन दर्ज हो रही है", requestPermissions: true, stale: false, distanceFilter: 10 },
+      (loc, err) => { if (loc) onPos({ coords: { latitude: loc.latitude, longitude: loc.longitude, accuracy: loc.accuracy || 50 } }); else if (err && err.code === "NOT_AUTHORIZED") say("Location की अनुमति \"हर समय\" पर करें (Settings → App → Permissions → Location)।", true); })
+      .then(id => { if (TRK.id === "pending") TRK.id = id; else NatGeo.removeWatcher({ id }); }).catch(e => console.error(e));
+  } else TRK.id = navigator.geolocation.watchPosition(onPos, () => {}, { enableHighAccuracy: true, maximumAge: 10000, timeout: 30000 });
   TRK.flushT = setInterval(() => flush(), 60000);
   if (!d.act) TRK.timer = setTimeout(check15, Math.max(1000, d.start + FIFTEEN + 5000 - Date.now()));
-  wake();
+  if (!NATIVE) wake();
   if (navigator.getBattery) navigator.getBattery().then(b => { TRK.bat = b; }).catch(() => {});
 }
 function onPos(p) {
   const d = TRK.day; if (!d || d.out) return;
   const now = Date.now(), pt = { t: now, lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6), acc: Math.round(p.coords.accuracy) };
   if (TRK.bat) pt.bat = Math.round(TRK.bat.level * 100);
+  if (!d.act && now - d.start > FIFTEEN + 5000) check15();
+  if (NATIVE && now - (TRK.lastFlush || 0) > 60000) { TRK.lastFlush = now; setTimeout(flush, 0); }
   TRK.lastFix = now; TRK.fix = { lat: pt.lat, lng: pt.lng, acc: pt.acc, t: now };
   const L = TRK.last;
   if (pt.acc > 150 && L) return;            // very poor fix, ignore
@@ -165,7 +176,7 @@ async function flush() { // points go up one document per hour; failures stay in
   finally { TRK.flushing = false; }
 }
 function stopTracking() {
-  if (TRK.id != null) navigator.geolocation.clearWatch(TRK.id);
+  if (TRK.id != null) { if (NATIVE) { if (TRK.id !== "pending") NatGeo.removeWatcher({ id: TRK.id }).catch(() => {}); } else navigator.geolocation.clearWatch(TRK.id); }
   clearInterval(TRK.flushT); clearTimeout(TRK.timer);
   if (TRK.lock) { TRK.lock.release().catch(() => {}); TRK.lock = null; }
   if (TRK.day) { try { localStorage.removeItem(bufKey()); localStorage.removeItem(earlyKey()); } catch (e) { /* ignore */ } }
@@ -179,6 +190,7 @@ window.addEventListener("online", () => { if (TRK.id != null) flush(); });
 function trackNote() {
   if (TRK.id == null) return "";
   const ago = Date.now() - TRK.lastFix, m = Math.floor(ago / 60000);
+  if (NATIVE && ago <= 5 * 60000) return `<div class="msg" id="trk">📍 Tracking चालू · screen बंद हो तो भी चलता रहेगा</div>`;
   return ago > 5 * 60000 ? `<div class="msg bad" id="trk">GPS नहीं मिल रहा (${m} मिनट से)। फ़ोन की Location चालू रखें और इस screen को खुला रखें।</div>`
     : `<div class="msg" id="trk">📍 Tracking चालू · screen चालू रखें, app बंद न करें</div>`;
 }
@@ -493,6 +505,11 @@ async function act(name, el) {
   switch (name) {
     case "login": {
       say("");
+      if (NATIVE) {
+        try { const r = await NatAuth.signInWithGoogle(); const t = r.credential && r.credential.idToken; if (!t) throw new Error("no token"); await signInWithCredential(auth, GoogleAuthProvider.credential(t)); }
+        catch (e) { console.error(e); say("Google login नहीं हुआ। Internet और Google account जाँचें।", true); render(); }
+        return;
+      }
       try { await signInWithPopup(auth, new GoogleAuthProvider()); }
       catch (e) {
         if (e && (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment")) return signInWithRedirect(auth, new GoogleAuthProvider());
@@ -500,7 +517,7 @@ async function act(name, el) {
       }
       return;
     }
-    case "logout": await flush(); stopTracking(); await signOut(auth); S.view = "home"; say(""); return;
+    case "logout": await flush(); stopTracking(); if (NATIVE) { try { await NatAuth.signOut(); } catch (e) { /* ignore */ } } await signOut(auth); S.view = "home"; say(""); return;
     case "nav": S.view = el.dataset.v; S.today = dateStr(); say(""); if (S.view === "mine" || S.view === "home") await reloadStaff(); return render();
     case "consent": {
       S.busy = true; render();

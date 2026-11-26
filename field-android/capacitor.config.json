@@ -1,0 +1,9 @@
+{
+  "appId": "com.salonslot.field",
+  "appName": "SalonSlot Field",
+  "webDir": "www",
+  "android": { "allowMixedContent": false },
+  "plugins": {
+    "FirebaseAuthentication": { "skipNativeAuth": true, "providers": ["google.com"] }
+  }
+}
