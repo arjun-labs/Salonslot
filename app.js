@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.20-1";
+const APP_VERSION = "2026.11.26-5";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -32,6 +32,7 @@ const db = getFirestore(fb);
 const T = {
  en:{
   tagline:"Salon booking, made simple",
+  biz_h:"What kind of business do you run?", biz_p:"Pick one. The app will use your words, services and look.", biz_change:"Change business type", biz_for:"For",
   welcome_h:"Run your salon's bookings from one phone",
   welcome_p:"Customers open your link, pick a barber, a service and a time. You see every booking the moment it comes in.",
   signin:"Sign in with Google", signin_note:"Open this page in Chrome to sign in. Sign-in doesn't work inside WhatsApp or Instagram.", free_trial:"Welcome offer: 10 days free. No card needed.",
@@ -50,7 +51,7 @@ const T = {
   nav_calendar:"Calendar", cal_h:"Calendar", cal_p:"Tap any day to see who came. Totals are for the whole month.", cal_total:"Bookings", cal_done:"Done", cal_cancel:"Cancelled", cal_earn:"Earned (done)",
   cal_by_barber:"By barber this month", cal_now:"This month", cal_none:"No bookings this day.", cal_pick:"Tap a day to see its bookings.",
   tl_h:"Day timeline", tl_p:"Tap an empty space to add a booking there. Tap a booking to add work or change its time.",
-  sh_extend:"+ Add work", sh_move:"Change time", sh_close:"Close", ck_help:"The clock runs on the current time. Slide the hour or minute box up or down to pick any time, earlier or later.", ck_h:"HOUR", ck_m:"MIN", ck_s:"SEC", ck_live:"Running on current time", ck_now:"Back to current time", ct_free:"Free slots", ct_own:"Own time (any)", ct_help:"Scroll the hour, minute and AM/PM. Past times work too, for a late client or a forgotten entry.", ct_clash:"{name} already has a booking at this time. You can still save it.", ct_hours:"This time is outside your opening hours.", ct_past:"This time has passed. If the work is done, tap Done after saving.", ct_pickb:"Barber: {name}. Pick another one above to change.",
+  sh_extend:"+ Add work", sh_move:"Change time", sh_close:"Close", ck_help:"The clock runs on the current time. Slide the hour or minute box up or down to pick any time, earlier or later.", ck_h:"HOUR", ck_m:"MIN", ck_s:"SEC", ck_live:"Running on current time", ck_now:"Back to current time", rp_h:"Doctor-wise report", rp_p:"How many patients each doctor saw. Useful when more than one doctor or shift runs the clinic.", rp_today:"Today", rp_yest:"Yesterday", rp_seen:"Seen", rp_wait:"Waiting", rp_first:"First", rp_last:"Last", rp_avg:"Avg per patient", rp_none:"No doctors yet.", snd_lbl:"Call sound on / off", tm_now:"Current time", tm_next:"Next free slot", tm_next_note:"This is the next free slot, not the current time. {name} is busy until then.", tm_next_day:"This is the first free slot of the day, not the current time.", ct_free:"Free slots", ct_own:"Own time (any)", ct_help:"Scroll the hour, minute and AM/PM. Past times work too, for a late client or a forgotten entry.", ct_clash:"{name} already has a booking at this time. You can still save it.", ct_hours:"This time is outside your opening hours.", ct_past:"This time has passed. If the work is done, tap Done after saving.", ct_pickb:"Barber: {name}. Pick another one above to change.",
   sh_add_svc:"Add a service", sh_search:"Search a service", sh_none:"No service matches. Try a shorter word.", sh_add_min:"Or just add time", sh_mins:"+{n} min",
   cf_h:"This runs into {name}'s booking at {time}.", cf_other:"Give {name} to {barber}", cf_other_none:"No other barber is free at that time.",
   cf_shift:"Move {name} to {time}", cf_shift_none:"Can't push it back: the time after is also booked. Use Change time.", cf_keep:"Keep both as they are",
@@ -123,6 +124,7 @@ const T = {
  },
  hi:{
   tagline:"सैलून बुकिंग, आसान",
+  biz_h:"आप कौन-सा बिज़नेस चलाते हैं?", biz_p:"एक चुनिए। ऐप आपके बिज़नेस की भाषा, services और माहौल में बदल जाएगा।", biz_change:"बिज़नेस टाइप बदलें", biz_for:"के लिए",
   welcome_h:"अपने सैलून की सारी बुकिंग एक फ़ोन से चलाइए",
   welcome_p:"ग्राहक आपका link खोलकर barber, service और time चुनता है। Booking आते ही आपको दिख जाती है।",
   signin:"Google से login करें", signin_note:"Login के लिए ये page Chrome में खोलें। WhatsApp या Instagram के अंदर login नहीं होता।", free_trial:"Welcome offer: 10 दिन FREE. कोई card नहीं चाहिए।",
@@ -141,7 +143,7 @@ const T = {
   nav_calendar:"Calendar", cal_h:"Calendar", cal_p:"किसी भी दिन पर tap करें और देखें कौन आया। ऊपर पूरे महीने का हिसाब है।", cal_total:"Bookings", cal_done:"Done", cal_cancel:"Cancel हुईं", cal_earn:"कमाई (done)",
   cal_by_barber:"इस महीने barber के हिसाब से", cal_now:"इस महीने पर जाएं", cal_none:"इस दिन कोई booking नहीं।", cal_pick:"Bookings देखने के लिए किसी दिन पर tap करें।",
   tl_h:"दिन की timeline", tl_p:"ख़ाली जगह पर tap करें तो वहीं booking जुड़ेगी। किसी booking पर tap करके काम जोड़ें या समय बदलें।",
-  sh_extend:"+ काम जोड़ें", sh_move:"समय बदलें", sh_close:"बंद करें", ck_help:"घड़ी अभी के समय पर चल रही है। पहले या बाद का समय चाहिए तो घंटे या मिनट वाले box को ऊपर-नीचे slide करें।", ck_h:"घंटा", ck_m:"मिनट", ck_s:"सेकंड", ck_live:"अभी का समय चल रहा है", ck_now:"अभी के समय पर लाएँ", ct_free:"ख़ाली slots", ct_own:"अपना समय (कोई भी)", ct_help:"घंटा, मिनट और AM/PM ऊपर-नीचे scroll करके चुनें। पिछला समय भी चुन सकते हैं, जैसे client देर से आया या entry भूल गए।", ct_clash:"इस समय {name} की दूसरी booking है। फिर भी save कर सकते हैं।", ct_hours:"ये समय दुकान के खुलने के समय से बाहर है।", ct_past:"ये समय निकल चुका है। काम हो गया हो तो save के बाद Done कर दें।", ct_pickb:"Barber: {name}। बदलना हो तो ऊपर से दूसरा barber चुनें।",
+  sh_extend:"+ काम जोड़ें", sh_move:"समय बदलें", sh_close:"बंद करें", ck_help:"घड़ी अभी के समय पर चल रही है। पहले या बाद का समय चाहिए तो घंटे या मिनट वाले box को ऊपर-नीचे slide करें।", ck_h:"घंटा", ck_m:"मिनट", ck_s:"सेकंड", ck_live:"अभी का समय चल रहा है", ck_now:"अभी के समय पर लाएँ", rp_h:"Doctor-wise रिपोर्ट", rp_p:"हर doctor ने कितने मरीज़ देखे। जब clinic में एक से ज़्यादा doctor या shift हों तब काम की।", rp_today:"आज", rp_yest:"कल", rp_seen:"देखे", rp_wait:"बाकी", rp_first:"पहला", rp_last:"आख़िरी", rp_avg:"प्रति मरीज़ औसत", rp_none:"अभी कोई doctor नहीं।", snd_lbl:"Call की आवाज़ चालू / बंद", tm_now:"अभी का समय", tm_next:"अगला ख़ाली slot", tm_next_note:"ये अभी का समय नहीं है, ये अगला ख़ाली slot है। {name} तब तक busy हैं।", tm_next_day:"ये अभी का समय नहीं है, इस दिन का पहला ख़ाली slot है।", ct_free:"ख़ाली slots", ct_own:"अपना समय (कोई भी)", ct_help:"घंटा, मिनट और AM/PM ऊपर-नीचे scroll करके चुनें। पिछला समय भी चुन सकते हैं, जैसे client देर से आया या entry भूल गए।", ct_clash:"इस समय {name} की दूसरी booking है। फिर भी save कर सकते हैं।", ct_hours:"ये समय दुकान के खुलने के समय से बाहर है।", ct_past:"ये समय निकल चुका है। काम हो गया हो तो save के बाद Done कर दें।", ct_pickb:"Barber: {name}। बदलना हो तो ऊपर से दूसरा barber चुनें।",
   sh_add_svc:"Service जोड़ें", sh_search:"Service ढूँढें", sh_none:"ऐसी कोई service नहीं मिली। छोटा शब्द लिखकर देखें।", sh_add_min:"या सिर्फ़ समय बढ़ाएं", sh_mins:"+{n} मिनट",
   cf_h:"इससे {name} की {time} वाली booking से टकराव होगा।", cf_other:"{name} को {barber} के पास भेजें", cf_other_none:"उस समय कोई दूसरा barber ख़ाली नहीं है।",
   cf_shift:"{name} को {time} पर करें", cf_shift_none:"आगे नहीं खिसक सकता, उसके बाद भी booking है। \"समय बदलें\" से करें।", cf_keep:"दोनों को ऐसे ही रहने दें",
@@ -214,9 +216,72 @@ const T = {
  }
 };
 
+
+/* ================= business types (Slot platform) ================= */
+// One platform, many branches. Existing salons have no bizType and stay "salon".
+const BIZ = {
+  salon:{ icon:"💈", name:{en:"SalonSlot",hi:"SalonSlot"}, pick:{en:"Salon",hi:"सैलून"}, hint:{en:"Barber · Salon · Beauty parlour",hi:"बारबर · सैलून · ब्यूटी पार्लर"}, color:"#24211F", rep:{en:[[/Customers/g,"Clients"],[/customers/g,"clients"],[/Customer/g,"Client"],[/customer/g,"client"]], hi:[[/ग्राहक/g,"क्लाइंट"],[/Customers/g,"क्लाइंट"],[/customers/g,"क्लाइंट"],[/Customer/g,"क्लाइंट"],[/customer/g,"क्लाइंट"]] } },
+  clinic:{ icon:"🩺", name:{en:"Clinic Slot",hi:"क्लिनिक स्लॉट"}, pick:{en:"Clinic",hi:"क्लिनिक"}, hint:{en:"Doctor · Token · Appointment",hi:"डॉक्टर · टोकन · अपॉइंटमेंट"}, color:"#0F5C5C",
+    tag:{en:"Clinic appointments and tokens, made simple",hi:"क्लिनिक की अपॉइंटमेंट और टोकन, आसान"},
+    sugg:[["General consultation",300,15],["Follow-up visit",150,10],["Fever / cold check",300,15],["Child check-up",400,20],["Blood pressure check",100,10],["Dressing / injection",150,10],["Health check-up",800,30]],
+    rep:{en:[[/Barbers/g,"Doctors"],[/barbers/g,"doctors"],[/Barber/g,"Doctor"],[/barber/g,"doctor"],[/Salons/g,"Clinics"],[/salons/g,"clinics"],[/Salon/g,"Clinic"],[/salon/g,"clinic"],[/Customers/g,"Patients"],[/customers/g,"patients"],[/Customer/g,"Patient"],[/customer/g,"patient"],[/Clients/g,"Patients"],[/clients/g,"patients"],[/Client/g,"Patient"],[/client/g,"patient"],[/Services/g,"Treatments"],[/services/g,"treatments"],[/Service/g,"Treatment"],[/service/g,"treatment"],[/Bookings/g,"Appointments"],[/bookings/g,"appointments"],[/Booking/g,"Appointment"],[/booking/g,"appointment"]],
+         hi:[[/Barbers/g,"डॉक्टर"],[/barbers/g,"डॉक्टर"],[/Barber/g,"डॉक्टर"],[/barber/g,"डॉक्टर"],[/सैलून/g,"क्लिनिक"],[/Salon/g,"Clinic"],[/salon/g,"clinic"],[/ग्राहक/g,"मरीज़"],[/Customers/g,"मरीज़"],[/customers/g,"मरीज़"],[/Customer/g,"मरीज़"],[/customer/g,"मरीज़"],[/Clients/g,"मरीज़"],[/clients/g,"मरीज़"],[/Client/g,"मरीज़"],[/client/g,"मरीज़"],[/Services/g,"इलाज"],[/services/g,"इलाज"],[/Service/g,"इलाज"],[/service/g,"इलाज"],[/Bookings/g,"अपॉइंटमेंट"],[/bookings/g,"अपॉइंटमेंट"],[/Booking/g,"अपॉइंटमेंट"],[/booking/g,"अपॉइंटमेंट"]] } },
+  spa:{ icon:"🧖", name:{en:"Spa Slot",hi:"स्पा स्लॉट"}, pick:{en:"Spa",hi:"स्पा"}, hint:{en:"Therapy · Packages · Wellness",hi:"थेरेपी · पैकेज · वेलनेस"}, color:"#6B4E71",
+    tag:{en:"Spa and wellness bookings, made simple",hi:"स्पा और वेलनेस की बुकिंग, आसान"},
+    sugg:[["Swedish massage",1500,60],["Deep tissue massage",2000,60],["Head & shoulder massage",600,30],["Aromatherapy",1800,60],["Facial",1200,45],["Body scrub",1800,60],["Foot reflexology",700,30],["Couple package",4500,90]],
+    rep:{en:[[/Barbers/g,"Therapists"],[/barbers/g,"therapists"],[/Barber/g,"Therapist"],[/barber/g,"therapist"],[/Salons/g,"Spas"],[/salons/g,"spas"],[/Salon/g,"Spa"],[/salon/g,"spa"],[/Customers/g,"Clients"],[/customers/g,"clients"],[/Customer/g,"Client"],[/customer/g,"client"],[/Clients/g,"Clients"],[/clients/g,"clients"],[/Client/g,"Client"],[/client/g,"client"],[/Services/g,"Therapies"],[/services/g,"therapies"],[/Service/g,"Therapy"],[/service/g,"therapy"]],
+         hi:[[/Barbers/g,"थेरेपिस्ट"],[/barbers/g,"थेरेपिस्ट"],[/Barber/g,"थेरेपिस्ट"],[/barber/g,"थेरेपिस्ट"],[/सैलून/g,"स्पा"],[/Salon/g,"Spa"],[/salon/g,"spa"],[/ग्राहक/g,"क्लाइंट"],[/Customers/g,"क्लाइंट"],[/customers/g,"क्लाइंट"],[/Customer/g,"क्लाइंट"],[/customer/g,"क्लाइंट"],[/Clients/g,"क्लाइंट"],[/clients/g,"क्लाइंट"],[/Client/g,"क्लाइंट"],[/client/g,"क्लाइंट"],[/Services/g,"थेरेपी"],[/services/g,"थेरेपी"],[/Service/g,"थेरेपी"],[/service/g,"थेरेपी"]] } },
+  other:{ icon:"✨", name:{en:"Slot",hi:"स्लॉट"}, pick:{en:"Other",hi:"अन्य"}, hint:{en:"Any service business",hi:"कोई भी सर्विस बिज़नेस"}, color:"#3E5A47",
+    tag:{en:"Bookings for any service business",hi:"किसी भी सर्विस बिज़नेस की बुकिंग"},
+    sugg:[["Consultation",500,30],["Standard service",800,60],["Premium service",1500,60],["Quick visit",200,15]],
+    rep:{en:[[/Barbers/g,"Staff"],[/barbers/g,"staff"],[/Barber/g,"Staff"],[/barber/g,"staff"],[/Salons/g,"Businesses"],[/salons/g,"businesses"],[/Salon/g,"Business"],[/salon/g,"business"],[/Customers/g,"Clients"],[/customers/g,"clients"],[/Customer/g,"Client"],[/customer/g,"client"]],
+         hi:[[/Barbers/g,"स्टाफ़"],[/barbers/g,"स्टाफ़"],[/Barber/g,"स्टाफ़"],[/barber/g,"स्टाफ़"],[/सैलून/g,"बिज़नेस"],[/Salon/g,"Business"],[/salon/g,"business"],[/ग्राहक/g,"क्लाइंट"],[/Customers/g,"क्लाइंट"],[/customers/g,"क्लाइंट"],[/Customer/g,"क्लाइंट"],[/customer/g,"क्लाइंट"]] } }
+};
+BIZ.salon.work = {en:"Barber / beautician team", hi:"बारबर / ब्यूटिशियन टीम"};
+BIZ.clinic.work = {en:"Doctors", hi:"डॉक्टर"};
+BIZ.spa.work = {en:"Therapist team", hi:"थेरेपिस्ट टीम"};
+BIZ.other.work = {en:"Team members", hi:"टीम के सदस्य"};
+BIZ.salon.spec = ["Haircut specialist","Beard expert","Hair colour specialist","Hair spa & treatment","Bridal makeup artist","Facial & skin care","Threading & waxing","Nail artist","Kids haircut","Unisex stylist"];
+BIZ.salon.specPh = {en:"e.g. Beard expert, Hair colour", hi:"जैसे Beard expert, Hair colour"};
+BIZ.clinic.spec = ["General Physician","Child specialist (Paediatrician)","Gynaecologist","Dermatologist (Skin)","Dentist","ENT specialist","Orthopaedic (Bone & Joint)","Cardiologist (Heart)","Diabetologist","Eye specialist (Ophthalmologist)","Physiotherapist","Psychiatrist","Neurologist","Gastroenterologist","Urologist","Pulmonologist (Chest)","General Surgeon","Homeopath","Ayurveda (BAMS)","Dietician"];
+BIZ.clinic.specPh = {en:"e.g. General Physician, Child specialist", hi:"जैसे General Physician, Child specialist"};
+BIZ.spa.spec = ["Swedish massage therapist","Deep tissue specialist","Aromatherapy therapist","Thai massage therapist","Ayurvedic (Abhyanga) therapist","Hot stone therapist","Reflexology specialist","Sports massage therapist","Head & shoulder massage","Facial & skin therapist","Body scrub & wrap","Couple massage","Senior therapist"];
+BIZ.spa.specPh = {en:"e.g. Swedish massage, Aromatherapy", hi:"जैसे Swedish massage, Aromatherapy"};
+BIZ.other.spec = ["Consultant","Senior specialist","Trainer","Technician","Assistant"];
+BIZ.other.specPh = {en:"e.g. Senior specialist", hi:"जैसे Senior specialist"};
+let BIZ_ID = "salon";
+const BIZ_CHOSEN = () => { try{ const v = localStorage.getItem("ss_biz"); return BIZ[v] && v!=="" ? v : ""; }catch(e){ return ""; } };
+function setBiz(id){ BIZ_ID = BIZ[id] ? id : "salon"; const b = BIZ[BIZ_ID];
+  document.documentElement.dataset.biz = BIZ_ID;
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = b.color; }
+const wsSid = uid => (isAdmin() && BIZ_CHOSEN() && BIZ_CHOSEN()!=="salon") ? uid+"_"+BIZ_CHOSEN() : uid;
+const bizName = () => BIZ[BIZ_ID].name[LANG] || BIZ[BIZ_ID].name.en;
+const bizIcon = () => BIZ[BIZ_ID].icon;
+// brand-name swap + word swap for non-salon types; admin/lead/offer screens stay as they are
+const BIZ_SKIP = /^(adm|lead|of_|ofr|rw_|pay|plan|gst|exp)/;
+function bizTr(k, s){
+  if (typeof s!=="string" || BIZ_SKIP.test(k)) return s;
+  const b = BIZ[BIZ_ID];
+  s = s.replace(/SalonSlot/g, b.name.en);
+  for (const [re, to] of (b.rep[LANG]||b.rep.en)) s = s.replace(re, to);
+  return s;
+}
+
+Object.assign(T.en,{ nav_queue:"Tokens", q_h:"Token queue", q_p:"Patients in order of token. The doctor taps Done and the next token starts.", q_mode:"Doctor mode", q_back:"Full app",
+  q_in:"In consultation", q_done:"Done", q_call:"Call next", q_none:"No patient waiting", q_fin:"Done", set_hours:"Working hours & days", set_mgmt:"Staff & access", set_n_svc:"{n} listed", set_n_team:"{n} added", set_open_all:"Open all", set_close_all:"Close all", exp_sub:"Last 2 years, Excel", pdf_offer:"Bill text sent. Now send the PDF to {name} too.", pdf_wait:"Making the PDF…", pdf_saved:"PDF saved. Attach it in WhatsApp.", pdf_fail:"Could not make the PDF. Check internet and try again.", who_lbl:"Customer", by_lbl:"Barber", gst_h:"GST billing", gst_on:"ON", gst_off:"OFF", gst_p:"Turn on to give GST tax invoices with your GSTIN and tax breakup. Off = plain bill as before.", gst_legal:"Business name on invoice", gst_bad:"Enter a valid 15-character GSTIN to issue GST invoices.", gst_rate:"GST rate %", gst_price:"Your service prices are", gst_incl:"GST included", gst_excl:"GST extra", gst_note:"The GSTIN is checked for format and check digit only; you are responsible for using your own registered number. Please confirm the rate and SAC code with your CA. This makes invoices only, it does not file GST returns.", gst_taxable:"Taxable value", exp_h:"Download data for your CA", exp_p:"Last 2 years of bookings and bills in one Excel/CSV file: invoice numbers, GST split, payments.", exp_btn:"Download 2-year data", exp_done:"{n} rows downloaded", popup_off:"Allow pop-ups to open the bill.", prob_h:"Describe the problem", prob_ph:"e.g. fever for 3 days, child is 5 years old", prob_priv:"Only the doctor and clinic can see this.", mic_start:"Speak", mic_stop:"Stop", mic_na:"Tip: use the 🎤 on your keyboard to speak.", mic_denied:"Microphone permission is off.", q_seen_s:"Seen", q_ready:"Ready for next patient", q_wait_s:"Waiting", q_waiting:"{n} waiting", q_next:"Next", q_nodoc:"Add a doctor in Settings first.", q_pickdoc:"Doctor",
+  q_idle:"Doctor is free", q_ahead:"{n} ahead", q_nextup:"Next to go in", q_remind:"Send reminder", q_sent:"Reminder sent", q_nobk:"No tokens today yet.", q_tok:"Token",
+  q_msg:"Hello {name}, {clinic}: your token is #{tk}. {ahead} patient(s) before you. Please reach the clinic soon.\nLive status: {link}", q_msg0:"Hello {name}, {clinic}: you are next, token #{tk}. Please be ready.\nLive status: {link}",
+  q_your:"Your token", q_now:"Now in", q_yourturn:"It is your turn. Please go in.", q_seen:"Your consultation is done.", q_before:"Patients before you", q_live:"Live token status", q_notyet:"Not started yet", q_open:"See live token",
+  team_h:"Team access", team_p:"Add staff by their Google email. They log in with their own account and see only what you allow.", team_email:"Staff Google email", team_name:"Name", team_role:"Role", r_reception:"Reception", r_doctor:"Doctor", r_manager:"Manager", team_doc:"Which doctor profile?", team_rev:"Can see earnings", team_add:"Add staff", team_none:"No staff added yet.", team_bad:"Enter a valid Gmail address.", team_tip:"Doctor who owns the clinic? You already have everything. Use Doctor mode." });
+Object.assign(T.hi,{ nav_queue:"टोकन", q_h:"टोकन कतार", q_p:"मरीज़ टोकन के क्रम में। डॉक्टर Done दबाए तो अगला टोकन चालू हो जाता है।", q_mode:"डॉक्टर मोड", q_back:"पूरा ऐप",
+  q_in:"अभी अंदर", q_done:"Done", q_call:"अगला बुलाएँ", q_none:"कोई मरीज़ इंतज़ार में नहीं", q_fin:"पूरा हुआ", set_hours:"समय और छुट्टी के दिन", set_mgmt:"स्टाफ़ और एक्सेस", set_n_svc:"{n} जुड़ी हैं", set_n_team:"{n} जुड़े हैं", set_open_all:"सब खोलें", set_close_all:"सब बंद", exp_sub:"पिछले 2 साल, Excel", pdf_offer:"बिल का टेक्स्ट भेज दिया। अब {name} को PDF भी भेजें।", pdf_wait:"PDF बन रहा है…", pdf_saved:"PDF सेव हो गया। WhatsApp में अटैच करें।", pdf_fail:"PDF नहीं बन पाया। इंटरनेट देखकर दोबारा कोशिश करें।", who_lbl:"ग्राहक", by_lbl:"Barber", gst_h:"GST बिलिंग", gst_on:"चालू", gst_off:"बंद", gst_p:"चालू करने पर आपके GSTIN और टैक्स ब्रेकअप के साथ GST टैक्स इनवॉइस बनेगा। बंद = पहले जैसा सादा बिल।", gst_legal:"इनवॉइस पर व्यापार का नाम", gst_bad:"GST इनवॉइस के लिए सही 15 अक्षर का GSTIN डालें।", gst_rate:"GST दर %", gst_price:"आपकी सर्विस के दाम", gst_incl:"GST समेत", gst_excl:"GST ऊपर से", gst_note:"GSTIN की जाँच सिर्फ़ फ़ॉर्मैट और चेक-अंक से होती है; अपना ही रजिस्टर्ड नंबर डालना आपकी ज़िम्मेदारी है। दर और SAC कोड अपने CA से पक्का कर लें। यह सिर्फ़ इनवॉइस बनाता है, GST रिटर्न नहीं भरता।", gst_taxable:"टैक्स योग्य राशि", exp_h:"CA के लिए डेटा डाउनलोड", exp_p:"पिछले 2 साल की बुकिंग और बिल एक Excel/CSV फ़ाइल में: इनवॉइस नंबर, GST का बँटवारा, भुगतान।", exp_btn:"2 साल का डेटा डाउनलोड", exp_done:"{n} पंक्तियाँ डाउनलोड हुईं", popup_off:"बिल खोलने के लिए pop-up की अनुमति दें।", prob_h:"समस्या बताएँ", prob_ph:"जैसे: 3 दिन से बुखार है, बच्चा 5 साल का है", prob_priv:"इसे सिर्फ़ डॉक्टर और क्लिनिक देखेंगे।", mic_start:"बोलकर लिखें", mic_stop:"रोकें", mic_na:"सुझाव: कीबोर्ड के 🎤 से बोलकर लिखें।", mic_denied:"माइक की अनुमति बंद है।", q_seen_s:"देखे गए", q_ready:"अगला मरीज़ बुलाएँ", q_wait_s:"इंतज़ार", q_waiting:"{n} इंतज़ार में", q_next:"अगला", q_nodoc:"पहले Settings में डॉक्टर जोड़ें।", q_pickdoc:"डॉक्टर",
+  q_idle:"डॉक्टर ख़ाली हैं", q_ahead:"आगे {n}", q_nextup:"अगला अंदर जाएगा", q_remind:"रिमाइंडर भेजें", q_sent:"रिमाइंडर भेजा", q_nobk:"आज अभी कोई टोकन नहीं।", q_tok:"टोकन",
+  q_msg:"नमस्ते {name}, {clinic}: आपका टोकन #{tk} है। आपसे पहले {ahead} मरीज़ हैं। कृपया जल्दी क्लिनिक पहुँचें।\nलाइव स्थिति: {link}", q_msg0:"नमस्ते {name}, {clinic}: अगला नंबर आपका है, टोकन #{tk}। कृपया तैयार रहें।\nलाइव स्थिति: {link}",
+  q_your:"आपका टोकन", q_now:"अभी अंदर", q_yourturn:"आपकी बारी है। कृपया अंदर जाइए।", q_seen:"आपका परामर्श हो चुका है।", q_before:"आपसे पहले मरीज़", q_live:"टोकन की लाइव स्थिति", q_notyet:"अभी शुरू नहीं हुआ", q_open:"लाइव टोकन देखें",
+  team_h:"टीम एक्सेस", team_p:"स्टाफ़ को उनके Google ईमेल से जोड़ें। वे अपने ख़ुद के अकाउंट से लॉगिन करेंगे और सिर्फ़ वही देखेंगे जो आप तय करें।", team_email:"स्टाफ़ का Google ईमेल", team_name:"नाम", team_role:"रोल", r_reception:"रिसेप्शन", r_doctor:"डॉक्टर", r_manager:"मैनेजर", team_doc:"कौन-सा डॉक्टर प्रोफ़ाइल?", team_rev:"कमाई देख सके", team_add:"स्टाफ़ जोड़ें", team_none:"अभी कोई स्टाफ़ नहीं जुड़ा।", team_bad:"सही Gmail पता डालें।", team_tip:"क्लिनिक के मालिक ख़ुद डॉक्टर हैं? आपके पास सब कुछ है, बस डॉक्टर मोड खोलिए।" });
 /* ================= helpers ================= */
 let LANG = "hi"; try{ LANG = localStorage.getItem("ss_lang") || "hi"; }catch(e){}
-const t = (k, v) => { let s = (T[LANG]||T.en)[k]; if (s===undefined) s = T.en[k]; if (typeof s==="string" && v) for (const x in v) s = s.split("{"+x+"}").join(v[x]); return s; };
+const t = (k, v) => { let s = (T[LANG]||T.en)[k]; if (s===undefined) s = T.en[k]; if (k==="sugg" && BIZ[BIZ_ID].sugg) return BIZ[BIZ_ID].sugg; if (k==="spec_ph" && BIZ[BIZ_ID].specPh) return BIZ[BIZ_ID].specPh[LANG]||BIZ[BIZ_ID].specPh.en; if (k==="tagline" && BIZ[BIZ_ID].tag) s = BIZ[BIZ_ID].tag[LANG]||BIZ[BIZ_ID].tag.en; s = bizTr(k, s); if (typeof s==="string" && v) for (const x in v) s = s.split("{"+x+"}").join(v[x]); return s; };
 const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid = () => Math.random().toString(36).slice(2,9);
 const pad = n => String(n).padStart(2,"0");
@@ -235,6 +300,20 @@ function avatar(b, cls){ if (b && b.photo) return `<img class="av ${cls||""}" sr
   const n = (b&&b.name||"?").trim(); const c = COLORS[(n.charCodeAt(0)||0)%COLORS.length];
   return `<span class="av ${cls||""}" style="background:${c}" aria-hidden="true">${esc(n.slice(0,1).toUpperCase())}</span>`; }
 function toast(m){ const el = document.createElement("div"); el.className="toast"; el.setAttribute("role","status"); el.textContent=m; document.body.appendChild(el); setTimeout(()=>el.remove(), 2600); }
+/* ---- doctor page sounds: "Next" = door-bell ding-dong, "Done" = short rising chime (loud, bell-like, heard at reception) ---- */
+let AC = null, ACOut = null;
+const sndOn = () => { try{ return localStorage.getItem("ss_snd")!=="0"; }catch(e){ return true; } };
+function acx(){ const C = window.AudioContext||window.webkitAudioContext; if (!C) return null;
+  if (!AC){ AC = new C(); const lp = AC.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=7000;
+    const cm = AC.createDynamicsCompressor(); cm.threshold.value=-18; cm.ratio.value=6; cm.attack.value=.003; cm.release.value=.25;
+    const mg = AC.createGain(); mg.gain.value=1.3; lp.connect(cm); cm.connect(mg); mg.connect(AC.destination); ACOut = lp; }
+  if (AC.state==="suspended") AC.resume(); return AC; }
+// one bell note: a few partials (bell-like, not a flat beep) with a fast strike and a long ring
+function bell(f, at, ring, vol){ const a = acx(); if (!a) return; const t0 = a.currentTime+at;
+  [[1,1],[2.01,.5],[2.76,.3],[4.07,.14],[5.4,.07]].forEach(([r,v])=>{ const o=a.createOscillator(), g=a.createGain(); o.type="sine"; o.frequency.value=f*r; o.connect(g); g.connect(ACOut);
+    const L = ring/(r>2?2.2:1); g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(vol*v,t0+.008); g.gain.exponentialRampToValueAtTime(.0008,t0+L); o.start(t0); o.stop(t0+L+.05); }); }
+function sndNext(){ if (!sndOn()) return; try{ bell(784,0,1.5,.55); bell(587.3,.62,2.1,.6); }catch(e){} }          // ding-dong: G5 then D5, door-bell
+function sndDone(){ if (!sndOn()) return; try{ bell(523.3,0,.5,.4); bell(659.3,.13,.5,.4); bell(1046.5,.26,1.0,.45); }catch(e){} } // quick rising C-E-C chime
 function beep(){ try{ const a = new (window.AudioContext||window.webkitAudioContext)(); [0,0.18].forEach(d=>{ const o=a.createOscillator(), g=a.createGain(); o.frequency.value=880; o.connect(g); g.connect(a.destination); g.gain.setValueAtTime(.2,a.currentTime+d); g.gain.exponentialRampToValueAtTime(.001,a.currentTime+d+.15); o.start(a.currentTime+d); o.stop(a.currentTime+d+.16); }); }catch(e){} }
 const slotKey = (barberId, time) => barberId+"_"+time.replace(":","");
 
@@ -251,8 +330,10 @@ const OF0 = () => ({ kind:"days", title:"", desc:"", days:"3", reveal:"", note:"
 UI.of = OF0();
 let D = null; // setup draft
 
+const canRev = () => !S.staff || S.staff.rev===true;
 const isAdmin = () => !!(S.user && S.user.email === ADMIN_EMAIL);
-const linkFor = sid => location.origin + location.pathname.replace(/index\.html$/,"").replace(/\/beta\/$/,"/") + "?s=" + sid;
+// test version: the link stays in /beta (with &t=1) so the page opens with the new theme and features; the main app gets it only after approval
+const linkFor = sid => IS_BETA ? location.origin + location.pathname.replace(/index\.html$/,"") + "?s=" + sid + "&t=1" : location.origin + location.pathname.replace(/index\.html$/,"") + "?s=" + sid;
 function subInfo(s){ s = s || S.salon; if (!s) return {active:false,days:0,kind:"none"};
   const exp = (s.sub&&s.sub.expires)||0, left = exp-Date.now();
   return { on: s.active!==false, active: s.active!==false && left>0, days: Math.max(0,Math.ceil(left/DAY)), kind: s.sub&&s.sub.plan ? "paid":"trial", expires:exp }; }
@@ -274,15 +355,51 @@ function billDraft(s, k){
   const items = [k.serviceId].concat(k.extra||[]).map(id=>svcOf(s,id)).filter(Boolean).map(v=>({n:v.name, p:String(Number(v.price)||0)}));
   return { items: items.length ? items : [{n:bkNames(s,k), p:String(bkPrice(s,k))}], disc:"", pay:"cash" };
 }
-function billSum(d){ const sub = d.items.reduce((a,x)=>a+Math.max(0,Math.round(Number(x.p)||0)),0); const disc = Math.min(sub, Math.max(0,Math.round(Number(d.disc)||0))); return { sub, disc, total: sub-disc }; }
+const r2 = n => Math.round((Number(n)||0)*100)/100;
+const rs2 = n => "₹"+(Number(n)||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+const GSTIN_RE = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
+// format + state code (01-38, 97, 99) + the GSTIN check digit. Catches typos and made-up numbers; it cannot tell if the number is really registered to this shop.
+function gstinValid(x){
+  x = String(x||"").trim().toUpperCase(); if (!GSTIN_RE.test(x)) return false;
+  const st = Number(x.slice(0,2)); if (!((st>=1 && st<=38) || st===97 || st===99)) return false;
+  const C = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"; let sum = 0;
+  for (let i=0;i<14;i++){ const p = C.indexOf(x[i]) * (i%2 ? 2 : 1); sum += Math.floor(p/36) + p%36; }
+  return C[(36 - sum%36)%36] === x[14];
+}
+const gstOk = g => !!g && g.on && gstinValid(g.gstin);
+const GST_DEF = { salon:{rate:18,sac:"999721"}, spa:{rate:18,sac:"999723"}, clinic:{rate:0,sac:"999312"}, other:{rate:18,sac:""} };
+// g = {rate, incl}; returns sub, disc, total and (with g) the tax split. Prices are GST-inclusive by default.
+function billSum(d, g){
+  const sub = d.items.reduce((a,x)=>a+Math.max(0,Math.round(Number(x.p)||0)),0); const disc = Math.min(sub, Math.max(0,Math.round(Number(d.disc)||0))); const base = sub-disc;
+  if (!g) return { sub, disc, total: base };
+  const rate = Number(g.rate)||0; let taxable, total;
+  if (g.incl!==false){ total = base; taxable = r2(base*100/(100+rate)); } else { taxable = base; total = r2(base + base*rate/100); }
+  const tax = r2(total-taxable), cgst = r2(tax/2), sgst = r2(tax-cgst);
+  return { sub, disc, total, taxable, cgst, sgst, rate };
+}
+const fyOf = (d=new Date()) => { const y = d.getMonth()>=3 ? d.getFullYear() : d.getFullYear()-1; return String(y).slice(2)+"-"+String(y+1).slice(2); };
 function billText(s, k, bill){
+  if (bill.gst) return gstBillText(s, k, bill);
   const hi = LANG==="hi", b = barberOf(s,k.barberId)||{name:""}, addr = fullAddr(s), line = "———————";
   const L = [`*${s.name}*`, `Bill #${bill.no}${bill.edited?(hi?" (बदला हुआ)":" (revised)"):""}`];
   if (addr) L.push((hi?"पता: ":"Address: ")+addr);
-  L.push(`${hi?"तारीख़":"Date"}: ${longDate(new Date(k.date+"T00:00").getTime())}, ${nice(k.time)}`, `Customer: ${k.cust}${b.name?" · Barber: "+b.name:""}`, line);
+  L.push(`${hi?"तारीख़":"Date"}: ${longDate(new Date(k.date+"T00:00").getTime())}, ${nice(k.time)}`, `${t("who_lbl")}: ${k.cust}${b.name?" · "+t("by_lbl")+": "+b.name:""}`, line);
   bill.items.forEach(x=>L.push(`${x.n}: ${rs(x.p)}`));
   if (bill.disc) L.push(`Discount: −${rs(bill.disc)}`);
-  L.push(`*${hi?"कुल":"Total"}: ${rs(bill.total)}* · ${bill.pay==="upi"?"UPI":"Cash"}`, line, hi?"धन्यवाद, फिर आइए!":"Thank you, see you again!", `${hi?"अगली booking यहाँ से":"Book your next visit"}: ${linkFor(S.sid)}`);
+  L.push(`*${hi?"कुल":"Total"}: ${rs(bill.total)}* · ${bill.pay==="upi"?"UPI":"Cash"}`, line, hi?"धन्यवाद, फिर आइए!":"Thank you, see you again!", ...billTail(s));
+  return L.join("\n");
+}
+const waShop = sl => digits(sl.phone).length===10 ? "https://wa.me/"+waNum(sl.phone) : "";
+// last lines of every bill: book again, chat on the shop's WhatsApp, map
+function billTail(s){ const hi = LANG==="hi", L = [`${hi?"अगली booking यहाँ से":"Book your next visit"}: ${linkFor(S.sid)}`]; const w = waShop(s); if (w) L.push(`${hi?"WhatsApp पर बात करें":"Chat on WhatsApp"}: ${w}`); L.push(`${hi?"रास्ता":"Map"}: ${mapUrl(s)}`); return L; }
+function gstBillText(s, k, bill){
+  const hi = LANG==="hi", g = bill.gst, addr = fullAddr(s), line = "———————", dt = new Date(bill.at||Date.now());
+  const L = [`*${g.legal||s.name}*`, `GSTIN: ${g.gstin}`, `*Tax Invoice ${g.inv}*${bill.edited?(hi?" (बदला हुआ)":" (revised)"):""}`];
+  if (addr) L.push((hi?"पता: ":"Address: ")+addr);
+  L.push(`${hi?"तारीख़":"Date"}: ${longDate(dt.getTime())}`, `${t("who_lbl")}: ${k.cust}`, line);
+  bill.items.forEach(x=>L.push(`${x.n}${g.sac?" ("+g.sac+")":""}: ${rs2(x.p)}`));
+  if (bill.disc) L.push(`${hi?"छूट":"Discount"}: −${rs2(bill.disc)}`);
+  L.push(line, `${hi?"टैक्स योग्य राशि":"Taxable value"}: ${rs2(g.taxable)}`, `CGST ${g.rate/2}%: ${rs2(g.cgst)}`, `SGST ${g.rate/2}%: ${rs2(g.sgst)}`, `*${hi?"कुल":"Total"}: ${rs2(bill.total)}* · ${bill.pay==="upi"?"UPI":"Cash"}`, line, hi?"धन्यवाद, फिर आइए!":"Thank you, see you again!", ...billTail(s));
   return L.join("\n");
 }
 const billSentLbl = b => !b.sent ? t("bill_not_sent") : b.sent===1 ? t("bill_sent1") : t("bill_sent_n",{n:b.sent});
@@ -318,6 +435,8 @@ function freeSlots(salon, date, svcId, barberPref, slotsMap, opt){
   for (let m=open; m+dur<=close; m+=step){ if (m<=nowM) continue; const f = cands.find(b=>isFree(busy,b.id,m,dur)); if (f) out.push({time:toHM(m), barberId:f.id}); }
   return out;
 }
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let micRec = null;
 async function createBooking(sid, salon, b, force){
   const dur = Number(b.dur) || Number((svcOf(salon,b.serviceId)||{}).dur)||30;
   const dref = doc(db,"salons",sid,"days",b.date), bref = doc(collection(db,"salons",sid,"bookings"));
@@ -325,7 +444,9 @@ async function createBooking(sid, salon, b, force){
   await runTransaction(db, async tx => {
     const d = await tx.get(dref); const slots = d.exists() ? (d.data().slots||{}) : {};
     if (!force && !isFree(busyList(slots), b.barberId, toMin(b.time), dur)) throw new Error("taken");
-    if (d.exists()) tx.update(dref, { ["slots."+key]: dur }); else tx.set(dref, { slots: { [key]: dur } });
+    const clinic = salon.bizType==="clinic"; let tk = 0;
+    if (clinic){ const tok = (d.exists() && d.data().tok) || {}; tk = (Number(tok[b.barberId])||0)+1; b.token = tk; }
+    if (d.exists()) tx.update(dref, { ["slots."+key]: dur, ...(clinic?{["tok."+b.barberId]: tk}:{}) }); else tx.set(dref, { slots: { [key]: dur }, ...(clinic?{tok:{[b.barberId]:tk}}:{}) });
     tx.set(bref, b);
   });
   return bref.id;
@@ -333,6 +454,11 @@ async function createBooking(sid, salon, b, force){
 
 /* ================= messages ================= */
 function msgs(salon, k){
+  const m = msgs0(salon, k);
+  if (isClinic(salon) && k.token){ m.cust += "\n"+t("q_your")+": #"+k.token+"\n"+t("q_live")+": "+queueLink(salon,k); m.salon += "\n#"+k.token; }
+  return m;
+}
+function msgs0(salon, k){
   const svc = {name:bkNames(salon,k), price:bkPrice(salon,k)}, b = barberOf(salon,k.barberId)||{name:""}, when = dayLabel(k.date)+", "+nice(k.time), hi = LANG==="hi";
   return {
     cust: `${hi?"नमस्ते":"Hi"} ${k.cust}! ${hi?"आपकी booking पक्की है":"Your booking is confirmed"}.\n${salon.name}\n${svc.name} · ${b.name}\n${when}\n₹${svc.price}${fullAddr(salon)?"\n"+(hi?"पता: ":"Address: ")+fullAddr(salon):""}\n${hi?"रास्ता":"Map"}: ${mapUrl(salon)}`,
@@ -379,7 +505,7 @@ function daySummary(s, date, onlyBarber){
 
 /* ================= shell ================= */
 function topBar(name, sub){
-  return `<header class="top"><div class="in"><span class="pole" aria-hidden="true"></span><div class="brand">${esc(name||"SalonSlot")}<small>${esc(sub||t("tagline"))}</small></div><span class="spacer"></span>
+  return `<header class="top"><div class="in"><span class="pole" aria-hidden="true"></span><div class="brand">${esc(name||bizName())}<small>${esc(sub||t("tagline"))}</small></div><span class="spacer"></span>
   <div class="lang" role="group" aria-label="Language"><button data-a="lang" data-v="hi" class="${LANG==="hi"?"on":""}">हिंदी</button><button data-a="lang" data-v="en" class="${LANG==="en"?"on":""}">EN</button></div></div></header>`;
 }
 function render(){
@@ -387,13 +513,14 @@ function render(){
   const y = window.scrollY; let html = "";
   if (CUSTOMER_SID){ html = renderCustomer(); }
   else {
-    const name = S.salon ? S.salon.name : "SalonSlot", sub = S.salon ? (S.salon.area||t("tagline")) : t("tagline");
+    const name = S.salon ? S.salon.name : bizName(), sub = S.salon ? (S.salon.area||t("tagline")) : t("tagline");
     html = topBar(name, sub)+`<main class="t-${UI.view==="main"?UI.tab:UI.view}">`;
     if (UI.view==="loading") html += `<div class="center"><div class="spin" aria-label="${t("loading")}"></div></div>`;
     else if (UI.view==="login") html += viewLogin();
     else if (UI.view==="setup") html += viewSetup();
     else if (UI.view==="adminOnly") html += `<button class="btn sm" data-a="adminBack">← ${t("back")}</button>` + viewAdmin();
-    else html += ({home:viewHome, calendar:viewCalendar, book:viewBook, barber:viewBarber, rewards:viewRewards, plan:viewPlan, settings:viewSettings, admin:viewAdmin, clients:viewClients, closing:viewClosing}[UI.tab]||viewHome)();
+    else html += ({home:viewHome, queue:viewQueue, doctor:viewDoctor, calendar:viewCalendar, book:viewBook, barber:viewBarber, rewards:viewRewards, plan:viewPlan, settings:viewSettings, admin:viewAdmin, clients:viewClients, closing:viewClosing}[UI.tab]||viewHome)();
+    if (UI.view==="main" && S.staff && S.user) html += `<div class="staffbar"><div class="grow"><span class="small muted">${t("signed_as")}</span><br><b>${esc(S.user.email||"")}</b></div><button class="btn sm" data-a="logout">⎋ ${t("logout")}</button></div>`;
     html += "</main>";
     if (UI.view==="main") html += navBar() + viewSheet();
   }
@@ -411,24 +538,32 @@ function navBar(){
     rewards:'<rect x="3" y="8.5" width="18" height="12.5" rx="1.5"/><path d="M3 12.5h18M12 8.5V21M12 8.5C10.6 5.3 7.2 4.4 6.8 6.4 6.4 8.4 9.8 8.5 12 8.5zm0 0c1.4-3.2 4.8-4.1 5.2-2.1.4 2-3 2.1-5.2 2.1z"/>',
     plan:'<rect x="2.5" y="5.5" width="19" height="13" rx="2"/><path d="M2.5 10h19M6.5 15h4"/>',
     settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
-    admin:'<path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>'
+    admin:'<path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+    queue:'<path d="M4 7h16v4a2 2 0 0 0 0 4v4H4v-4a2 2 0 0 0 0-4z"/><path d="M9 7v12M9 10v1M9 13v1"/>'
   };
-  const tabs = ["home","calendar","book","rewards","plan","settings"].concat(isAdmin()?["admin"]:[]);
+  let tabs = ["home","calendar","book","rewards","plan","settings"].concat(isAdmin()?["admin"]:[]);
+  if (isClinic(S.salon)) tabs.splice(1,0,"queue");
+  if (S.staff){ if (S.staff.role==="doctor") return ""; tabs = ["home"].concat(isClinic(S.salon)?["queue"]:[], ["book"], (S.staff.role==="manager"&&canRev())?["calendar"]:[]); }
   const fresh = freshOffers().length;
   return `<nav class="nav ${tabs.length>6?"seven":tabs.length>5?"six":""}" aria-label="Main"><div>${tabs.map(k=>
     `<button data-a="tab" data-v="${k}" class="${UI.tab===k?"on":""}" aria-current="${UI.tab===k?"page":"false"}"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic[k]}</svg>${k==="rewards"&&fresh?`<i class="dot" aria-label="${fresh}"></i>`:""}</span>${t("nav_"+k)}</button>`).join("")}</div></nav>`;
 }
 
-const brandFoot = () => `<p class="brandfoot">${t("booked_by")} <a href="https://www.instagram.com/salon.slot/" target="_blank" rel="noopener"><b>SalonSlot</b> · @salon.slot</a><br><span>Powered by <a href="https://www.instagram.com/visualzonefilms/" target="_blank" rel="noopener">Visual Zone Films</a></span></p>`;
+const brandFoot = () => `<p class="brandfoot">${t("booked_by")} <a href="https://www.instagram.com/salon.slot/" target="_blank" rel="noopener"><b>${esc(bizName().replace(/ /g,""))}</b> · @salon.slot</a><br><span>Powered by <a href="https://www.instagram.com/visualzonefilms/" target="_blank" rel="noopener">Visual Zone Films</a></span></p>`;
 
 /* ================= login ================= */
 const G_ICON = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
+function bizPicker(){
+  return `<section class="bizpick"><h1>${t("biz_h")}</h1><p class="muted">${t("biz_p")}</p><div class="bizgrid">${["salon","clinic","spa","other"].map(id=>`<button class="biztile" data-a="pickBiz" data-v="${id}" data-biz="${id}"><span class="bi" aria-hidden="true">${BIZ[id].icon}</span><b>${BIZ[id].pick[LANG]||BIZ[id].pick.en}</b><small>${BIZ[id].hint[LANG]||BIZ[id].hint.en}</small></button>`).join("")}</div></section>${brandFoot()}`;
+}
 function viewLogin(){
-  return `<section class="hero"><p class="label">${t("tagline")}</p><h1>${t("welcome_h")}</h1><p>${t("welcome_p")}</p>
+  if (!BIZ_CHOSEN()) return bizPicker();
+  return `<section class="hero"><span class="bizbadge" aria-hidden="true">${bizIcon()}</span><p class="label">${t("tagline")}</p><h1>${t("welcome_h")}</h1><p>${t("welcome_p")}</p><p class="label">${t("tagline")}</p><h1>${t("welcome_h")}</h1><p>${t("welcome_p")}</p>
     <button class="btn block gbtn" data-a="login" ${UI.busy?"disabled":""}>${G_ICON} ${t("signin")}</button></section>
     ${UI.err?`<div class="banner bad" role="alert">${UI.err}</div>`:""}
     <p class="rule small">${t("free_trial")}</p>
     <p class="small muted" style="text-align:center">${t("signin_note")}</p>
+    <p style="text-align:center"><button class="btn sm ghost" data-a="changeBiz">${bizIcon()} ${t("biz_change")}</button></p>
     <div class="card"><p class="label">${t("plan_h")}</p><div class="plans">
       ${["monthly","halfyearly","yearly"].map(p=>`<div class="plan"><span class="label">${t(p)}</span><b>₹${PLANS[p].price.toLocaleString("en-IN")}</b><span class="small muted">${t(p==="monthly"?"per_month":p==="yearly"?"per_year":"per_half")}</span></div>`).join("")}</div></div>${brandFoot()}`;
 }
@@ -458,10 +593,11 @@ function barbersEditor(o){
     <div class="stack">
       <label class="field"><span class="small">${t("barber_name")} ${i+1}</span><input type="text" id="bn_${b.id}" data-bar="${b.id}" data-k="name" value="${esc(b.name)}"></label>
       <label class="field"><span class="small">${t("speciality")} <em>(${t("optional")})</em></span><input type="text" id="bs_${b.id}" data-bar="${b.id}" data-k="spec" value="${esc(b.spec)}" placeholder="${t("spec_ph")}"></label>
+      <div class="chips specrow" aria-label="${t("speciality")}">${BIZ[BIZ_ID].spec.filter(x=>!String(b.spec||"").includes(x)).map(x=>`<button class="chip" data-a="specSug" data-v="${esc(b.id)}|${esc(x)}">+ ${esc(x)}</button>`).join("")}</div>
       <div class="field"><span class="small">${t("g_serves")}</span><div class="chips" role="radiogroup" aria-label="${t("g_serves")}">${["m","f","both"].map(g=>`<button class="chip ${barberServes(b)===g?"on":""}" role="radio" aria-checked="${barberServes(b)===g}" data-a="barServes" data-v="${b.id}|${g}">${t("g_"+g)}</button>`).join("")}</div></div>
       ${pickField(o,b)}
       <label class="field"><span class="small">${t("barber_phone")} <em>(${t("optional")})</em></span><input type="tel" inputmode="tel" id="bp_${b.id}" data-bc="${b.id}" data-k="phone" value="${esc((contactsOf()[b.id]||{}).phone||"")}" placeholder="98XXXXXXXX"></label>
-      <label class="field"><span class="small">${t("barber_email")} <em>(${t("optional")})</em></span><input type="email" inputmode="email" id="be_${b.id}" data-bc="${b.id}" data-k="email" value="${esc((contactsOf()[b.id]||{}).email||b.email||"")}" placeholder="barber@gmail.com"></label>
+      <label class="field"><span class="small">${t("barber_email")} <em>(${t("optional")})</em></span><input type="email" inputmode="email" id="be_${b.id}" data-bc="${b.id}" data-k="email" value="${esc((contactsOf()[b.id]||{}).email||b.email||"")}" placeholder="name@gmail.com"></label>
       <p class="small muted">${t("private_note")}</p>
       <button class="btn ghost sm" style="align-self:flex-start" data-a="delBarber" data-v="${b.id}">${t("remove")}</button>
     </div></div>`).join("")}</div>
@@ -499,7 +635,7 @@ function viewSetup(){
   if (n===2) body = `<h2>${t("s2_h")}</h2>${hoursFields(D)}`;
   if (n===3) body = `<h2>${t("s3_h")}</h2><p class="muted small">${t("s3_p")}</p>${servicesEditor(D)}`;
   if (n===4) body = `<h2>${t("s4_h")}</h2><p class="muted small">${t("s4_p")}</p>${barbersEditor(D)}`;
-  if (n===5) body = `<div class="lock stack"><div class="big" aria-hidden="true">✂️</div><h2>${t("s5_h")}</h2><p class="muted">${t("s5_p")}</p></div>
+  if (n===5) body = `<div class="lock stack"><div class="big" aria-hidden="true">${BIZ_ID==="salon"?"✂️":bizIcon()}</div><h2>${t("s5_h")}</h2><p class="muted">${t("s5_p")}</p></div>
     <div class="barbers">${D.barbers.map(b=>`<div class="bcard">${avatar(b,"lg")}<b>${esc(b.name)}</b>${b.spec?`<small>${esc(b.spec)}</small>`:""}</div>`).join("")}</div>`;
   return `${isAdmin()?`<button class="btn primary block" data-a="adminOnly">🛡️ ${t("nav_admin")}</button>`:""}<div class="stack"><p class="label">${t("step")} ${n} ${t("of")} ${total}</p><div class="steps">${Array.from({length:total},(_,i)=>`<i class="${i<n?"on":""}"></i>`).join("")}</div></div>
   <div class="card">${body}</div>
@@ -532,10 +668,10 @@ function bookingRow(k, o){
   const pill = k.status==="done"?`<span class="pill ok">${t("st_done")}</span>`:k.status==="cancelled"?`<span class="pill bad">${t("st_cancelled")}</span>`:`<span class="pill warn">${t("st_booked")}</span>`;
   const manage = !o.view && S.bookings.some(x=>x.id===k.id);
   return `<div class="bk"><div class="t">${nice(k.time).replace(" ","<small>")}</small></div><div class="body">
-    <div class="row" style="gap:8px">${digits(k.phone).length===10?`<button class="cname grow" data-a="cHist" data-v="${digits(k.phone)}"><b>${esc(k.cust)}</b></button>`:`<b class="grow">${esc(k.cust)}</b>`}${k.src==="online"?`<span class="pill">${t("online")}</span>`:""}${k.bill?`<span class="pill">${t("bill_no",{n:k.bill.no})}</span>`:""}${pill}</div>
+    <div class="row" style="gap:8px">${digits(k.phone).length===10?`<button class="cname grow" data-a="cHist" data-v="${digits(k.phone)}"><b>${esc(k.cust)}</b></button>`:`<b class="grow">${esc(k.cust)}</b>`}${k.src==="online"?`<span class="pill">${t("online")}</span>`:""}${k.bill?`<span class="pill">${k.bill.gst?esc(k.bill.gst.inv):t("bill_no",{n:k.bill.no})}</span>`:""}${pill}</div>
     <div class="row small muted" style="gap:6px">${avatar(b,"sm")}<span>${niceRange(k.time,bkDur(s,k))} · ${esc(b.name)} · ${esc(svc.name)} · ${rs(bkEarn(s,k))}${k.bill?" "+(k.bill.pay==="upi"?"UPI":"Cash"):""} · ${esc(k.phone)}${k.email?" · "+esc(k.email):""}</span></div>
     ${k.status==="done" && manage?`<div class="row" style="gap:6px">
-      ${k.bill?`<a class="btn sm primary" data-a="billResent" data-v="${k.id}" href="${waLink(k.phone, billText(s,k,{...k.bill, edited:!!k.bill.edited}))}" target="_blank" rel="noopener">${t("bill_resend")}</a><button class="btn sm" data-a="billOpen" data-v="${k.id}">${t("bill_edit")}</button><span class="small muted">${billSentLbl(k.bill)}</span>`
+      ${k.bill?`<a class="btn sm primary" data-a="billResent" data-v="${k.id}" href="${waLink(k.phone, billText(s,k,{...k.bill, edited:!!k.bill.edited}))}" target="_blank" rel="noopener">${t("bill_resend")}</a><button class="btn sm" data-a="billOpen" data-v="${k.id}">${t("bill_edit")}</button><button class="btn sm" data-a="billPdf" data-v="${k.id}">🧾 PDF</button><span class="small muted">${billSentLbl(k.bill)}</span>`
         :`<button class="btn sm primary" data-a="billOpen" data-v="${k.id}">${t("bill_make")}</button>`}</div>`:""}
     ${k.status==="booked"?`<div class="row" style="gap:6px">
       <button class="btn sm primary" data-a="done" data-v="${k.id}">${t("mark_done")}</button>
@@ -578,14 +714,14 @@ function viewHome(){
   const later = S.bookings.filter(k=>k.date>td && k.status==="booked").sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).slice(0,8);
   let last = "";
   const fresh = freshOffers().length;
-  return `${subBanner()}
-  ${fresh?`<button class="giftbar" data-a="tab" data-v="rewards"><span class="gi" aria-hidden="true">🎁</span><span class="grow">${fresh===1?t("rw_home"):t("rw_home_n",{n:fresh})}</span><b>${t("rw_open_btn")} →</b></button>`:""}
-  ${!String(S.salon.address||"").trim()?`<div class="banner warn"><span style="flex:1">${t("addr_missing")}</span><button class="btn sm saffron" data-a="tab" data-v="settings">${t("nav_settings")}</button></div>`:""}
+  return `${S.staff?"":subBanner()}
+  ${fresh&&!S.staff?`<button class="giftbar" data-a="tab" data-v="rewards"><span class="gi" aria-hidden="true">🎁</span><span class="grow">${fresh===1?t("rw_home"):t("rw_home_n",{n:fresh})}</span><b>${t("rw_open_btn")} →</b></button>`:""}
+  ${!S.staff&&!String(S.salon.address||"").trim()?`<div class="banner warn"><span style="flex:1">${t("addr_missing")}</span><button class="btn sm saffron" data-a="tab" data-v="settings">${t("nav_settings")}</button></div>`:""}
   <div><p class="muted">${t("hello")}${S.salon.owner?", "+esc(S.salon.owner):""}</p><h1>${dayLabel(td)}</h1></div>
   <div class="stats"><div class="stat"><b>${today.filter(k=>k.status!=="cancelled").length}</b><span>${t("today_bk")}</span></div>
-    <div class="stat"><b>${up}</b><span>${t("upcoming")}</span></div><div class="stat"><b>${rs(earned)}</b><span>${t("earned")}</span></div></div>
+    <div class="stat"><b>${up}</b><span>${t("upcoming")}</span></div>${canRev()?`<div class="stat"><b>${rs(earned)}</b><span>${t("earned")}</span></div>`:""}</div>
   <button class="btn primary block" data-a="walkin">+ ${t("add_walkin")}</button>
-  <div class="homebtns"><button class="btn" data-a="tab" data-v="closing">📊 ${t("home_closing")}</button><button class="btn" data-a="tab" data-v="clients">👥 ${t("home_clients")}${S.allBk?(n=>n?` <span class="pill warn">${n}</span>`:"")(lostOf(clientsOf(allBkList()),30).length):""}</button></div>
+  <div class="homebtns">${canRev()?`<button class="btn" data-a="tab" data-v="closing">📊 ${t("home_closing")}</button>`:""}<button class="btn" data-a="tab" data-v="clients">👥 ${t("home_clients")}${S.allBk?(n=>n?` <span class="pill warn">${n}</span>`:"")(lostOf(clientsOf(allBkList()),30).length):""}</button></div>
   <div class="cols"><div class="colA">
   <div class="card"><div class="row" style="gap:6px"><h2 class="grow">${t("tl_h")}</h2>
       <button class="btn sm ghost" data-a="tlDay" data-v="-1" ${tlDate<=tlMin?"disabled":""} aria-label="${t("back")}">‹</button><b style="min-width:96px;text-align:center">${dayLabel(tlDate)}</b>
@@ -666,7 +802,7 @@ function viewSheet(){
   const d = bkDur(s,k), b = barberOf(s,k.barberId)||{name:"?"}, m = msgs(s,k);
   let body = "";
   if (sh.mode==="bill" && UI.bill){
-    const dr = UI.bill, sm = billSum(dr), old = k.bill;
+    const dr = UI.bill, old = k.bill, gs0 = s.gst, gC = old ? (old.gst?{rate:old.gst.rate,incl:old.gst.incl}:null) : (gs0&&gs0.on?{rate:Number(gs0.rate)||0,incl:gs0.incl!==false}:null), sm = billSum(dr, gC);
     body = `<div class="row" style="gap:8px"><h2 class="grow">${old?t("bill_no",{n:old.no}):t("bill_h")}</h2>${old?`<span class="small muted">${billSentLbl(old)}</span>`:""}</div>
       <p class="small muted">${t("bill_p")}</p>
       <div class="stack" style="gap:6px">${dr.items.map((x,i)=>`<div class="billrow"><span class="grow">${esc(x.n)}</span>
@@ -675,7 +811,8 @@ function viewSheet(){
       <p class="label">${t("bill_add")}</p><div class="chips">${s.services.map(v=>`<button class="chip" data-a="billAdd" data-v="${v.id}">+ ${esc(v.name)} · ${rs(v.price)}</button>`).join("")}</div>
       <div class="billrow"><label class="grow" for="bdisc">${t("bill_disc")}</label><label class="billp"><span aria-hidden="true">₹</span><input type="number" inputmode="numeric" min="0" id="bdisc" data-bill="disc" value="${esc(dr.disc)}" placeholder="0"></label></div>
       <p class="label">${t("bill_pay")}</p><div class="chips">${["cash","upi"].map(p=>`<button class="chip ${dr.pay===p?"on":""}" data-a="billPay" data-v="${p}" aria-pressed="${dr.pay===p}">${t("pay_"+p)}</button>`).join("")}</div>
-      <div class="billtot"><span>${t("bill_total")}</span><b id="billTotal">${rs(sm.total)}</b></div>
+      ${gC?`<div class="gstsplit small muted" id="billGst">${gstSplitHtml(sm)}</div>${!old&&!gstOk(gs0)?`<div class="banner bad">${t("gst_bad")}</div>`:""}`:""}
+      <div class="billtot"><span>${t("bill_total")}</span><b id="billTotal">${gC?rs2(sm.total):rs(sm.total)}</b></div>
       <button class="btn primary block" data-a="billSend">${old?t("bill_resave_send"):t("bill_send")}</button>
       <button class="btn block" data-a="billSave">${old?t("bill_resave"):t("bill_later")}</button>
       ${old&&old.sent?`<p class="small muted">${t("bill_edit_note")}</p>`:""}`;
@@ -719,7 +856,7 @@ function viewSheet(){
     body = `<div class="stack" style="gap:8px">
       ${k.status==="booked"?`<button class="btn primary block" data-a="done" data-v="${k.id}">${t("mark_done")}</button>
       <div class="row" style="gap:8px"><button class="btn grow" data-a="sheetMode" data-v="${k.id}|extend">${t("sh_extend")}</button><button class="btn grow" data-a="sheetMode" data-v="${k.id}|move">${t("sh_move")}</button></div>`:""}
-      ${k.status==="done"?(k.bill?`<div class="row" style="gap:8px"><a class="btn primary grow" data-a="billResent" data-v="${k.id}" href="${waLink(k.phone, billText(s,k,k.bill))}" target="_blank" rel="noopener">${t("bill_resend")}</a><button class="btn grow" data-a="billOpen" data-v="${k.id}">${t("bill_edit")}</button></div><p class="small muted">${t("bill_no",{n:k.bill.no})} · ${billSentLbl(k.bill)}</p>`
+      ${k.status==="done"?(k.bill?`<div class="row" style="gap:8px"><a class="btn primary grow" data-a="billResent" data-v="${k.id}" href="${waLink(k.phone, billText(s,k,k.bill))}" target="_blank" rel="noopener">${t("bill_resend")}</a><button class="btn grow" data-a="billOpen" data-v="${k.id}">${t("bill_edit")}</button><button class="btn grow" data-a="billPdf" data-v="${k.id}">🧾 PDF</button></div><p class="small muted">${k.bill.gst?k.bill.gst.inv:t("bill_no",{n:k.bill.no})} · ${billSentLbl(k.bill)}</p>`
         :`<button class="btn primary block" data-a="billOpen" data-v="${k.id}">${t("bill_make")}</button>`):""}
       <div class="row" style="gap:8px"><a class="btn grow" href="${waLink(k.phone, m.remind)}" target="_blank" rel="noopener">${t("whatsapp")}</a><a class="btn grow" href="${barberWa(k.barberId,m.barber)}" target="_blank" rel="noopener">${t("send_barber")}</a></div>
       ${k.status==="booked"?`<button class="btn ghost block" data-a="cancelBk" data-v="${k.id}">${t("cancel")}</button>`:""}</div>`;
@@ -739,19 +876,51 @@ async function updateBk(k, patch){
   Object.assign(k, patch); // local copy until the live update arrives
 }
 // save the bill on the booking (and mark it done); with send, WhatsApp opens first so the browser treats it as the tap's own window
+const gstSplitHtml = m => `${t("gst_taxable")} ${rs2(m.taxable)} · CGST ${m.rate/2}% ${rs2(m.cgst)} · SGST ${m.rate/2}% ${rs2(m.sgst)}`;
+function invoiceHtml(s, k, bill, noPrint){
+  const hi = LANG==="hi", g = bill.gst, E = esc, dt = new Date(bill.at||Date.now()), addr = fullAddr(s);
+  const rows = bill.items.map((x,i)=>`<tr><td>${i+1}</td><td>${E(x.n)}</td>${g?`<td>${E(g.sac||"")}</td>`:""}<td class="r">${g?rs2(x.p):rs(x.p)}</td></tr>`).join("");
+  const sum = g ? `<tr><td colspan="3" class="r">${hi?"छूट":"Discount"}</td><td class="r">−${rs2(bill.disc||0)}</td></tr>
+    <tr><td colspan="3" class="r">${hi?"टैक्स योग्य राशि":"Taxable value"}</td><td class="r">${rs2(g.taxable)}</td></tr>
+    <tr><td colspan="3" class="r">CGST ${g.rate/2}%</td><td class="r">${rs2(g.cgst)}</td></tr>
+    <tr><td colspan="3" class="r">SGST ${g.rate/2}%</td><td class="r">${rs2(g.sgst)}</td></tr>
+    <tr class="t"><td colspan="3" class="r">${hi?"कुल":"Total"}</td><td class="r">${rs2(bill.total)}</td></tr>`
+    : `${bill.disc?`<tr><td colspan="2" class="r">${hi?"छूट":"Discount"}</td><td class="r">−${rs(bill.disc)}</td></tr>`:""}<tr class="t"><td colspan="2" class="r">${hi?"कुल":"Total"}</td><td class="r">${rs(bill.total)}</td></tr>`;
+  return `<!doctype html><html lang="${hi?"hi":"en"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${E(g?g.inv:"Bill "+bill.no)}</title>
+<style>body{font:15px/1.45 system-ui,"Noto Sans Devanagari",sans-serif;color:#111;margin:0;padding:24px;max-width:720px}h1{font-size:22px;margin:0}h2{font-size:15px;letter-spacing:.08em;text-transform:uppercase;margin:18px 0 6px}.m{color:#555}.row{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px;border-bottom:1px solid #ddd;text-align:left}th{background:#f3f3f3}.r{text-align:right}.t td{font-weight:700;font-size:17px;border-top:2px solid #111}.foot{margin-top:28px;color:#555;font-size:13px}
+@media print{body{padding:0}}.next{margin-top:22px;padding:12px 14px;border:1px solid #ddd;border-radius:10px;font-size:14px}.next a{color:#0b5;word-break:break-all}</style></head><body>
+<div class="row"><div><h1>${E(g&&g.legal?g.legal:s.name)}</h1>${addr?`<div class="m">${E(addr)}</div>`:""}${s.phone?`<div class="m">${E(s.phone)}</div>`:""}${g?`<div><b>GSTIN:</b> ${E(g.gstin)}</div>`:""}</div>
+<div class="r"><h2 style="margin-top:0">${g?"Tax Invoice":(hi?"बिल":"Bill")}</h2><div><b>${E(g?g.inv:"#"+bill.no)}</b></div><div class="m">${hi?"तारीख़":"Date"}: ${E(longDate(dt.getTime()))}</div></div></div>
+<h2>${t("who_lbl")}</h2><div><b>${E(k.cust)}</b>${k.phone?` · ${E(k.phone)}`:""}</div>
+<table><thead><tr><th>#</th><th>${hi?"सेवा":"Service"}</th>${g?`<th>SAC</th>`:""}<th class="r">${hi?"राशि":"Amount"}</th></tr></thead><tbody>${rows}${sum}</tbody></table>
+<p class="m">${hi?"भुगतान":"Paid by"}: ${bill.pay==="upi"?"UPI":"Cash"}</p>
+<div class="next"><b>${hi?"फिर ज़रूरत पड़े तो":"Need us again?"}</b>
+<div>${hi?"अगली booking":"Book next visit"}: <a href="${E(linkFor(S.sid))}">${E(linkFor(S.sid))}</a></div>
+${waShop(s)?`<div>WhatsApp: <a href="${E(waShop(s))}">${E(s.phone)}</a></div>`:""}
+<div>${hi?"रास्ता (Map)":"Map"}: <a href="${E(mapUrl(s))}">${E(mapUrl(s).length>70?(hi?"Google Maps पर खोलें":"Open in Google Maps"):mapUrl(s))}</a></div></div>
+<p class="foot">${hi?"धन्यवाद, फिर आइए!":"Thank you, see you again!"}${g?`<br>${hi?"यह कंप्यूटर से बना बिल है, हस्ताक्षर आवश्यक नहीं।":"This is a computer-generated invoice."}`:""}</p>
+${noPrint?"":`<script>window.onload=function(){setTimeout(function(){window.print()},350)}<\/script>`}</body></html>`;
+}
 function saveBill(send){
   const k = curK(), s = S.salon, d = UI.bill; if (!k || !d) return;
   const items = d.items.map(x=>({ n:String(x.n||"").slice(0,60), p:Math.max(0,Math.round(Number(x.p)||0)) })).filter(x=>x.n);
   if (!items.length){ toast(t("bill_empty")); return; }
-  const { disc, total } = billSum({ items, disc:d.disc }), old = k.bill;
+  const old = k.bill, gs = S.salon.gst;
+  const gCfg = old ? (old.gst ? { rate:old.gst.rate, incl:old.gst.incl } : null) : (gs && gs.on ? { rate:Number(gs.rate)||0, incl:gs.incl!==false } : null);
+  if (!old && gs && gs.on && !gstOk(gs)){ toast(t("gst_bad")); return; }
+  const sm = billSum({ items, disc:d.disc }, gCfg), { disc, total } = sm;
   const changed = !!old && (old.total!==total || (old.disc||0)!==disc || JSON.stringify(old.items)!==JSON.stringify(items));
   const no = old ? old.no : (Number(s.billSeq)||0)+1;
+  const fy = fyOf(), gq = s.gstSeq && s.gstSeq.fy===fy ? Number(s.gstSeq.n)||0 : 0;
+  const gstInfo = !gCfg ? null : old ? { ...old.gst, rate:sm.rate, taxable:sm.taxable, cgst:sm.cgst, sgst:sm.sgst }
+    : { inv:"INV/"+fy+"/"+String(gq+1).padStart(4,"0"), seq:gq+1, fy, rate:sm.rate, incl:gCfg.incl, taxable:sm.taxable, cgst:sm.cgst, sgst:sm.sgst, gstin:String(gs.gstin).trim().toUpperCase(), legal:String(gs.legal||"").trim().slice(0,80), sac:String(gs.sac||"").trim().slice(0,10) };
   const bill = { no, items, disc, total, pay: d.pay==="upi"?"upi":"cash", at: old&&old.at ? old.at : Date.now(),
-    sent: (old ? Number(old.sent)||0 : 0) + (send?1:0), edited: !!old && (!!old.edited || (changed && (Number(old.sent)||0)>0)) };
-  if (send) window.open(waLink(k.phone, billText(s, k, bill)), "_blank", "noopener");
+    sent: (old ? Number(old.sent)||0 : 0) + (send?1:0), edited: !!old && (!!old.edited || (changed && (Number(old.sent)||0)>0)), ...(gstInfo?{gst:gstInfo}:{}) };
+  if (send) window.open(waLink(k.phone, billText(s, k, bill)), "_blank", "noopener");        // straight into this patient's chat
   const b = writeBatch(db);
-  b.update(doc(db,"salons",S.sid,"bookings",k.id), { status:"done", bill });
-  if (!old){ b.update(doc(db,"salons",S.sid), { billSeq: no }); s.billSeq = no; }
+  b.update(doc(db,"salons",S.sid,"bookings",k.id), { status:"done", bill, doneAt: (old&&old.doneAt) || Date.now() });
+  if (!old){ b.update(doc(db,"salons",S.sid), { billSeq: no, ...(gstInfo?{gstSeq:{fy,n:gstInfo.seq}}:{}) }); s.billSeq = no; if (gstInfo) s.gstSeq = { fy, n:gstInfo.seq }; }
   Object.assign(k, { status:"done", bill });
   UI.sheet = null; UI.bill = null; render();
   b.commit().then(()=>toast(send?t("bill_sent"):t("bill_saved"))).catch(e=>{ console.error(e); toast(t("save_fail")); });
@@ -804,6 +973,7 @@ function cSugNote(B){
 }
 // typing in the owner form: refresh the suggestions; a full known number fills an empty name
 function bookSug(k, el){
+  if (k==="problem") return;
   const B = UI.book; B.picked = null;
   if (k==="name"){ const box = document.getElementById("cSug"); if (box) box.innerHTML = cSugHtml(el.value); return; }
   if (k==="phone"){ const p = digits(el.value); if (p.length!==10 || String(B.name||"").trim()) return;
@@ -986,6 +1156,30 @@ setInterval(()=>{ const d = new Date();
     if (hc && Number(hc.dataset.sel)!==d.getHours()) setCol(hc, d.getHours(), true);
     if (mc && Number(mc.dataset.sel)!==d.getMinutes()) setCol(mc, d.getMinutes(), true); }); }, 1000);
 const roundNow = nowHM;
+// walk-in: earliest start (from now, or opening on another day) where a barber is free for the whole length
+function nextFree(salon, date, list, dur, pref){
+  const cands = (pref && pref!=="any" ? salon.barbers.filter(b=>b.id===pref) : salon.barbers).filter(b=>!onLeave(salon,b.id,date) && canDoAll(list,b));
+  const now = new Date(), nowM = now.getHours()*60+now.getMinutes(), open = toMin(salon.open||"10:00");
+  const base = date===ymd(now) ? Math.max(nowM, open) : open, busy = busyList(ownerSlotsMap(date)); let best = null;
+  cands.forEach(b=>{ let st = base; const mine = busy.filter(x=>x.b===b.id).sort((a,c)=>a.start-c.start);
+    for (const x of mine){ if (st+dur<=x.start) break; if (x.start+x.dur>st) st = x.start+x.dur; }
+    if (!best || st<best.m) best = { m:st, b }; });
+  return best ? { time:toHM(best.m), barberId:best.b.id, barber:best.b } : null;
+}
+// what the owner's walk-in form uses as the time: own (wheel touched), next free slot, or the live current time
+function ownTime(salon, B, list, dur){
+  const now = new Date(), nowM = now.getHours()*60+now.getMinutes(), today = ymd(now), past = B.date < today;
+  if (B.time) return { kind:"own", time:B.time };
+  const nf = past ? null : nextFree(salon, B.date, list, dur, B.barber), tm = B.tm||"auto";
+  const freeNow = !!nf && B.date===today && toMin(nf.time)<=nowM;
+  if (nf && (tm==="next" || (tm==="auto" && !freeNow))) return { kind:"next", time:nf.time, barber:nf.barber, today:B.date===today };
+  return { kind:"now", time:nowHM(), barber: freeNow ? nf.barber : null, noNext: !nf };
+}
+function tmBlock(ot){
+  if (ot.noNext) return "";
+  return `<div class="tmtog" role="group"><button class="btn sm ${ot.kind==="now"?"primary":""}" data-a="tmNow" aria-pressed="${ot.kind==="now"}">⏱ ${t("tm_now")}</button><button class="btn sm ${ot.kind==="next"?"primary":""}" data-a="tmNext" aria-pressed="${ot.kind==="next"}">⏭ ${t("tm_next")}</button></div>`
+    + (ot.kind==="next" ? `<div class="nextbox" role="status"><b>⏭ ${t("tm_next")}: ${nice(ot.time)}</b><span class="small">${ot.today ? t("tm_next_note",{name:esc(ot.barber.name)}) : t("tm_next_day")}</span></div>` : "");
+}
 function pickBarberFor(salon, svcId, date, pref, list){
   if (pref && pref!=="any") return barberOf(salon, pref);
   const L = list && list.length ? list : [svcOf(salon, svcId)].filter(Boolean);
@@ -1011,6 +1205,7 @@ function bookingForm(salon, slotsFor, ownerMode){
   if (map===undefined && CUSTOMER_SID) setTimeout(()=>loadDay(B.date),0);
   B.extra = (B.extra||[]).filter(id=>id!==B.svc && svcOf(salon,id));
   const list = bkList(salon,B), dur = bkLen(salon,B), so = { dur, svcs:list }, adds = addOpts(salon,B);
+  const ot = ownerMode && B.svc ? ownTime(salon,B,list,dur) : null;
   const slots = B.svc ? (map===undefined ? undefined : freeSlots(salon, B.date, B.svc, B.barber||"any", map, so)) : [];
   return `
   <div class="card ${UI.flashSvc||UI.addMode?"flash":""}" id="svcCard"><h3>${t("pick_svc")}</h3>${UI.addMode?`<div class="banner ok addpick"><span class="grow">${t("add_pick")}</span><button class="btn sm" data-a="addCancel">${t("add_cancel")}</button></div>`:""}${!salon.services.length?`<p class="muted">${t("no_services")}</p>`:""}${svcGroups(salon).map(g=>`${g.head?`<p class="label svchead">${g.head}</p>`:""}<div class="svclist" role="radiogroup" ${g.head?`aria-label="${g.head}"`:""}>${g.list.map(s=>{ const on = B.svc===s.id || (B.extra||[]).includes(s.id), dis = UI.addMode && !on && !adds.some(v=>v.id===s.id);
@@ -1024,19 +1219,23 @@ function bookingForm(salon, slotsFor, ownerMode){
     ${list.length>1?`<div class="addsum" role="status"><span><b>${t("add_tot")}:</b> ${list.map(v=>esc(v.name)).join(" + ")}</span><span class="addtot">⏱ ${dur} ${t("min")} · ₹${list.reduce((a,v)=>a+(Number(v.price)||0),0)}</span></div>`:""}
     <button class="btn primary block" data-a="toBarber">${t("add_next")} ↓</button></div>` : ""}
   <div class="card" id="barberCard"><h3>${t("pick_barber")}</h3><div class="barbers">
-    <button class="bcard ${(!B.barber||B.barber==="any")?"on":""}" data-a="bBarber" data-v="any"><span class="av lg" style="background:var(--surface2);color:var(--muted)" aria-hidden="true">✂</span><b>${t("any_barber")}</b><small>${t("any_sub")}</small></button>
+    <button class="bcard ${(!B.barber||B.barber==="any")?"on":""}" data-a="bBarber" data-v="any"><span class="av lg" style="background:var(--surface2);color:var(--muted)" aria-hidden="true">${BIZ_ID==="salon"?"✂":bizIcon()}</span><b>${t("any_barber")}</b><small>${t("any_sub")}</small></button>
     ${salon.barbers.filter(b=>!B.svc || canDoAll(list,b)).map(b=>{ const off = onLeave(salon,b.id,B.date); return `<button class="bcard ${B.barber===b.id?"on":""} ${off?"off":""}" data-a="bBarber" data-v="${b.id}">${avatar(b,"lg")}<b>${esc(b.name)}</b>${off?`<span class="pill bad">${t("on_leave")}</span>`:b.spec?`<small>${esc(b.spec)}</small>`:""}</button>`; }).join("")}</div>
     ${B.barber && B.barber!=="any" && onLeave(salon,B.barber,B.date)?`<div class="banner warn">${t("barber_off",{name:esc((barberOf(salon,B.barber)||{}).name||""), date:dayLabel(B.date)})}</div>`:""}</div>
   <div class="card" id="dateCard"><h3>${t("pick_date")}</h3><div class="hscroll">${days.map(d=>{const dt=new Date(d+"T00:00");const closed=!(salon.days||[]).includes(dt.getDay());
     return `<button class="date ${B.date===d?"on":""}" data-a="bDate" data-v="${d}" ${closed?"disabled":""}><small>${t("dw")[dt.getDay()]}</small><b>${dt.getDate()}</b><small>${t("mon")[dt.getMonth()]}</small></button>`}).join("")}</div></div>
-  <div class="card" id="timeCard"><h3>${t("pick_time")}</h3>${ownerMode ? `<p class="small muted">${t("ck_help")}</p>${clockPicker("wkBook", B.time||nowHM(), !B.time)}${!B.svc?`<button class="btn block" data-a="toSvc">↑ ${t("pick_svc_first")}</button>`:(()=>{ const b = pickBarberFor(salon,B.svc,B.date,B.barber,list);
-      return customBox(salon, B.date, B.time||nowHM(), B.svc, b, dur, null, list.map(v=>v.name).join(" + ")) + ((!B.barber||B.barber==="any") && b ? `<p class="small muted">${t("ct_pickb",{name:esc(b.name)})}</p>` : ""); })()}` :
+  <div class="card" id="timeCard"><h3>${t("pick_time")}</h3>${ownerMode ? `<p class="small muted">${t("ck_help")}</p>${ot?tmBlock(ot):""}<div class="${ot&&ot.kind==="next"?"nxtwrap":""}">${clockPicker("wkBook", ot?ot.time:(B.time||nowHM()), ot?ot.kind==="now":!B.time)}</div>${!B.svc?`<button class="btn block" data-a="toSvc">↑ ${t("pick_svc_first")}</button>`:(()=>{ const b = (ot && ot.barber) || pickBarberFor(salon,B.svc,B.date,B.barber,list);
+      return customBox(salon, B.date, ot?ot.time:(B.time||nowHM()), B.svc, b, dur, null, list.map(v=>v.name).join(" + ")) + ((!B.barber||B.barber==="any") && b ? `<p class="small muted">${t("ct_pickb",{name:esc(b.name)})}</p>` : ""); })()}` :
     !B.svc?`<button class="btn block" data-a="toSvc">↑ ${t("pick_svc_first")}</button>`:slots===undefined?`<div class="spin"></div>`:slots===null?`<p class="muted">${t("closed_day")}</p>`:slots.length?slotGrid(slots, B.time, "bTime")+(()=>{ const f5 = freeSlots(salon, B.date, B.svc, B.barber||"any", map, {...so, step:5})||[]; return ``+ownPick(salon,B,f5,dur); })():`<p class="muted">${t("no_slots")}</p>`}</div>
   <div class="card" id="detailsCard"><h3>${t("your_details")}</h3>
     <label class="field"><span>${t("cust_name")}</span><input type="text" id="c_name" autocomplete="${ownerMode?"off":"name"}" data-book="name" value="${esc(B.name||"")}"></label>
     ${ownerMode?`<div id="cSug">${!B.picked && digits(B.phone).length!==10 ? cSugHtml(B.name) : ""}</div>${cSugNote(B)}`:""}
     <label class="field"><span>${t("cust_phone")}</span><input type="tel" inputmode="tel" autocomplete="tel" id="c_phone" data-book="phone" value="${esc(B.phone||"")}" placeholder="98XXXXXXXX"></label>
     <label class="field"><span>${t("cust_email")} <em>(${t("optional")})</em></span><input type="email" inputmode="email" autocomplete="email" id="c_email" data-book="email" value="${esc(B.email||"")}" placeholder="name@gmail.com"></label>
+    ${isClinic(salon)?`<div class="field probbox"><span>${t("prob_h")} <em>(${t("optional")})</em></span>
+      <textarea id="c_prob" rows="3" maxlength="300" data-book="problem" placeholder="${esc(t("prob_ph"))}">${esc(B.problem||"")}</textarea>
+      ${SR?`<button type="button" class="btn micbtn ${UI.mic?"on":""}" id="micBtn" data-a="mic">${UI.mic?"⏹ "+t("mic_stop"):"🎤 "+t("mic_start")}</button>`:`<p class="small muted">${t("mic_na")}</p>`}
+      <p class="small muted">🔒 ${t("prob_priv")}</p></div>`:""}
     ${UI.err?`<div class="banner bad" role="alert">${UI.err}</div>`:""}
     <button class="btn primary block" data-a="confirm" ${UI.busy?"disabled":""}>${t("confirm_bk")}</button></div>`;
 }
@@ -1097,18 +1296,78 @@ function viewPlan(){
     ${UI.err?`<div class="banner bad" role="alert">${UI.err}</div>`:""}
     <button class="btn primary" data-a="paid" ${UI.busy?"disabled":""}>${t("submit_pay")} · ${t(UI.planPick)}</button></div>`;
 }
+const secOpen = id => !!(UI.sec && UI.sec[id]);
+function secSave(){ try{ localStorage.setItem("ss_sec", JSON.stringify(UI.sec||{})); }catch(e){} }
+// one collapsible section: header (icon, title, one-line summary) + body that is only built when open
+function acc(id, icon, title, sub, body){
+  const open = secOpen(id);
+  return `<section class="acc ${open?"open":""}"><button class="acchd" data-a="secT" data-v="${id}" aria-expanded="${open}"><span class="accic" aria-hidden="true">${icon}</span><span class="grow"><b>${title}</b>${sub?`<small>${sub}</small>`:""}</span><span class="chev" aria-hidden="true">›</span></button>${open?`<div class="accbd">${body()}</div>`:""}</section>`;
+}
 function viewSettings(){
-  const s = S.salon;
+  if (!UI.sec){ try{ UI.sec = JSON.parse(localStorage.getItem("ss_sec")||"{}")||{}; }catch(e){ UI.sec = {}; } }
+  const s = S.salon, B = BIZ[BIZ_ID], work = (B.work||{})[LANG] || (B.work||{}).en || t("barbers"), nSvc = (s.services||[]).length, nWork = (s.barbers||[]).length, nTeam = (S.team||[]).length, g = s.gst||{};
   return `<h1>${t("set_h")}</h1>
-  <div class="card"><h2>${t("salon_details")}</h2>${salonFields(s)}${hoursFields(s)}</div>
-  <div class="card"><h2>${t("services")}</h2>${servicesEditor(s)}</div>
-  <div class="card"><h2>${t("barbers")}</h2>${barbersEditor(s)}</div>
-  ${linkCard()}
-  <div class="card"><h3>${t("install_h")}</h3><p class="small muted">${t("install_p")}</p></div>
+  <div class="row accall"><button class="btn sm ghost" data-a="secAll" data-v="1">${t("set_open_all")}</button><button class="btn sm ghost" data-a="secAll" data-v="0">${t("set_close_all")}</button></div>
+  ${acc("prof", B.icon, t("salon_details"), esc([s.name, s.area].filter(Boolean).join(" · ")), ()=>salonFields(s))}
+  ${acc("hours", "🕘", t("set_hours"), esc((s.open||"")+" – "+(s.close||"")), ()=>hoursFields(s))}
+  ${acc("svc", "🏷️", t("services"), t("set_n_svc",{n:nSvc}), ()=>servicesEditor(s))}
+  ${acc("work", ({clinic:"🩺",spa:"💆",salon:"✂️"})[BIZ_ID]||"👥", work, t("set_n_team",{n:nWork}), ()=>barbersEditor(s))}
+  ${S.staff?"":acc("mgmt", "🛡️", t("set_mgmt"), t("set_n_team",{n:nTeam}), ()=>teamCard())}
+  ${acc("gst", "🧾", t("gst_h"), g.on?(gstOk(g)?"GSTIN ✓":t("gst_bad")):t("gst_off"), ()=>gstCard())}
+  ${acc("exp", "⬇️", t("exp_h"), t("exp_sub"), ()=>exportCard())}
+  ${acc("link", "🔗", t("link_h"), "", ()=>linkCard())}
+  ${acc("inst", "📲", t("install_h"), "", ()=>`<p class="small muted">${t("install_p")}</p>`)}
   <div class="card"><h3>${t("account")}</h3><div class="who">${S.user.photoURL?`<img src="${esc(S.user.photoURL)}" alt="">`:""}<div><span class="small muted">${t("signed_as")}</span><br><b>${esc(S.user.email)}</b></div></div>
     <button class="btn" data-a="logout">${t("logout")}</button></div>`;
 }
 
+function gstCard(){
+  const s = S.salon, g = s.gst || {}, d = GST_DEF[s.bizType||"salon"]||GST_DEF.salon, on = !!g.on, bad = on && !gstOk(g);
+  const f = (k, label, ph, extra="") => `<label class="field"><span>${label}</span><input type="text" ${extra} data-gst="${k}" value="${esc(g[k]==null?"":g[k])}" placeholder="${esc(ph)}"></label>`;
+  return `<div class="card"><div class="row" style="gap:8px"><h2 class="grow">${t("gst_h")}</h2><button class="chip ${on?"on":""}" data-a="gstOn" aria-pressed="${on}">${on?t("gst_on"):t("gst_off")}</button></div>
+  <p class="small muted">${t("gst_p")}</p>
+  ${on?`${f("legal",t("gst_legal"),s.name)}${f("gstin","GSTIN","27AAPFU0939F1ZV",'autocapitalize="characters" maxlength="15" style="text-transform:uppercase"')}
+    ${bad?`<p class="small" style="color:var(--danger)">${t("gst_bad")}</p>`:`<p class="small muted">✓ GSTIN</p>`}
+    <div class="row"><label class="field grow"><span>${t("gst_rate")}</span><input type="number" inputmode="decimal" min="0" max="28" step="0.5" data-gst="rate" value="${esc(g.rate==null?d.rate:g.rate)}"></label>
+    <label class="field grow"><span>SAC</span><input type="text" data-gst="sac" maxlength="8" value="${esc(g.sac==null?d.sac:g.sac)}"></label></div>
+    <div class="field"><span>${t("gst_price")}</span><div class="chips"><button class="chip ${g.incl!==false?"on":""}" data-a="gstIncl" data-v="1">${t("gst_incl")}</button><button class="chip ${g.incl===false?"on":""}" data-a="gstIncl" data-v="0">${t("gst_excl")}</button></div></div>
+    <p class="small muted">${t("gst_note")}</p>`:""}</div>`;
+}
+function exportCard(){
+  return `<div class="card"><h2>${t("exp_h")}</h2><p class="small muted">${t("exp_p")}</p><button class="btn block" data-a="exportData" ${UI.expBusy?"disabled":""}>⬇ ${UI.expBusy?t("loading"):t("exp_btn")}</button></div>`;
+}
+async function exportData(){
+  const s = S.salon; if (!s || !S.sid || UI.expBusy) return; UI.expBusy = true; render();
+  try{
+    const from = new Date(); from.setFullYear(from.getFullYear()-2);
+    const snap = await getDocs(query(collection(db,"salons",S.sid,"bookings"), where("date",">=",ymd(from))));
+    const list = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+    const cell = v => { const x = String(v==null?"":v).replace(/\r?\n/g," ").trim(); return /[",;]/.test(x) ? '"'+x.replace(/"/g,'""')+'"' : x; };
+    const head = ["Date","Time","Invoice / Bill no",t("who_lbl"),"Phone","Services","With","Status","Gross (Rs)","Discount (Rs)","Taxable value (Rs)","GST rate %","CGST (Rs)","SGST (Rs)","Total (Rs)","Payment","Shop GSTIN","SAC"];
+    const rows = list.map(k=>{ const b = k.bill||{}, g = b.gst, sv = barberOf(s,k.barberId)||{};
+      const gross = (b.items||[]).reduce((a,x)=>a+(Number(x.p)||0),0);
+      return [k.date,k.time,g?g.inv:(b.no?"Bill "+b.no:""),k.cust,k.phone,bkNames(s,k),sv.name||"",k.status,
+        b.items?gross:"",b.disc||"",g?g.taxable:"",g?g.rate:"",g?g.cgst:"",g?g.sgst:"",b.total==null?"":b.total,b.pay?(b.pay==="upi"?"UPI":"Cash"):"",g?g.gstin:"",g?g.sac:""].map(cell).join(","); });
+    const blob = new Blob(["﻿"+[head.join(",")].concat(rows).join("\r\n")], {type:"text/csv;charset=utf-8"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = (String(s.name||"data").replace(/[^\w]+/g,"-"))+"-2yr-"+ymd(new Date())+".csv"; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1500);
+    toast(t("exp_done",{n:rows.length}));
+  }catch(e){ console.error(e); toast(t("save_fail")); }
+  UI.expBusy = false; render();
+}
+function teamCard(){
+  if (S.staff) return "";
+  const clinic = isClinic(S.salon), roles = ["reception","doctor","manager"].filter(r=>clinic||r!=="doctor"), role = roles.includes(UI.tmRole)?UI.tmRole:"reception";
+  const docs = S.salon.barbers||[];
+  return `<div class="card"><h2>${t("team_h")}</h2><p class="small muted">${t("team_p")}</p>${clinic?`<p class="small muted">${t("team_tip")}</p>`:""}
+    ${(S.team||[]).length?`<div>${S.team.map(m=>`<div class="srow"><div class="row" style="gap:8px"><b class="grow">${esc(m.name||m.id)}</b><span class="pill">${t("r_"+m.role)}</span></div><span class="small muted">${esc(m.id)}${m.barberId&&barberOf(S.salon,m.barberId)?" · "+esc(barberOf(S.salon,m.barberId).name):""}${m.rev?" · ₹":""}</span><button class="btn sm ghost" style="align-self:flex-start" data-a="tmDel" data-v="${esc(m.id)}">${t("remove")}</button></div>`).join("")}</div>`:`<p class="small muted">${t("team_none")}</p>`}
+    <label class="field"><span class="small">${t("team_email")}</span><input type="email" inputmode="email" data-ui="tmEmail" value="${esc(UI.tmEmail||"")}" placeholder="name@gmail.com"></label>
+    <label class="field"><span class="small">${t("team_name")} <em>(${t("optional")})</em></span><input type="text" data-ui="tmName" value="${esc(UI.tmName||"")}"></label>
+    <div class="field"><span class="small">${t("team_role")}</span><div class="chips">${roles.map(r=>`<button class="chip ${role===r?"on":""}" data-a="tmRole" data-v="${r}">${t("r_"+r)}</button>`).join("")}</div></div>
+    ${role==="doctor"&&docs.length?`<div class="field"><span class="small">${t("team_doc")}</span><div class="chips">${docs.map(d=>`<button class="chip ${(UI.tmDoc||docs[0].id)===d.id?"on":""}" data-a="tmDoc" data-v="${d.id}">${esc(d.name||"—")}</button>`).join("")}</div></div>`:""}
+    <div class="chips"><button class="chip ${UI.tmRev?"on":""}" data-a="tmRev">₹ ${t("team_rev")}</button></div>
+    ${UI.err&&UI.tab==="settings"?`<div class="banner bad" role="alert">${UI.err}</div>`:""}
+    <button class="btn primary" data-a="tmAdd">${t("team_add")}</button></div>`;
+}
 /* ================= rewards ================= */
 // offers/{id}: kind "days" (scratch card that adds free days) or "deal" (partner/brand code + link)
 function offerLive(o){ return !!o && o.active===true && (!o.endsAt || o.endsAt > Date.now()); }
@@ -1236,7 +1495,9 @@ function viewAdmin(){
   const live = list.filter(x=>subInfo(x).active).length, pend = list.filter(x=>x.payReq);
   const collected = list.reduce((a,x)=>a+(x.payments||[]).reduce((b,p)=>b+(Number(p.amt)||0),0),0);
   const sorted = list.slice().sort((a,b)=>(b.payReq?1:0)-(a.payReq?1:0) || ((a.sub||{}).expires||0)-((b.sub||{}).expires||0));
-  return `<div><h1>${t("adm_h")}</h1><p class="small muted" style="margin-top:4px">${t("adm_p")}</p></div>
+  const wsNow = BIZ_CHOSEN()||"salon";
+  const wsCard = `<div class="card"><p class="label">Demo workspace</p><p class="small muted">Each type is its own business under your login. Pick one to open its setup and theme.</p><div class="chips">${["salon","clinic","spa","other"].map(id=>`<button class="chip ${wsNow===id?"on":""}" data-a="wsSwitch" data-v="${id}">${BIZ[id].icon} ${BIZ[id].pick.en}</button>`).join("")}</div></div>`;
+  return `<div><h1>${t("adm_h")}</h1><p class="small muted" style="margin-top:4px">${t("adm_p")}</p></div>${wsCard}
   <div class="stats"><div class="stat"><b>${list.length}</b><span>${t("adm_salons")}</span></div><div class="stat"><b>${live}</b><span>${t("adm_live")}</span></div><div class="stat"><b>₹${collected.toLocaleString("en-IN")}</b><span>${t("adm_collected")}</span></div></div>
   ${pend.length?`<div class="banner warn">${t("adm_pending")}: <b>${pend.length}</b></div>`:""}
   <div class="card">${sorted.length?sorted.map(x=>{ const i=subInfo(x);
@@ -1298,15 +1559,17 @@ function watchOffers(){
 /* ================= customer page ================= */
 const C = { salon:null, state:"loading", days:{} };
 function renderCustomer(){
-  if (C.state==="loading") return topBar("SalonSlot")+`<main><div class="center"><div class="spin"></div></div></main>`;
-  if (C.state==="nf") return topBar("SalonSlot")+`<main><div class="card lock"><div class="big" aria-hidden="true">🔍</div><h2>${t("nf_h")}</h2><p class="muted">${t("nf_p")}</p></div></main>`;
+  if (C.state==="loading") return topBar(bizName())+`<main><div class="center"><div class="spin"></div></div></main>`;
+  if (C.state==="nf") return topBar(bizName())+`<main><div class="card lock"><div class="big" aria-hidden="true">🔍</div><h2>${t("nf_h")}</h2><p class="muted">${t("nf_p")}</p></div></main>`;
   const s = C.salon, i = subInfo(s);
   let body = "";
-  if (!i.active) body = `<div class="card lock"><div class="big" aria-hidden="true">📞</div><h2>${t("bk_closed_h")}</h2><p class="muted">${t("bk_closed_p")}</p>
+  if (C.q) body = viewPatientQueue();
+  else if (!i.active) body = `<div class="card lock"><div class="big" aria-hidden="true">📞</div><h2>${t("bk_closed_h")}</h2><p class="muted">${t("bk_closed_p")}</p>
       ${s.phone?`<div class="copy"><code>${esc(s.phone)}</code><button class="btn sm" data-a="copy" data-v="${esc(s.phone)}">${t("copy")}</button></div><a class="btn primary" href="${waLink(s.phone,"")}" target="_blank" rel="noopener">${t("whatsapp")}</a>`:""}</div>${addrCard(s)}`;
   else if (UI.bookedData){ const k = UI.bookedData, m = msgs(s,k), svc = svcOf(s,k.serviceId), b = barberOf(s,k.barberId);
     body = `<div class="card lock"><div class="big" aria-hidden="true">✅</div><h2>${t("booked_h")}</h2>
       <p>${t("booked_p",{svc:esc(bkNames(s,k)),barber:esc(b.name),date:dayLabel(k.date),time:nice(k.time)})}</p>
+      ${k.token?`<p class="label">${t("q_your")}</p><div class="tokbig">#${k.token}</div><a class="btn primary" href="${queueLink(s,k)}">${t("q_open")}</a>`:""}
       <a class="btn" href="${calLink(s,k,custGuests(s,k))}" target="_blank" rel="noopener">${t("calendar")}</a>
       <p class="small muted">${t("cal_note_c")}</p></div>
       ${addrCard(s, t("how_reach"))}
@@ -1323,7 +1586,9 @@ function loadDay(date){
 }
 async function initCustomer(){
   try{ const d = await getDoc(doc(db,"salons",CUSTOMER_SID)); if (!d.exists()) { C.state="nf"; render(); return; }
-    C.salon = {id:d.id, ...d.data()}; C.state="ok"; document.title = C.salon.name+" · SalonSlot"; render(); }
+    C.salon = {id:d.id, ...d.data()}; setBiz(C.salon.bizType);
+    if (params.get("q")==="1" && params.get("d") && params.get("dt") && Number(params.get("tk"))){ C.q = {d:params.get("d"), dt:params.get("dt"), tk:Number(params.get("tk"))};
+      onSnapshot(doc(db,"salons",CUSTOMER_SID,"queue",C.q.dt), dd => { C.queue = dd.exists() ? dd.data() : {}; render(); }, e => console.error(e)); } C.state="ok"; document.title = C.salon.name+" · "+bizName(); render(); }
   catch(e){ console.error(e); C.state="nf"; render(); }
 }
 
@@ -1340,7 +1605,7 @@ async function saveSalon(){
   const contacts = cleanContacts(s);
   const clean = JSON.parse(JSON.stringify({services:s.services, barbers:s.barbers})); cleanList(clean);
   setDoc(doc(db,"salons",S.sid,"private","contacts"), { barbers: contacts }).catch(e=>console.error(e));
-  try{ await updateDoc(doc(db,"salons",S.sid), { name:s.name, owner:s.owner, phone:s.phone, address:String(s.address||"").trim(), mapLink: isMapLink(s.mapLink)?String(s.mapLink).trim():"", area:s.area, open:s.open, close:s.close, days:s.days, services:clean.services, barbers:clean.barbers });
+  try{ await updateDoc(doc(db,"salons",S.sid), { name:s.name, owner:s.owner, phone:s.phone, address:String(s.address||"").trim(), mapLink: isMapLink(s.mapLink)?String(s.mapLink).trim():"", area:s.area, open:s.open, close:s.close, days:s.days, services:clean.services, barbers:clean.barbers, gst: s.gst || { on:false } });
     toast(t("saved")); }catch(e){ console.error(e); toast(t("save_fail")); }
 }
 
@@ -1362,6 +1627,28 @@ const A = {
     catch(e){ if (e && /popup-blocked|operation-not-supported|cancelled-popup/.test(e.code||"")) { try{ await signInWithRedirect(auth,p); return; }catch(e2){} }
       if (e && e.code!=="auth/popup-closed-by-user") UI.err = t("signin_fail"); }
     UI.busy=false; render(); },
+  pickBiz:v=>go(()=>{ try{ localStorage.setItem("ss_biz",v); }catch(e){} setBiz(v); }),
+  wsSwitch:v=>{ try{ localStorage.setItem("ss_biz",v); }catch(e){} location.reload(); },
+  docMode:()=>go(()=>{ pushNav(); UI.tab="doctor"; window.scrollTo(0,0); }),
+  rpDay:v=>go(()=>{ UI.rpDay=v; }),
+  docBack:()=>go(()=>{ UI.tab = isClinic(S.salon) ? "queue" : "home"; }),
+  docPick:v=>go(()=>{ UI.docId=v; try{ localStorage.setItem("ss_mydoc_"+S.sid, v); }catch(e){} }),
+  sndT:()=>go(()=>{ try{ localStorage.setItem("ss_snd", sndOn()?"0":"1"); }catch(e){} if (sndOn()) sndNext(); }),
+  qDone:v=>{ qAdvance(v,true); },
+  qCall:v=>{ qAdvance(v,false); },
+  qRemind:v=>{ const [id,l] = v.split("|"); const k = S.bookings.find(x=>x.id===id); if (!k) return; const at = Date.now(); k.rem = {...(k.rem||{}), [l]:at}; setTimeout(render,300);
+    updateDoc(doc(db,"salons",S.sid,"bookings",id), {["rem."+l]:at}).catch(()=>{}); },
+  tmRole:v=>go(()=>{ UI.tmRole=v; }),
+  tmRev:()=>go(()=>{ UI.tmRev=!UI.tmRev; }),
+  tmDoc:v=>go(()=>{ UI.tmDoc=v; }),
+  tmAdd: async ()=>{ const em = String(UI.tmEmail||"").trim().toLowerCase(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){ UI.err = t("team_bad"); render(); return; }
+    const role = UI.tmRole||"reception"; const rec = { sid:S.sid, role, name:String(UI.tmName||"").trim().slice(0,60), at:Date.now() };
+    if (role==="doctor") rec.barberId = UI.tmDoc || ((S.salon.barbers||[])[0]||{}).id || ""; if (UI.tmRev) rec.rev = true;
+    try{ await setDoc(doc(db,"staffIndex",em), rec); UI.tmEmail=""; UI.tmName=""; UI.tmRev=false; UI.err=""; toast(t("saved")); }catch(e){ console.error(e); UI.err=t("save_fail"); } render(); },
+  tmDel: async v=>{ try{ await deleteDoc(doc(db,"staffIndex",v)); }catch(e){ toast(t("save_fail")); } },
+  specSug:v=>{ const i = v.indexOf("|"), id = v.slice(0,i), txt = v.slice(i+1); const o = editTarget(); const b = o.barbers.find(x=>x.id===id); if (!b) return;
+    const cur = String(b.spec||"").trim(); b.spec = cur ? (cur.includes(txt) ? cur : cur+", "+txt) : txt; render(); if (o===S.salon) queueSave(); },
+  changeBiz:()=>go(()=>{ try{ localStorage.removeItem("ss_biz"); }catch(e){} setBiz("salon"); }),
   logout: async ()=>{ await signOut(auth); },
   adminOnly:()=>go(()=>{ pushNav(); UI.view="adminOnly"; watchAdmin(); window.scrollTo(0,0); }),
   adminBack:()=>goBack(()=>{ UI.view="setup"; }),
@@ -1383,8 +1670,8 @@ const A = {
     UI.busy=true; render(); cleanList(D); const now = Date.now();
     const data = { ...D, ownerUid:S.user.uid, ownerEmail:S.user.email||"", active:true, createdAt:now, sub:{ plan:null, trialStart:now, expires: now+TRIAL_DAYS*DAY } };
     const contacts = cleanContacts(D); delete data.contacts;
-    try{ await setDoc(doc(db,"salons",S.user.uid), data); await setDoc(doc(db,"salons",S.user.uid,"private","contacts"), { barbers: contacts }); }catch(err){ console.error(err); UI.err = t("save_fail"); UI.busy=false; render(); return; }
-    UI.busy=false; startOwner(S.user.uid); },
+    try{ await setDoc(doc(db,"salons",S.sid), data); await setDoc(doc(db,"salons",S.sid,"private","contacts"), { barbers: contacts }); }catch(err){ console.error(err); UI.err = t("save_fail"); UI.busy=false; render(); return; }
+    UI.busy=false; startOwner(S.sid); },
   day:v=>{ const o = editTarget(); const d=Number(v), i=o.days.indexOf(d); if (i>=0) o.days.splice(i,1); else o.days.push(d); render(); if (o===S.salon) queueSave(); },
   sugg:v=>{ const o = editTarget(); const [n,p,d]=v.split("|"); o.services.push({id:uid(),name:n,price:Number(p),dur:Number(d)}); UI.err=""; render(); if (o===S.salon) queueSave(); },
   addSvc:()=>{ const o = editTarget(); o.services.push({id:uid(),name:"",price:"",dur:30}); render(); },
@@ -1403,7 +1690,7 @@ const A = {
   delBarber:v=>{ const o = editTarget(); o.barbers=o.barbers.filter(b=>b.id!==v); render(); if (o===S.salon) queueSave(); },
   done:v=>{ const k = S.bookings.find(x=>x.id===v);
     if (k){ A.billOpen(v); return; }
-    if (UI.sheet){ UI.sheet=null; render(); } updateDoc(doc(db,"salons",S.sid,"bookings",v),{status:"done"}).catch(()=>toast(t("save_fail"))); },
+    if (UI.sheet){ UI.sheet=null; render(); } updateDoc(doc(db,"salons",S.sid,"bookings",v),{status:"done", doneAt:Date.now()}).catch(()=>toast(t("save_fail"))); },
   billOpen:v=>{ const k = S.bookings.find(x=>x.id===v); if (!k) return; UI.bill = billDraft(S.salon, k); UI.sheet = { id:v, mode:"bill" }; render(); },
   billAdd:v=>{ const sv = svcOf(S.salon,v); if (!sv || !UI.bill) return; UI.bill.items.push({n:sv.name, p:String(Number(sv.price)||0)}); render(); },
   billDel:v=>{ if (!UI.bill || UI.bill.items.length<2) return; UI.bill.items.splice(Number(v),1); render(); },
@@ -1413,7 +1700,8 @@ const A = {
   billResent:v=>{ const k = S.bookings.find(x=>x.id===v); if (!k || !k.bill) return; const n = (Number(k.bill.sent)||0)+1;
     k.bill.sent = n; setTimeout(render, 300); updateDoc(doc(db,"salons",S.sid,"bookings",v),{"bill.sent":n}).catch(()=>{}); },
   cancelBk:async v=>{ const k = S.bookings.find(x=>x.id===v); if (!k) return; if (UI.sheet){ UI.sheet=null; render(); }
-    try{ await updateDoc(doc(db,"salons",S.sid,"bookings",v),{status:"cancelled"}); await updateDoc(doc(db,"salons",S.sid,"days",k.date),{["slots."+slotKey(k.barberId,k.time)]:deleteField()}).catch(()=>{}); }catch(e){ toast(t("save_fail")); } },
+    try{ await updateDoc(doc(db,"salons",S.sid,"bookings",v),{status:"cancelled"}); await updateDoc(doc(db,"salons",S.sid,"days",k.date),{["slots."+slotKey(k.barberId,k.time)]:deleteField()}).catch(()=>{});
+      if (isClinic(S.salon) && k.token && k.date===qDay()) setDoc(doc(db,"salons",S.sid,"queue",k.date),{gone:{[k.barberId]:arrayUnion(k.token)}},{merge:true}).catch(()=>{}); }catch(e){ toast(t("save_fail")); } },
   bSvc:v=>{ go(()=>{ const B = UI.book, sl = CUSTOMER_SID ? C.salon : S.salon; B.svc=v; UI.addMode=false;
       B.extra = (B.extra||[]).filter(id=>id!==v); const ok = new Set(addOpts(sl,{svc:v}).map(x=>x.id)); B.extra = B.extra.filter(id=>ok.has(id) && sl.barbers.some(b=>canDoAll(bkList(sl,{svc:v,extra:B.extra}),b)));
       { const bb = B.barber && B.barber!=="any" && barberOf(sl,B.barber); if (bb && !canDoAll(bkList(sl,B),bb)) B.barber = "any"; } B.time=B.prefTime||null; UI.flashSvc=false; if (CUSTOMER_SID) loadDay(B.date); });
@@ -1431,24 +1719,54 @@ const A = {
   bDate:v=>{ go(()=>{ UI.book.date=v; UI.book.time=null; if (CUSTOMER_SID) loadDay(v); }); stepTo("timeCard"); },
   ownH:v=>go(()=>{ UI.ownH = Number(v); }),
   bTime:v=>{ go(()=>{ UI.book.time=v; UI.err=""; }); stepTo("detailsCard"); },
+  secT:v=>{ UI.sec = UI.sec || {}; UI.sec[v] = !UI.sec[v]; secSave(); render(); },
+  secAll:v=>{ UI.sec = {}; if (v==="1") ["prof","hours","svc","work","mgmt","gst","exp","link","inst"].forEach(k=>{ UI.sec[k] = true; }); secSave(); render(); },
+  gstOn:()=>{ const s = S.salon, d = GST_DEF[s.bizType||"salon"]||GST_DEF.salon; s.gst = s.gst || {}; s.gst.on = !s.gst.on; if (s.gst.on){ if (s.gst.rate==null) s.gst.rate = d.rate; if (s.gst.sac==null) s.gst.sac = d.sac; if (s.gst.incl==null) s.gst.incl = true; if (!s.gst.legal) s.gst.legal = s.name||""; } render(); queueSave(); },
+  gstIncl:v=>{ const s = S.salon; s.gst = s.gst || {}; s.gst.incl = v==="1"; render(); queueSave(); },
+  exportData:()=>{ exportData(); },
+  billPdf:v=>{ const k = S.bookings.find(x=>x.id===v); if (!k || !k.bill) return; const w = window.open("","_blank"); if (!w){ toast(t("popup_off")); return; } w.document.open(); w.document.write(invoiceHtml(S.salon,k,k.bill)); w.document.close(); },
+  mic:()=>{
+    if (!SR) return;
+    const btn = () => document.getElementById("micBtn");
+    if (micRec){ micRec.want = false; try{ micRec.stop(); }catch(e){} return; }
+    const B = UI.book, base = (B.problem||"").trim(); let done = "";          // done = text from finished phrases
+    const show = interim => { const parts = [base, interim].map(x=>String(x||"").trim()).filter(Boolean); B.problem = parts.join(" ").slice(0,300); const ta = document.getElementById("c_prob"); if (ta) ta.value = B.problem; };
+    const ui = on => { UI.mic = on; const b = btn(); if (b){ b.classList.toggle("on", on); b.textContent = (on?"⏹ ":"🎤 ")+t(on?"mic_stop":"mic_start"); } };
+    const ctl = { want:true }; micRec = ctl;
+    const begin = () => {
+      const r = new SR(); r.lang = LANG==="hi" ? "hi-IN" : "en-IN"; r.interimResults = true; r.continuous = false; r.maxAlternatives = 1; ctl.r = r;
+      let cur = "";                                                           // latest text of THIS run only; replaced, never appended
+      r.onresult = ev => { const last = ev.results[ev.results.length-1]; const txt = last && last[0] ? String(last[0].transcript||"").trim() : ""; if (txt){ cur = txt; show((done+" "+cur).trim()); } };
+      const commit = () => { if (cur && !(done+" ").endsWith(cur+" ")) done = (done+" "+cur).trim(); cur = ""; show(done); };
+      r.onerror = ev => { if (ev && (ev.error==="not-allowed"||ev.error==="service-not-allowed")){ ctl.want = false; toast(t("mic_denied")); } };
+      r.onend = () => { commit(); if (ctl.want){ setTimeout(()=>{ if (ctl.want){ try{ begin(); }catch(e){ ctl.want = false; micRec = null; ui(false); } } }, 150); } else { micRec = null; ui(false); } };
+      r.start();
+    };
+    try{ begin(); ui(true); }catch(e){ micRec = null; ui(false); }
+  },
   confirm: async ()=>{ const B = UI.book; const salon = CUSTOMER_SID ? C.salon : S.salon, sid = CUSTOMER_SID || S.sid;
     if (!B.svc){ A.toSvc(); return; }
     if (!B.time && CUSTOMER_SID){ UI.err = t("pick_time"); render(); const el=document.getElementById("timeCard"); if (el) el.scrollIntoView({behavior:"smooth", block:"start"}); return; }
     if (!(B.name||"").trim() || digits(B.phone).length!==10){ UI.err = t("need_details"); render(); return; }
     const em = (B.email||"").trim().toLowerCase(); if (em && !isEmail(em)){ UI.err = t("bad_email"); render(); return; }
-    const own = !CUSTOMER_SID; if (own && !B.time) B.time = nowHM();
+    const own = !CUSTOMER_SID;
     const map = CUSTOMER_SID ? (C.days[B.date]||{}) : ownerSlotsMap(B.date);
     B.extra = (B.extra||[]).filter(id=>id!==B.svc && svcOf(salon,id)); const list = bkList(salon,B), dur = bkLen(salon,B);
-    const slot = own ? { time:B.time, barberId:(pickBarberFor(salon,B.svc,B.date,B.barber,list)||{}).id } : (freeSlots(salon,B.date,B.svc,B.barber||"any",map,{step:5, dur, svcs:list})||[]).find(s=>s.time===B.time);
+    const ot = own ? ownTime(salon,B,list,dur) : null; if (own && !B.time) B.time = ot.time;
+    const slot = own ? { time:B.time, barberId:((ot&&ot.barber)||pickBarberFor(salon,B.svc,B.date,B.barber,list)||{}).id } : (freeSlots(salon,B.date,B.svc,B.barber||"any",map,{step:5, dur, svcs:list})||[]).find(s=>s.time===B.time);
     if (!slot || !slot.barberId){ UI.err = t("taken"); render(); return; }
     const k = { date:B.date, time:B.time, serviceId:B.svc, barberId:slot.barberId, cust:B.name.trim().slice(0,60), phone:digits(B.phone), status:"booked", created:Date.now(), src: CUSTOMER_SID?"online":"walkin" };
     if (em) k.email = em.slice(0,100);
+    if (isClinic(salon) && (B.problem||"").trim()) k.problem = B.problem.trim().slice(0,300);
     if (B.extra.length){ k.extra = B.extra.slice(0,10); k.dur = dur; }
     UI.busy=true; UI.err=""; render();
-    try{ await createBooking(sid, salon, k, own); UI.bookedData = k; if (CUSTOMER_SID){ delete C.days[B.date]; } window.scrollTo(0,0); }
+    const force = own && ot && (ot.kind==="own" || (ot.kind==="now" && !ot.barber));
+    try{ await createBooking(sid, salon, k, force); UI.bookedData = k; if (CUSTOMER_SID){ delete C.days[B.date]; } window.scrollTo(0,0); }
     catch(e){ console.error(e); UI.err = e.message==="taken" ? t("taken") : t("save_fail"); if (CUSTOMER_SID){ delete C.days[B.date]; loadDay(B.date); } }
     UI.busy=false; render(); },
-  bNow: ()=>go(()=>{ UI.book.time = null; UI.book.prefTime = null; }),
+  bNow: ()=>go(()=>{ UI.book.time = null; UI.book.prefTime = null; UI.book.tm = "now"; }),
+  tmNow: ()=>go(()=>{ UI.book.time = null; UI.book.prefTime = null; UI.book.tm = "now"; }),
+  tmNext: ()=>go(()=>{ UI.book.time = null; UI.book.prefTime = null; UI.book.tm = "next"; }),
   mvNow: ()=>go(()=>{ if (UI.sheet) UI.sheet.mvTime = nowHM(); }),
   bookAgain:()=>go(()=>{ const keep = CUSTOMER_SID ? {name:UI.book.name, phone:UI.book.phone, email:UI.book.email} : {}; UI.bookedData=null; UI.book=keep; if (CUSTOMER_SID) loadDay(ymd(new Date())); }),
   pickBarber:v=>go(()=>{ UI.barberId=v; }),
@@ -1577,14 +1895,17 @@ function filterShChips(q){
 }
 app.addEventListener("input", e => { const el = e.target, d = el.dataset; if (d.shs){ filterShChips(el.value); return; }
   if (d.cls){ const q = el.value.trim().toLowerCase(), qd = q.replace(/\D/g,""); let n = 0; document.querySelectorAll("#clList .crow").forEach(r=>{ const ok = !q || r.dataset.q.includes(q) || (qd.length>=3 && r.dataset.q.includes(qd)); r.hidden = !ok; if (ok) n++; }); const no = document.getElementById("clNone"); if (no) no.hidden = n>0; return; } const o = editTarget();
-  if (d.salon && o){ o[d.salon] = el.value; if (o===S.salon) queueSave(); }
+  if (d.gst && o===S.salon){ o.gst = o.gst || {}; let v = el.value; if (d.gst=="gstin") v = v.toUpperCase().replace(/[^0-9A-Z]/g,""); if (d.gst=="rate") v = Math.min(28, Math.max(0, Number(v)||0)); o.gst[d.gst] = v; queueSave(); }
+  else if (d.salon && o){ o[d.salon] = el.value; if (o===S.salon) queueSave(); }
   else if (d.svc && o){ const s = o.services.find(x=>x.id===d.svc); if (s){ s[d.k] = el.value; if (o===S.salon) queueSave(); } }
   else if (d.bar && o){ const b = o.barbers.find(x=>x.id===d.bar); if (b){ b[d.k] = el.value; if (o===S.salon) queueSave(); } }
   else if (d.bc){ const c = contactsOf(); c[d.bc] = {...(c[d.bc]||{}), [d.k]: el.value}; if (UI.view==="main") queueSave(); }
   else if (d.book){ UI.book[d.book] = el.value; if (!CUSTOMER_SID) bookSug(d.book, el); }
   else if (d.of){ UI.of[d.of] = el.type==="checkbox" ? el.checked : el.value; }
   else if (d.bill && UI.bill){ if (d.bill==="p"){ const x = UI.bill.items[Number(d.i)]; if (x) x.p = el.value; } else UI.bill[d.bill] = el.value;
-    const tot = document.getElementById("billTotal"); if (tot) tot.textContent = rs(billSum(UI.bill).total); }
+    const k0 = curK(), og = k0 && k0.bill, gs1 = S.salon.gst, g1 = og ? (og.gst?{rate:og.gst.rate,incl:og.gst.incl}:null) : (gs1&&gs1.on?{rate:Number(gs1.rate)||0,incl:gs1.incl!==false}:null), m1 = billSum(UI.bill, g1);
+      const tot = document.getElementById("billTotal"); if (tot) tot.textContent = g1 ? rs2(m1.total) : rs(m1.total);
+      const bg = document.getElementById("billGst"); if (bg && g1) bg.innerHTML = gstSplitHtml(m1); }
   else if (d.ui){ UI[d.ui] = el.value; }
 });
 app.addEventListener("change", e => { const el = e.target; const o = editTarget();
@@ -1599,36 +1920,154 @@ app.addEventListener("change", e => { const el = e.target; const o = editTarget(
 /* ================= owner boot ================= */
 function stopOwner(){ S.unsub.forEach(f=>{try{f()}catch(e){}}); S.unsub=[]; if (S.adminUnsub){ S.adminUnsub(); S.adminUnsub=null; }
   ["adminClaimsUnsub","offersUnsub","adminLeadsUnsub"].forEach(k=>{ if (S[k]){ try{ S[k](); }catch(e){} S[k]=null; } });
+  if (S.qUnsub){ try{ S.qUnsub(); }catch(e){} S.qUnsub=null; } S.qDate=null; S.queue=null; if (S.teamUnsub){ try{ S.teamUnsub(); }catch(e){} S.teamUnsub=null; } S.team=[];
   S.salon=null; S.bookings=[]; S.allSalons=null; S.contacts={}; S.offers=null; S.claims={}; S.allClaims=null; }
 function startOwner(sid){
   S.sid = sid; S.firstSnap = true;
   S.unsub.push(onSnapshot(doc(db,"salons",sid), d => {
-    if (!d.exists()){ if (UI.view!=="setup" && UI.view!=="adminOnly"){ D = { name:"", owner:S.user.displayName||"", phone:"", address:"", mapLink:"", area:"", open:"10:00", close:"21:00", days:[0,1,2,3,4,5,6], services:[], barbers:[] }; UI.view="setup"; UI.step=1; render(); } return; }
-    const fresh = {id:d.id, ...d.data()};
+    if (!d.exists()){ if (UI.view!=="setup" && UI.view!=="adminOnly"){ setBiz(BIZ_CHOSEN()||"salon"); D = { bizType:BIZ_ID, name:"", owner:S.user.displayName||"", phone:"", address:"", mapLink:"", area:"", open:"10:00", close:"21:00", days:[0,1,2,3,4,5,6], services:[], barbers:[] }; UI.view="setup"; UI.step=1; render(); } return; }
+    const fresh = {id:d.id, ...d.data()}; setBiz(fresh.bizType); if (isClinic(fresh)) setTimeout(watchQueue,0);
     if (S.salon && (saveTimer || document.activeElement && document.activeElement.closest && document.activeElement.closest("[data-salon],[data-svc],[data-bar]"))){
       // keep local edits, take server-owned fields
       S.salon.sub = fresh.sub; S.salon.active = fresh.active; S.salon.leave = fresh.leave; S.salon.payReq = fresh.payReq; S.salon.payments = fresh.payments;
     } else S.salon = fresh;
-    if (UI.view!=="main"){ UI.view="main"; UI.tab="home"; }
+    if (UI.view!=="main"){ UI.view="main"; UI.tab = S.staff && S.staff.role==="doctor" ? "doctor" : "home"; }
     if (!(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select,textarea"))) render();
   }, err => { console.error(err); }));
-  S.unsub.push(onSnapshot(doc(db,"salons",sid,"private","contacts"), d => {
+  if (!S.staff) S.teamUnsub = onSnapshot(query(collection(db,"staffIndex"), where("sid","==",sid)), snap => { S.team = snap.docs.map(d=>({id:d.id,...d.data()})); if (UI.view==="main" && UI.tab==="settings" && !typing()) render(); }, e => console.error(e));
+  if (!S.staff) S.unsub.push(onSnapshot(doc(db,"salons",sid,"private","contacts"), d => {
     if (saveTimer) return; S.contacts = d.exists() ? (d.data().barbers||{}) : {};
     if (UI.view==="main" && !(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select,textarea"))) render();
   }, err => console.error(err)));
-  watchOffers();
-  S.unsub.push(onSnapshot(collection(db,"salons",sid,"claims"), snap => {
+  if (!S.staff) watchOffers();
+  if (!S.staff) S.unsub.push(onSnapshot(collection(db,"salons",sid,"claims"), snap => {
     S.claims = {}; snap.docs.forEach(d=>{ S.claims[d.id] = d.data(); });
     if (UI.view==="main" && !typing()) render();
   }, err => console.error(err)));
   const since = ymd(new Date(Date.now()-DAY));
-  S.unsub.push(onSnapshot(query(collection(db,"salons",sid,"bookings"), where("date",">=",since)), snap => {
+  const docOnly = S.staff && S.staff.role==="doctor" && S.staff.barberId;   // a doctor reads only his own patients (the rules enforce it too)
+  S.unsub.push(onSnapshot(docOnly ? query(collection(db,"salons",sid,"bookings"), where("barberId","==",S.staff.barberId)) : query(collection(db,"salons",sid,"bookings"), where("date",">=",since)), snap => {
     if (!S.firstSnap) snap.docChanges().forEach(ch=>{ if (ch.type==="added"){ const k = ch.doc.data(); if (k.src==="online"){ beep(); toast(t("new_bk",{name:k.cust,time:dayLabel(k.date)+" "+nice(k.time)})); } } });
-    S.firstSnap = false; S.bookings = snap.docs.map(d=>({id:d.id,...d.data()})); setTimeout(checkReminders,0);
+    S.firstSnap = false; S.bookings = snap.docs.map(d=>({id:d.id,...d.data()})).filter(k=>k.date>=since); setTimeout(checkReminders,0);
     if (UI.view==="main" && !(document.activeElement && document.activeElement.matches && document.activeElement.matches("input,select,textarea"))) render();
   }, err => console.error(err)));
 }
 
+
+/* ================= clinic token queue ================= */
+const isClinic = sl => !!sl && sl.bizType==="clinic";
+const qCur = b => Number(((S.queue||{}).cur||{})[b])||0;
+const qIn = b => !!((S.queue||{}).in||{})[b];
+const qDay = () => ymd(new Date());
+const qNowK = b => { const c = qCur(b); return c && qIn(b) ? S.bookings.find(k=>k.date===qDay() && k.barberId===b && k.token===c) || null : null; };
+const qWait = b => { const c = qCur(b); return S.bookings.filter(k=>k.date===qDay() && k.barberId===b && k.status==="booked" && k.token && k.token>c).sort((a,x)=>a.token-x.token); };
+function watchQueue(){
+  const td = qDay(); if (S.qDate===td && S.qUnsub) return; if (S.qUnsub){ try{ S.qUnsub(); }catch(e){} }
+  S.qDate = td; S.queue = null;
+  S.qUnsub = onSnapshot(doc(db,"salons",S.sid,"queue",td), d => { S.queue = d.exists() ? d.data() : {}; if (UI.view==="main" && !typing()) render(); }, e => console.error(e));
+}
+setInterval(()=>{ if (S.salon && isClinic(S.salon) && S.sid) watchQueue(); }, 60000);
+// call the next waiting patient in (and finish the one inside, if any)
+async function qAdvance(b, finish){
+  const now = qNowK(b); const waits = qWait(b).filter(k=>!now || k.id!==now.id);
+  const batch = writeBatch(db); const qref = doc(db,"salons",S.sid,"queue",qDay());
+  if (finish){
+    // Done: close the visit only. Nobody is called until the doctor taps "Next".
+    if (!now) return; sndDone();
+    batch.update(doc(db,"salons",S.sid,"bookings",now.id), { status:"done", doneAt:Date.now() });
+    batch.set(qref, { in:{[b]:false}, cur:{[b]:now.token} }, { merge:true });
+  } else {
+    const nx = waits[0]; if (!nx) return; sndNext();
+    if (now) batch.update(doc(db,"salons",S.sid,"bookings",now.id), { status:"done", doneAt:Date.now() });
+    batch.set(qref, { cur:{[b]:nx.token}, in:{[b]:true} }, { merge:true });
+  }
+  try{ await batch.commit(); if (now && (finish || waits[0])) now.status = "done"; }catch(e){ console.error(e); toast(t("save_fail")); }
+}
+function queueLink(sl, k){
+  const base = location.origin + location.pathname.replace(/index\.html$/,"");
+  return base + "?s="+(sl.id||S.sid||CUSTOMER_SID)+"&q=1&d="+k.barberId+"&dt="+k.date+"&tk="+k.token+(IS_BETA?"&t=1":"");
+}
+function qRemindMsg(k, ahead){
+  const sl = S.salon, link = queueLink({id:S.sid}, k);
+  return t(ahead<=0?"q_msg0":"q_msg",{name:k.cust, clinic:sl.name, tk:k.token, ahead:ahead, link:link}) + "\n" + (LANG==="hi"?"रास्ता":"Map") + ": " + mapUrl(sl);
+}
+function tokenRow(k, ahead, o){
+  const lvl = ahead; const sent = (k.rem||{})[String(lvl)];
+  const can = o && o.remind && (ahead===2 || ahead===1) && digits(k.phone).length===10;
+  return `<div class="tkrow"><span class="tkno">#${k.token}</span><div class="grow"><b>${esc(k.cust)}</b><div class="small">${esc(bkNames(S.salon,k))}</div>${k.problem?`<div class="small prob">“${esc(k.problem)}”</div>`:""}<div class="small muted">${t("q_ahead",{n:ahead})}${digits(k.phone).length===10?" · "+esc(k.phone):""}</div></div>
+    ${can?(sent?`<span class="pill ok">${t("q_sent")}</span>`:`<a class="btn sm saffron" data-a="qRemind" data-v="${k.id}|${lvl}" href="${waLink(k.phone, qRemindMsg(k, ahead))}" target="_blank" rel="noopener">${t("q_remind")}</a>`):""}
+    <a class="btn sm ghost" href="${waLink(k.phone, qRemindMsg(k, ahead))}" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a></div>`;
+}
+const canDoctor = () => !S.staff || S.staff.role==="doctor";
+// the owner may be a doctor too: the doctor page opens on the profile he picked last time
+function myDoc(s){ try{ const v = localStorage.getItem("ss_mydoc_"+S.sid); return v && barberOf(s,v) ? v : ""; }catch(e){ return ""; } }
+// doctor-wise transparency: how many each doctor saw, first/last time and pace (owner and manager only)
+function reportCard(){
+  if (S.staff && S.staff.role!=="manager") return "";
+  const s = S.salon, yest = UI.rpDay==="yest", day = ymd(new Date(yest ? Date.now()-DAY : Date.now()));
+  const tmv = ms => { if (!ms) return "–"; const d = new Date(ms); return nice(toHM(d.getHours()*60+d.getMinutes())); };
+  const rows = (s.barbers||[]).map(b=>{
+    const all = S.bookings.filter(k=>k.date===day && k.barberId===b.id && k.status!=="cancelled");
+    const seen = all.filter(k=>k.status==="done"), ts = seen.map(k=>Number(k.doneAt)||0).filter(Boolean).sort((a,x)=>a-x);
+    const avg = ts.length>1 ? Math.round((ts[ts.length-1]-ts[0])/(ts.length-1)/60000) : null;
+    return `<div class="srow"><div class="row" style="gap:10px">${avatar(b)}<b class="grow">${esc(b.name)}</b><span class="pill ok">${t("rp_seen")}: ${seen.length}</span></div>
+      <span class="small muted">${t("rp_wait")}: ${all.length-seen.length} · ${t("rp_first")}: ${tmv(ts[0])} · ${t("rp_last")}: ${tmv(ts[ts.length-1])}${avg!==null?" · "+t("rp_avg")+": "+avg+" "+t("min"):""}</span></div>`; }).join("");
+  return `<div class="card"><h2>${t("rp_h")}</h2><p class="small muted">${t("rp_p")}</p>
+    <div class="chips"><button class="chip ${yest?"":"on"}" data-a="rpDay" data-v="today">${t("rp_today")}</button><button class="chip ${yest?"on":""}" data-a="rpDay" data-v="yest">${t("rp_yest")}</button></div>${rows||`<p class="small muted">${t("rp_none")}</p>`}</div>`;
+}
+function viewQueue(){
+  const s = S.salon;
+  return `<div><h1>${t("q_h")}</h1><p class="small muted" style="margin-top:4px">${t("q_p")}</p></div>
+  <div class="row" style="gap:8px"><button class="btn primary grow" data-a="walkin">+ ${t("add_walkin")}</button>${canDoctor()?`<button class="btn grow" data-a="docMode">🩺 ${t("q_mode")}</button>`:""}</div>
+  ${(s.barbers||[]).map(b=>{ const now = qNowK(b.id), waits = qWait(b.id).filter(k=>!now||k.id!==now.id);
+    return `<div class="card"><div class="row" style="gap:10px">${avatar(b,"lg")}<div class="grow"><h2>${esc(b.name)}</h2>${b.spec?`<p class="small muted">${esc(b.spec)}</p>`:""}</div><span class="pill ${waits.length?"warn":""}">${t("q_waiting",{n:waits.length})}</span></div>
+      ${now?`<div class="tkin"><span class="label">${t("q_in")}</span><div class="row" style="gap:10px"><span class="tkno big">#${now.token}</span><div class="grow"><b>${esc(now.cust)}</b><div class="small">${esc(bkNames(S.salon,now))}</div>${now.problem?`<div class="small prob">“${esc(now.problem)}”</div>`:""}</div></div></div>`:`<p class="muted">${t("q_idle")}</p>`}
+      ${waits.length?`<div>${waits.map((k,i)=>tokenRow(k,i,{remind:true})).join("")}</div>`:`<p class="small muted">${t("q_none")}</p>`}</div>`; }).join("")}
+  ${reportCard()}`;
+}
+
+// doctor page: one compact card. Seen (faded) above, patient inside (highlighted) in the middle, waiting (blurred) below.
+function docRow(k, c){ return `<div class="dk ${c}"><span class="dn">#${k.token}</span><span class="dtx"><span class="dc">${esc(k.cust)}</span><span class="dsv">${esc(bkNames(S.salon,k))}</span>${k.problem&&c.indexOf("wait")===0?`<span class="dpr">${esc(k.problem)}</span>`:""}</span></div>`; }
+function viewDoctor(){
+  const s = S.salon, docs = s.barbers||[];
+  const bid = S.staff && S.staff.barberId ? S.staff.barberId : (UI.docId && barberOf(s,UI.docId) ? UI.docId : (myDoc(s) || (docs[0]||{}).id));
+  const b = barberOf(s,bid);
+  if (!b) return `<div class="card lock"><p class="muted">${t("q_nodoc")}</p></div>`;
+  const td = qDay(), now = qNowK(bid), waits = qWait(bid).filter(k=>!now||k.id!==now.id), nx = waits[0];
+  const seen = S.bookings.filter(k=>k.date===td && k.barberId===bid && k.token && k.status==="done").sort((a,x)=>a.token-x.token);
+  const cur = qCur(bid);
+  const last = !now && cur ? seen.find(k=>k.token===cur) : null;           // just finished, waiting for "Next"
+  const above = seen.filter(k=>!last || k.id!==last.id).slice(-2);
+  const key = bid+":"+cur+":"+(qIn(bid)?1:0)+":"+seen.length; const pop = UI.dwKey!==key ? " pop" : ""; UI.dwKey = key;
+  const back = !S.staff ? `<button class="btn sm ghost" data-a="docBack">← ${t("q_back")}</button>` : "";
+  const pick = !S.staff && docs.length>1 ? `<div class="chips">${docs.map(x=>`<button class="chip ${x.id===bid?"on":""}" data-a="docPick" data-v="${x.id}">${esc(x.name)}</button>`).join("")}</div>` : "";
+  const mid = now ? `<div class="dmid in${pop}"><span class="dlab">${t("q_in")}</span><div class="dbig">#${now.token}</div><div class="dname">${esc(now.cust)}</div><div class="dsvc">${esc(bkNames(S.salon,now))}</div>${now.problem?`<div class="dprob">“${esc(now.problem)}”</div>`:""}</div>`
+    : last ? `<div class="dmid fin${pop}"><span class="dlab">✓ ${t("q_fin")}</span><div class="dbig">#${last.token}</div><div class="dname">${esc(last.cust)}</div><div class="dsvc">${esc(bkNames(S.salon,last))}</div>${last.problem?`<div class="dprob">“${esc(last.problem)}”</div>`:""}</div>`
+    : `<div class="dmid idle${pop}"><span class="dlab">${t("q_ready")}</span><div class="dbig">—</div><div class="dname">${nx?"":t("q_none")}</div></div>`;
+  const btn = now ? `<button class="btn primary docdone" data-a="qDone" data-v="${bid}">✓ ${t("q_done")}</button>`
+    : nx ? `<button class="btn primary docdone next" data-a="qCall" data-v="${bid}">${t("q_call")} · #${nx.token} →</button>`
+    : `<button class="btn docdone" disabled>${t("q_none")}</button>`;
+  return `<div class="docpage">${back}${pick}
+    <div class="dochead">${avatar(b,"lg")}<div class="grow"><b>${esc(b.name)}</b>${b.spec?`<div class="small muted">${esc(b.spec)}</div>`:""}</div>
+      <button class="btn sm ghost sndbtn" data-a="sndT" aria-label="${t("snd_lbl")}" aria-pressed="${sndOn()}">${sndOn()?"🔔":"🔕"}</button><div class="dstat"><b>${seen.length}</b><span>${t("q_seen_s")}</span></div><div class="dstat"><b>${waits.length}</b><span>${t("q_wait_s")}</span></div></div>
+    <div class="dstage">
+      <div class="dabove">${above.map(k=>docRow(k,"done")).join("")}</div>
+      ${mid}
+      <div class="dbelow">${waits.slice(0,3).map((k,i)=>docRow(k,"wait d"+(i+1)+(i===0&&now?" first":""))).join("")}${waits.length>3?`<div class="dmore">+${waits.length-3}</div>`:""}</div>
+    </div>
+    ${btn}</div>`;
+}
+// patient's own live page (no login): ?s=..&q=1&d=<doctor>&dt=<date>&tk=<token>
+function viewPatientQueue(){
+  const s = C.salon, Q = C.q, qd = C.queue || {}, cur = Number((qd.cur||{})[Q.d])||0, inn = !!(qd.in||{})[Q.d], gone = ((qd.gone||{})[Q.d])||[], tk = Q.tk;
+  const dr = barberOf(s,Q.d);
+  const seen = tk<cur || (tk===cur && !inn), turn = tk===cur && inn;
+  const ahead = Math.max(0, tk-cur-1-gone.filter(g=>g>cur && g<tk).length);
+  return `<div class="card lock"><p class="label">${t("q_your")}</p><div class="tokbig">#${tk}</div>
+    ${seen?`<h2>${t("q_seen")}</h2>`:turn?`<div class="banner ok"><b>${t("q_yourturn")}</b></div>`:`<p class="label" style="margin-top:6px">${t("q_before")}</p><div class="tokbig" style="font-size:56px">${ahead}</div>`}
+    <p class="muted">${t("q_now")}: <b>${cur?"#"+cur:t("q_notyet")}</b>${dr?" · "+esc(dr.name):""}</p>
+    <p class="small muted">${esc(s.name)}</p></div>${addrCard(s)}`;
+}
 /* ================= reminders ================= */
 const remDone = new Set(); try{ JSON.parse(localStorage.getItem("ss_rem")||"[]").forEach(x=>remDone.add(x)); }catch(e){}
 function markReminded(id){ remDone.add(id); try{ localStorage.setItem("ss_rem", JSON.stringify([...remDone].slice(-300))); }catch(e){} }
@@ -1663,15 +2102,23 @@ setInterval(checkVersion, 5*60*1000);
 document.addEventListener("visibilitychange", ()=>{ if (document.visibilityState==="visible"){ checkVersion(); checkReminders(); } });
 setTimeout(checkVersion, 8000);
 // only the admin stays on the test version; everyone else is sent to the main link
-function betaGate(){ if (!IS_BETA) return; if (S.user && !isAdmin()) { location.replace(MAIN_URL()); return; }
+function betaGate(){ if (!IS_BETA) return; if (S.user && !isAdmin() && !S.staff) { location.replace(MAIN_URL()); return; }
   if (isAdmin() && !document.querySelector(".betabar")) overlay.insertAdjacentHTML("afterbegin", `<div class="betabar">${t("beta")}</div>`); }
 
 /* ================= start ================= */
+if (!CUSTOMER_SID) setBiz(BIZ_CHOSEN()||"salon");
 if (CUSTOMER_SID){ render(); initCustomer().then(()=>loadDay(ymd(new Date()))); }
 else {
   render();
   getRedirectResult(auth).catch(()=>{ UI.err = t("signin_fail"); });
-  onAuthStateChanged(auth, u => { stopOwner(); S.user = u; betaGate();
-    if (!u){ UI.view="login"; UI.busy=false; render(); return; }
-    UI.view="loading"; render(); startOwner(u.uid); if (isAdmin()) watchAdmin(); });
+  onAuthStateChanged(auth, async u => { stopOwner(); S.user = u; S.staff = null;
+    if (!u){ betaGate(); setBiz(BIZ_CHOSEN()||"salon"); UI.view="login"; UI.busy=false; render(); return; }
+    UI.view="loading"; render();
+    // a staff member (added by an owner with their Google email) has no salon of their own
+    if (!isAdmin()){ try{ const own = await getDoc(doc(db,"salons",u.uid));
+      if (!own.exists()){ const si = await getDoc(doc(db,"staffIndex",String(u.email||"").toLowerCase())); if (si.exists()) S.staff = si.data(); } }catch(e){ console.error(e); } }
+    if (S.user !== u) return;
+    betaGate();
+    if (S.staff){ startOwner(S.staff.sid); return; }
+    startOwner(wsSid(u.uid)); if (isAdmin()) watchAdmin(); });
 }
