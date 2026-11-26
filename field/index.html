@@ -12,7 +12,22 @@
 </head>
 <body>
 <div id="app"><p class="boot">लोड हो रहा है…</p></div>
+<script>
+/* boot diagnostics: if the app is still on the loading screen after 6 s, show why */
+window.__qsErr = [];
+window.addEventListener("error", function (e) { window.__qsErr.push((e.message || "error") + (e.filename ? " @" + e.filename.split("/").pop() + ":" + e.lineno : "")); }, true);
+window.addEventListener("unhandledrejection", function (e) { window.__qsErr.push("promise: " + (e.reason && (e.reason.message || e.reason))); });
+setTimeout(function () {
+  var b = document.querySelector(".boot"); if (!b || window.__qsReady) return;
+  var C = window.Capacitor;
+  var lines = ["ऐप शुरू नहीं हो पाई (जाँच)", "app.js चला: " + (window.__qsStarted ? "हाँ" : "नहीं"),
+    "native: " + (C && C.isNativePlatform ? C.isNativePlatform() : "no Capacitor"), "online: " + navigator.onLine, "url: " + location.href,
+    "errors: " + (window.__qsErr.join(" | ") || "none")];
+  b.style.whiteSpace = "pre-wrap"; b.style.textAlign = "left"; b.style.padding = "16px"; b.textContent = lines.join("\n");
+  fetch("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js", { mode: "cors" }).then(function (r) { b.textContent += "\ngstatic: HTTP " + r.status; }, function (e) { b.textContent += "\ngstatic: " + e; });
+}, 6000);
+</script>
 <script src="vendor/leaflet.js"></script>
-<script type="module" src="app.js"></script>
+<script type="module" src="app.js" onerror="window.__qsErr.push('app.js load failed')"></script>
 </body>
 </html>
