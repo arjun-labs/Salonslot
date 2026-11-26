@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, orderBy, limit, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, orderBy, limit, getDocs, writeBatch, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ================= config ================= */
 const firebaseConfig = {
@@ -12,7 +12,8 @@ const firebaseConfig = {
   appId: "1:1041857314935:web:ac9cb74373273477a80672"
 };
 const ADMIN_EMAIL = "vishwakarmaarjun128@gmail.com";
-const FIELD_VERSION = "2026.11.23-1";
+const FIELD_VERSION = "2026.11.26-1";
+const RADIUS = 50, FIFTEEN = 15 * 60000;
 const CONSENT_VER = 1;
 const RETAIN_DAYS = 90;
 
@@ -35,12 +36,13 @@ const KIND = { salary: "सैलरी वाला", commission: "commission �
 /* attendance for one day: rules in the PRD. Phase 1 has no GPS movement rule yet. */
 function dayStatus(d, today) {
   if (d.fix) return "fixed";
+  if (d.act === "still") return d.out > 0 || d.date < today ? "still" : "open";
   if (d.out > 0) return "ok";
   return d.date === today ? "open" : "missed";
 }
 const STATUS = {
   ok: ["हाज़िरी लगी", "ok"], fixed: ["Admin ने ठीक की", "ok"],
-  open: ["काम चालू", "open"], missed: ["हाज़िरी नहीं (Time out नहीं दबाया)", "bad"]
+  open: ["काम चालू", "open"], still: ["हाज़िरी नहीं (15 मिनट एक जगह रुका)", "bad"], missed: ["हाज़िरी नहीं (Time out नहीं दबाया)", "bad"]
 };
 const chip = st => `<span class="chip ${STATUS[st][1]}">${STATUS[st][0]}</span>`;
 
@@ -58,9 +60,12 @@ function download(name, text) {
 function getPos() {
   return new Promise(res => {
     if (!navigator.geolocation) return res(null);
+    const f0 = TRK.fix; if (f0 && Date.now() - f0.t < 20000) return res({ lat: f0.lat, lng: f0.lng, acc: f0.acc }); // tracker has a fresh fix
     navigator.geolocation.getCurrentPosition(
       p => res({ lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6), acc: Math.round(p.coords.accuracy) }),
-      () => res(null), { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+      () => { const f = TRK.fix; // GPS busy: fall back to the tracker's fix if it is under 2 minutes old
+        res(f && Date.now() - f.t < 120000 ? { lat: f.lat, lng: f.lng, acc: f.acc } : null); },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
   });
 }
 function loadImg(file) {
@@ -92,13 +97,99 @@ async function makePhotos(file, stamp) {
   return { photo, thumb: scaled(img, 140, 0.6) };
 }
 
+
+/* ================= GPS tracking (phase 2) ================= */
+const toRad = x => x * Math.PI / 180;
+function dist(a, b) {
+  const R = 6371000, dLa = toRad(b.lat - a.lat), dLo = toRad(b.lng - a.lng);
+  const h = Math.sin(dLa / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLo / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+const TRK = { id: null, day: null, buf: [], early: [], last: null, lastFix: 0, fix: null, bat: null, timer: null, flushT: null, lock: null, flushing: false };
+const bufKey = () => "fieldbuf_" + TRK.day.id, earlyKey = () => "fieldearly_" + TRK.day.id;
+const keep = () => { try { localStorage.setItem(bufKey(), JSON.stringify(TRK.buf)); localStorage.setItem(earlyKey(), JSON.stringify(TRK.early)); } catch (e) { /* storage full or blocked */ } };
+
+function startTracking(d) {
+  if (TRK.id != null || !navigator.geolocation || !d || d.out) return;
+  TRK.day = d;
+  try { TRK.buf = JSON.parse(localStorage.getItem(bufKey()) || "[]"); TRK.early = JSON.parse(localStorage.getItem(earlyKey()) || "[]"); } catch (e) { TRK.buf = []; TRK.early = []; }
+  TRK.last = TRK.buf[TRK.buf.length - 1] || TRK.early[TRK.early.length - 1] || null;
+  TRK.lastFix = Date.now();
+  TRK.id = navigator.geolocation.watchPosition(onPos, () => {}, { enableHighAccuracy: true, maximumAge: 10000, timeout: 30000 });
+  TRK.flushT = setInterval(() => flush(), 60000);
+  if (!d.act) TRK.timer = setTimeout(check15, Math.max(1000, d.start + FIFTEEN + 5000 - Date.now()));
+  wake();
+  if (navigator.getBattery) navigator.getBattery().then(b => { TRK.bat = b; }).catch(() => {});
+}
+function onPos(p) {
+  const d = TRK.day; if (!d || d.out) return;
+  const now = Date.now(), pt = { t: now, lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6), acc: Math.round(p.coords.accuracy) };
+  if (TRK.bat) pt.bat = Math.round(TRK.bat.level * 100);
+  TRK.lastFix = now; TRK.fix = { lat: pt.lat, lng: pt.lng, acc: pt.acc, t: now };
+  const L = TRK.last;
+  if (pt.acc > 150 && L) return;            // very poor fix, ignore
+  if (L && now - L.t < 20000) return;       // at most one point per 20 s
+  if (!L || now - L.t >= 180000 || dist(L, pt) >= RADIUS) { // every 3 min, or after moving 50 m
+    TRK.last = pt; TRK.buf.push(pt);
+    if (now - d.start <= FIFTEEN + 60000) TRK.early.push(pt);
+    keep();
+    if (!d.act && now - d.start <= FIFTEEN && d.startLoc && dist(d.startLoc, pt) > RADIUS) setAct("ok15");
+  }
+}
+function check15() { // the 15-minute rule: moved out of 50 m, or saved a visit, counts; clearly stood still does not
+  const d = TRK.day; if (!d || d.act || d.out) return;
+  const moved = TRK.early.some(p => p.t - d.start <= FIFTEEN && dist(d.startLoc, p) > RADIUS) || S.visits.some(v => v.dayId === d.id);
+  if (moved) return setAct("ok15");
+  const ev = TRK.early.filter(p => p.t - d.start <= FIFTEEN + 60000);
+  if (ev.length >= 2 && ev[ev.length - 1].t - d.start >= 10 * 60000) return setAct("still");
+  setAct("nodata");                          // not enough GPS to decide: Admin checks
+}
+async function setAct(v) {
+  const d = TRK.day || todayDay(); if (!d || d.act === v || d.act === "ok15") return;
+  try {
+    await updateDoc(doc(db, "field_days", d.id), { act: v }); d.act = v;
+    const td = todayDay(); if (td) td.act = v;
+    if (S.role === "staff" && S.view === "home") render();
+  } catch (e) { console.error(e); }
+}
+async function flush() { // points go up one document per hour; failures stay in the phone buffer
+  const d = TRK.day; if (!d || !TRK.buf.length || !navigator.onLine || TRK.flushing) return true;
+  TRK.flushing = true;
+  const batch = TRK.buf.slice(), byHour = {};
+  batch.forEach(p => { const h = pad(new Date(p.t).getHours()); (byHour[h] = byHour[h] || []).push(p); });
+  try {
+    for (const [h, pts] of Object.entries(byHour))
+      await setDoc(doc(db, "field_points", `${d.id}_${h}`), { email: S.email, dayId: d.id, date: d.date, pts: arrayUnion(...pts) }, { merge: true });
+    TRK.buf = TRK.buf.slice(batch.length); keep(); return true;
+  } catch (e) { console.error(e); return false; }
+  finally { TRK.flushing = false; }
+}
+function stopTracking() {
+  if (TRK.id != null) navigator.geolocation.clearWatch(TRK.id);
+  clearInterval(TRK.flushT); clearTimeout(TRK.timer);
+  if (TRK.lock) { TRK.lock.release().catch(() => {}); TRK.lock = null; }
+  if (TRK.day) { try { localStorage.removeItem(bufKey()); localStorage.removeItem(earlyKey()); } catch (e) { /* ignore */ } }
+  Object.assign(TRK, { id: null, day: null, buf: [], early: [], last: null, fix: null, flushing: false });
+}
+async function wake() { // keeps the screen on while working, so the browser keeps giving GPS
+  try { if ("wakeLock" in navigator && !TRK.lock) { TRK.lock = await navigator.wakeLock.request("screen"); TRK.lock.addEventListener("release", () => { TRK.lock = null; }); } } catch (e) { /* not allowed */ }
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && TRK.id != null) { wake(); flush(); } });
+window.addEventListener("online", () => { if (TRK.id != null) flush(); });
+function trackNote() {
+  if (TRK.id == null) return "";
+  const ago = Date.now() - TRK.lastFix, m = Math.floor(ago / 60000);
+  return ago > 5 * 60000 ? `<div class="msg bad" id="trk">GPS नहीं मिल रहा (${m} मिनट से)। फ़ोन की Location चालू रखें और इस screen को खुला रखें।</div>`
+    : `<div class="msg" id="trk">📍 Tracking चालू · screen चालू रखें, app बंद न करें</div>`;
+}
+
 /* ================= state ================= */
 const S = {
   ready: false, user: null, email: "", role: null, staff: null,
   view: "home", busy: false, msg: "", bad: false,
   today: dateStr(), days: [], visits: [],
   form: blankForm(), overlay: "",
-  adm: { tab: "people", staff: [], visits: [], days: [], fStaff: "", fFrom: "" }
+  adm: { tab: "people", staff: [], visits: [], days: [], live: {}, map: null, fStaff: "", fFrom: "" }
 };
 function blankForm() { return { salon: "", owner: "", phone: "", demo: "yes", result: "interest", follow: "", file: null, preview: "" }; }
 function say(m, bad) { S.msg = m; S.bad = !!bad; }
@@ -133,7 +224,7 @@ onAuthStateChanged(auth, async u => {
       if (S.email === ADMIN_EMAIL && u.emailVerified) { S.role = "admin"; await loadAdminData(); }
       else {
         const s = await getDoc(doc(db, "field_staff", S.email));
-        if (s.exists() && s.data().active) { S.role = "staff"; S.staff = s.data(); await loadStaffData(); }
+        if (s.exists() && s.data().active) { S.role = "staff"; S.staff = s.data(); await loadStaffData(); const td = todayDay(); if (td && !td.out) startTracking(td); }
         else S.role = "none";
       }
     }
@@ -198,6 +289,7 @@ function homeView() {
   } else if (!d.out) {
     h += `<div class="card"><div class="row"><h2>काम चालू</h2><span class="spacer"></span>${chip("open")}</div>
     <div class="timer" id="elapsed">${fmtDur(Date.now() - d.start)}</div>
+    ${trackNote()}
     <p class="muted small">Start: ${fmtTime(d.start)} · आज के visits: ${todays.length}</p>
     <button class="btn gold" data-act="newvisit">＋ सैलून visit जोड़ें</button>
     <button class="btn ghost" data-act="timeout" ${S.busy ? "disabled" : ""}>Time out</button></div>`;
@@ -244,9 +336,11 @@ function visitForm() {
 
 /* ---------- admin ---------- */
 function adminView() {
-  const A = S.adm, tabs = [["people", "लोग"], ["visits", "Visits"], ["days", "हाज़िरी"]];
+  const A = S.adm, tabs = [["people", "लोग"], ["live", "आज"], ["visits", "Visits"], ["days", "हाज़िरी"]];
+  if (A.map) return `<main>${mapView()}</main>`;
   let body = "";
-  if (A.tab === "people") body = adminPeople();
+  if (A.tab === "live") body = adminLive();
+  else if (A.tab === "people") body = adminPeople();
   else if (A.tab === "visits") body = adminVisits();
   else body = adminDays();
   return `<main><div class="tabs">${tabs.map(([k, v]) => `<button data-act="atab" data-v="${k}" class="${A.tab === k ? "on" : ""}">${v}</button>`).join("")}<button data-act="refresh">↻ ताज़ा करें</button></div>${msgBox()}${body}</main>`;
@@ -262,7 +356,9 @@ function adminPeople() {
    <label>प्रकार<select name="kind"><option value="salary">सैलरी वाला</option><option value="commission">commission वाला</option></select></label>
    <label>Partner code<input name="code" value="${code}" maxlength="12"></label>
    <button class="btn gold" type="submit">जोड़ें</button></form>
-   <div class="list">${list || `<p class="muted">अभी कोई नहीं जुड़ा।</p>`}</div>`;
+   <div class="list">${list || `<p class="muted">अभी कोई नहीं जुड़ा।</p>`}</div>
+   <div class="card"><h3>${RETAIN_DAYS} दिन से पुराना डेटा</h3><p class="small muted">फोटो, visits, लोकेशन और हाज़िरी जो ${RETAIN_DAYS} दिन से पुरानी हैं, यहाँ से मिटाएँ (सहमति में यही वादा है)। महीने में एक बार दबाएँ।</p>
+   <button class="btn danger sm" data-act="purge">पुराना डेटा मिटाएँ</button></div>`;
 }
 function filteredVisits() {
   const A = S.adm;
@@ -286,11 +382,109 @@ function adminDays() {
   const A = S.adm, rows = A.days.filter(d => (!A.fStaff || d.email === A.fStaff) && (!A.fFrom || d.date >= A.fFrom));
   const tr = rows.map(d => {
     const st = dayStatus(d, S.today), n = A.visits.filter(v => v.dayId === d.id).length;
-    return `<tr><td>${fmtDate(d.date)}</td><td>${esc(d.name)}</td><td>${fmtTime(d.start)}</td><td>${fmtTime(d.out)}</td><td>${d.hours || "—"}</td><td>${n}</td><td>${chip(st)}${st === "missed" ? `<br><button class="btn sm gold" data-act="fix" data-id="${esc(d.id)}">ठीक करें</button>` : ""}</td></tr>`;
+    return `<tr><td>${fmtDate(d.date)}</td><td>${esc(d.name)}</td><td>${fmtTime(d.start)}</td><td>${fmtTime(d.out)}</td><td>${d.hours || "—"}</td><td>${n}</td><td>${chip(st)}${d.act === "nodata" ? ` <span class="chip open">GPS कम</span>` : ""}<br><button class="btn sm ghost" data-act="map" data-id="${esc(d.id)}">नक़्शा</button>${st === "missed" ? `<br><button class="btn sm gold" data-act="fix" data-id="${esc(d.id)}">ठीक करें</button>` : ""}</td></tr>`;
   }).join("");
   return `${filterBar()}<div class="row"><b>${rows.length} दिन</b><span class="spacer"></span><button class="btn sm ghost" data-act="csvd">Excel (CSV) डाउनलोड</button></div>
    <div class="card scroll"><table><thead><tr><th>तारीख़</th><th>नाम</th><th>Start</th><th>Out</th><th>घंटे</th><th>Visits</th><th>हाज़िरी</th></tr></thead><tbody>${tr || `<tr><td colspan="7" class="muted">कोई दिन नहीं।</td></tr>`}</tbody></table></div>
    <p class="small muted">"ठीक करें" तब दबाएँ जब लड़के की ग़लती नहीं थी (फ़ोन बंद, नेट नहीं)।</p>`;
+}
+
+
+/* ---------- admin: live list, day map, cleanup ---------- */
+async function loadLive() {
+  const q = await getDocs(query(collection(db, "field_points"), where("date", "==", S.today)));
+  const live = {};
+  q.docs.forEach(x => (x.data().pts || []).forEach(p => { const k = x.data().dayId; if (!live[k] || p.t > live[k].t) live[k] = p; }));
+  S.adm.live = live;
+}
+function adminLive() {
+  const A = S.adm, open = A.days.filter(d => d.date === S.today && !d.out), done = A.days.filter(d => d.date === S.today && d.out);
+  const card = d => {
+    const p = A.live[d.id], ago = p ? Math.floor((Date.now() - p.t) / 60000) : null;
+    return `<div class="card"><div class="row"><b>${esc(d.name)}</b><span class="spacer"></span>${chip(dayStatus(d, S.today))}</div>
+    <span class="small muted">Start ${fmtTime(d.start)}${d.out ? " → " + fmtTime(d.out) : ""} · ${p ? `आख़िरी बिंदु ${ago} मिनट पहले${p.bat != null ? ", battery " + p.bat + "%" : ""} · <a href="${mapLink(p)}" target="_blank" rel="noopener">नक़्शे पर</a>` : "अभी कोई बिंदु नहीं"}</span>
+    ${!d.out && ago != null && ago > 10 ? `<span class="chip bad">${ago} मिनट से सिग्नल नहीं</span>` : ""}
+    <button class="btn sm ghost" data-act="map" data-id="${esc(d.id)}">आज का रास्ता</button></div>`;
+  };
+  return `<h3>अभी काम पर (${open.length})</h3><div class="list">${open.map(card).join("") || `<p class="muted">अभी कोई Start पर नहीं।</p>`}</div>
+  <h3>आज पूरा किया (${done.length})</h3><div class="list">${done.map(card).join("") || `<p class="muted">कोई नहीं।</p>`}</div>`;
+}
+function analyse(pts) {
+  let km = 0; for (let i = 1; i < pts.length; i++) km += dist(pts[i - 1], pts[i]);
+  const stops = [], gaps = [];
+  for (let i = 0; i < pts.length;) {
+    let j = i; while (j + 1 < pts.length && dist(pts[i], pts[j + 1]) <= RADIUS) j++;
+    if (pts[j].t - pts[i].t >= 5 * 60000) stops.push({ from: pts[i].t, to: pts[j].t, lat: pts[i].lat, lng: pts[i].lng });
+    i = j + 1;
+  }
+  for (let i = 1; i < pts.length; i++) if (pts[i].t - pts[i - 1].t > 10 * 60000) gaps.push({ from: pts[i - 1].t, to: pts[i].t });
+  return { km: km / 1000, stops, gaps };
+}
+async function openMap(id) {
+  const d = S.adm.days.find(x => x.id === id); if (!d) return;
+  S.adm.map = { d, pts: [], visits: [], loading: true, a: { km: 0, stops: [], gaps: [] } }; render();
+  try {
+    const [ps, vs] = await Promise.all([
+      getDocs(query(collection(db, "field_points"), where("dayId", "==", id))),
+      getDocs(query(collection(db, "field_visits"), where("dayId", "==", id)))]);
+    const m = S.adm.map; if (!m || m.d.id !== id) return;
+    m.pts = ps.docs.flatMap(x => x.data().pts || []).sort((a, b) => a.t - b.t);
+    m.visits = vs.docs.map(x => ({ id: x.id, ...x.data() })).sort((a, b) => a.at - b.at);
+    m.a = analyse(m.pts); m.loading = false;
+  } catch (e) { console.error(e); say("नक़्शे का डेटा नहीं खुला।", true); if (S.adm.map) S.adm.map.loading = false; }
+  render(); setTimeout(drawMap, 0);
+}
+function mapView() {
+  const m = S.adm.map, a = m.a;
+  return `<button class="btn ghost sm" data-act="mapback">← वापस</button>
+  <h2>${esc(m.d.name)} · ${fmtDate(m.d.date)}</h2>${msgBox()}
+  <div class="row">${chip(dayStatus(m.d, S.today))}${m.d.act === "nodata" ? `<span class="chip open">GPS कम</span>` : ""}</div>
+  <p class="small muted">Start ${fmtTime(m.d.start)} → ${fmtTime(m.d.out)} · ${m.pts.length} बिंदु · करीब ${a.km.toFixed(1)} किमी · visits ${m.visits.length}</p>
+  ${m.loading ? `<p class="muted">नक़्शा लोड हो रहा है…</p>` : `<div id="map" style="height:52vh;border-radius:12px;border:1px solid var(--line)"></div>`}
+  ${a.stops.length ? `<h3>रुके (5 मिनट से ज़्यादा)</h3><div class="list">${a.stops.map((s, i) => `<div class="card"><b>${fmtTime(s.from)} → ${fmtTime(s.to)}</b> · ${Math.round((s.to - s.from) / 60000)} मिनट<br><span class="small muted" id="area${i}">${s.area ? esc(s.area) : ""}</span> <a class="small" href="${mapLink(s)}" target="_blank" rel="noopener">नक़्शे पर</a></div>`).join("")}</div>` : ""}
+  ${a.gaps.length ? `<h3>सिग्नल नहीं (10 मिनट से ज़्यादा)</h3><div class="card small">${a.gaps.map(g => `${fmtTime(g.from)} → ${fmtTime(g.to)}`).join("<br>")}</div>` : ""}`;
+}
+function drawMap() {
+  const m = S.adm.map, el = document.getElementById("map");
+  if (!m || !el || !window.L) return;
+  if (m.lmap) m.lmap.remove();
+  const map = m.lmap = L.map(el);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(map);
+  const ll = m.pts.map(p => [p.lat, p.lng]);
+  if (ll.length) { const line = L.polyline(ll, { color: "#B3262B", weight: 4 }).addTo(map); map.fitBounds(line.getBounds().pad(0.25), { maxZoom: 17 }); }
+  else if (m.d.startLoc) map.setView([m.d.startLoc.lat, m.d.startLoc.lng], 15); else map.setView([19.2183, 72.9781], 12);
+  const dot = (p, color, text) => L.circleMarker([p.lat, p.lng], { radius: 8, color: "#fff", weight: 2, fillColor: color, fillOpacity: 1 }).addTo(map).bindPopup(text);
+  if (m.d.startLoc) dot(m.d.startLoc, "#2E6B45", "Start " + fmtTime(m.d.start));
+  if (m.d.outLoc) dot(m.d.outLoc, "#1F3E7A", "Time out " + fmtTime(m.d.out));
+  m.a.stops.forEach(s => dot(s, "#6E665C", `रुके ${fmtTime(s.from)}–${fmtTime(s.to)}`));
+  m.visits.forEach(v => v.loc && dot(v.loc, "#B08A3E", `${esc(v.salon)} · ${fmtTime(v.at)}`));
+  nameStops(m);
+}
+async function nameStops(m) { // area names from OpenStreetMap, one per second, first 8 stops
+  for (let i = 0; i < Math.min(8, m.a.stops.length); i++) {
+    const s = m.a.stops[i]; if (s.area) continue;
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=16&accept-language=hi,en&lat=${s.lat}&lon=${s.lng}`);
+      const a = (await r.json()).address || {};
+      s.area = a.suburb || a.neighbourhood || a.city_district || a.village || a.town || a.city || "";
+      const el = document.getElementById("area" + i); if (el && S.adm.map === m) el.textContent = s.area;
+    } catch (e) { /* offline or blocked: skip */ }
+    await new Promise(r => setTimeout(r, 1100));
+    if (S.adm.map !== m) return;
+  }
+}
+async function purgeOld() {
+  const cutoff = Date.now() - RETAIN_DAYS * 864e5, cd = dateStr(new Date(cutoff));
+  const jobs = [["field_photos", "at", cutoff], ["field_visits", "at", cutoff], ["field_points", "date", cd], ["field_days", "date", cd]];
+  let n = 0;
+  for (const [col, f, v] of jobs) {
+    for (;;) {
+      const q = await getDocs(query(collection(db, col), where(f, "<", v), limit(400)));
+      if (!q.docs.length) break;
+      const b = writeBatch(db); q.docs.forEach(x => b.delete(doc(db, col, x.id))); await b.commit(); n += q.docs.length;
+    }
+  }
+  return n;
 }
 
 /* ================= actions ================= */
@@ -306,7 +500,7 @@ async function act(name, el) {
       }
       return;
     }
-    case "logout": await signOut(auth); S.view = "home"; say(""); return;
+    case "logout": await flush(); stopTracking(); await signOut(auth); S.view = "home"; say(""); return;
     case "nav": S.view = el.dataset.v; S.today = dateStr(); say(""); if (S.view === "mine" || S.view === "home") await reloadStaff(); return render();
     case "consent": {
       S.busy = true; render();
@@ -322,7 +516,7 @@ async function act(name, el) {
         S.today = dateStr();
         const d = { email: S.email, name: S.staff.name, kind: S.staff.kind, date: S.today, start: Date.now(), out: 0, hours: 0, startLoc: pos };
         await setDoc(doc(db, "field_days", dayId()), d);
-        S.days.unshift({ id: dayId(), ...d });
+        const nd = { id: dayId(), ...d }; S.days.unshift(nd); startTracking(nd);
       } catch (e) { console.error(e); say("Start सेव नहीं हुआ। नेट देखें और दोबारा कोशिश करें।", true); }
       S.busy = false; return render();
     }
@@ -330,17 +524,25 @@ async function act(name, el) {
       const d = todayDay(); if (!d || d.out) return;
       if (!confirm("Time out दबाने के बाद आज के visit नहीं जोड़ सकेंगे। पक्का?")) return;
       S.busy = true; say(""); render();
+      await flush();
       const pos = await getPos(), out = Date.now();
       const upd = { out, hours: Math.round((out - d.start) / 36e5 * 100) / 100 };
       if (pos) upd.outLoc = pos;
-      try { await updateDoc(doc(db, "field_days", d.id), upd); Object.assign(d, upd); say("Time out हो गया। आज का दिन पूरा।"); }
+      try { await updateDoc(doc(db, "field_days", d.id), upd); Object.assign(d, upd); stopTracking(); say("Time out हो गया। आज का दिन पूरा।"); }
       catch (e) { console.error(e); say("Time out सेव नहीं हुआ। नेट देखकर दोबारा दबाएँ।", true); }
       S.busy = false; return render();
     }
     case "newvisit": S.form = blankForm(); S.view = "visit"; say(""); return render();
     case "pickphoto": document.getElementById("pfile").click(); return;
-    case "atab": A.tab = el.dataset.v; say(""); return render();
-    case "refresh": try { await loadAdminData(); say("ताज़ा हो गया।"); } catch (e) { say("ताज़ा नहीं हुआ।", true); } return render();
+    case "atab": A.tab = el.dataset.v; A.map = null; say(""); if (A.tab === "live") { try { await loadLive(); } catch (e) { console.error(e); } } return render();
+    case "map": return openMap(el.dataset.id);
+    case "mapback": if (A.map && A.map.lmap) A.map.lmap.remove(); A.map = null; return render();
+    case "purge": {
+      if (!confirm(`${RETAIN_DAYS} दिन से पुराना सारा Field डेटा (फोटो, visits, लोकेशन, हाज़िरी) हमेशा के लिए मिट जाएगा। पक्का?`)) return;
+      try { const n = await purgeOld(); say(`${n} पुराने रिकॉर्ड मिटाए।`); await loadAdminData(); } catch (e) { console.error(e); say("मिटाना पूरा नहीं हुआ।", true); }
+      return render();
+    }
+    case "refresh": try { await loadAdminData(); if (A.tab === "live") await loadLive(); say("ताज़ा हो गया।"); } catch (e) { say("ताज़ा नहीं हुआ।", true); } return render();
     case "toggle": {
       const s = A.staff.find(x => x.id === el.dataset.id); if (!s) return;
       try { await updateDoc(doc(db, "field_staff", s.id), { active: !s.active }); s.active = !s.active; say(""); } catch (e) { say("बदलाव नहीं हुआ।", true); }
@@ -389,7 +591,7 @@ async function saveVisit() {
     b.set(doc(db, "field_photos", id), { email: S.email, photo, at });
     b.set(doc(db, "field_visits", id), v);
     await b.commit();
-    S.visits.unshift({ id, ...v }); S.form = blankForm(); S.view = "home"; say("Visit सेव हो गया।");
+    S.visits.unshift({ id, ...v }); setAct("ok15"); S.form = blankForm(); S.view = "home"; say("Visit सेव हो गया।");
   } catch (e) { console.error(e); say("Visit सेव नहीं हुआ। नेट देखकर दोबारा दबाएँ। फोटो और जानकारी बनी रहेगी।", true); }
   S.busy = false; render();
 }
@@ -436,5 +638,6 @@ document.addEventListener("change", async e => {
 setInterval(() => {
   const el = document.getElementById("elapsed"), d = S.role === "staff" && todayDay();
   if (el && d && !d.out) el.textContent = fmtDur(Date.now() - d.start);
+  if (document.getElementById("trk") && S.view === "home") render();
 }, 30000);
 window.__fieldVersion = FIELD_VERSION;
