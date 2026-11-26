@@ -34,10 +34,33 @@ rm -rf android/app/src/main/res/mipmap-anydpi-v26
 # fixed signing key so the SHA-1 never changes (needed for Google login)
 mkdir -p ~/.android && cp debug.keystore ~/.android/debug.keystore
 npx cap sync android
+# force the fixed signing key (the SHA-1 registered in Firebase); AGP's default debug key differs on CI runners
+python3 - <<'PY'
+import re
+p="android/app/build.gradle"; s=open(p).read()
+blk="""
+    signingConfigs {
+        debug {
+            storeFile file("$rootDir/../debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
+    }
+"""
+assert "signingConfigs" not in s
+s=re.sub(r"(\nandroid \{\n)", lambda m: m.group(1)+blk, s, count=1)
+assert "debug.keystore" in s
+open(p,"w").write(s)
+PY
 # every build gets a higher versionCode so Android accepts it as an update
 G=android/app/build.gradle
 sed -i -E "s/versionCode [0-9]+/versionCode ${GITHUB_RUN_NUMBER:-1}/" "$G"
 grep -n versionCode "$G"
 (cd android && ./gradlew --no-daemon assembleDebug)
 mkdir -p out && cp android/app/build/outputs/apk/debug/app-debug.apk out/QuickSlot-Field.apk
+# safety check: the APK must be signed with the key registered in Firebase
+AS=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+"$AS" verify --print-certs out/QuickSlot-Field.apk | tee /tmp/certs.txt
+grep -qi "5273b1862c87cec569f4fc301c7b90b6096758d0" /tmp/certs.txt || { echo "ERROR: APK signed with wrong key"; exit 1; }
 ls -la out
