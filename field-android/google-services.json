@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1041857314935",
+    "project_id": "salonslot-d44af",
+    "storage_bucket": "salonslot-d44af.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1041857314935:android:2eabf46dd9e92ca3a80672",
+        "android_client_info": {
+          "package_name": "com.quickslot.field"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1041857314935-rprjnk5jhguhi6m9lje0qb03r243hgun.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC39ZYgZn86HWLTjf7Tfl_n_vQ4Vuea4qc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1041857314935-rprjnk5jhguhi6m9lje0qb03r243hgun.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
