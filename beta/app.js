@@ -18,7 +18,7 @@ const ADMIN_NAME = "SalonSlot";
 const PLANS = { monthly:{price:499, days:30}, halfyearly:{price:2699, days:182}, yearly:{price:4999, days:365} };
 const TRIAL_DAYS = 7;
 const DAY = 864e5;
-const APP_VERSION = "2026.11.26-5";
+const APP_VERSION = "2026.11.26-6";
 const IS_BETA = /\/beta\//.test(location.pathname);
 const MAIN_URL = () => location.origin + location.pathname.replace(/\/beta\/.*$/, "/") + location.search;
 // customers never use the test version; Arjun can open a client page here with &t=1 to check new booking features
@@ -51,7 +51,7 @@ const T = {
   nav_calendar:"Calendar", cal_h:"Calendar", cal_p:"Tap any day to see who came. Totals are for the whole month.", cal_total:"Bookings", cal_done:"Done", cal_cancel:"Cancelled", cal_earn:"Earned (done)",
   cal_by_barber:"By barber this month", cal_now:"This month", cal_none:"No bookings this day.", cal_pick:"Tap a day to see its bookings.",
   tl_h:"Day timeline", tl_p:"Tap an empty space to add a booking there. Tap a booking to add work or change its time.",
-  sh_extend:"+ Add work", sh_move:"Change time", sh_close:"Close", ck_help:"The clock runs on the current time. Slide the hour or minute box up or down to pick any time, earlier or later.", ck_h:"HOUR", ck_m:"MIN", ck_s:"SEC", ck_live:"Running on current time", ck_now:"Back to current time", rp_h:"Doctor-wise report", rp_p:"How many patients each doctor saw. Useful when more than one doctor or shift runs the clinic.", rp_today:"Today", rp_yest:"Yesterday", rp_seen:"Seen", rp_wait:"Waiting", rp_first:"First", rp_last:"Last", rp_avg:"Avg per patient", rp_none:"No doctors yet.", snd_lbl:"Call sound on / off", tm_now:"Current time", tm_next:"Next free slot", tm_next_note:"This is the next free slot, not the current time. {name} is busy until then.", tm_next_day:"This is the first free slot of the day, not the current time.", ct_free:"Free slots", ct_own:"Own time (any)", ct_help:"Scroll the hour, minute and AM/PM. Past times work too, for a late client or a forgotten entry.", ct_clash:"{name} already has a booking at this time. You can still save it.", ct_hours:"This time is outside your opening hours.", ct_past:"This time has passed. If the work is done, tap Done after saving.", ct_pickb:"Barber: {name}. Pick another one above to change.",
+  sh_extend:"+ Add work", sh_move:"Change time", sh_close:"Close", ck_help:"The clock runs on the current time. Slide the hour or minute box up or down to pick any time, earlier or later.", ck_h:"HOUR", ck_m:"MIN", ck_s:"SEC", ck_live:"Running on current time", ck_now:"Back to current time", tl_zoom:"Zoom the day view", tl_step:"Every {n}", hour:"hour", rp_h:"Doctor-wise report", rp_p:"How many patients each doctor saw. Useful when more than one doctor or shift runs the clinic.", rp_today:"Today", rp_yest:"Yesterday", rp_seen:"Seen", rp_wait:"Waiting", rp_first:"First", rp_last:"Last", rp_avg:"Avg per patient", rp_none:"No doctors yet.", snd_lbl:"Call sound on / off", tm_now:"Current time", tm_next:"Next free slot", tm_next_note:"This is the next free slot, not the current time. {name} is busy until then.", tm_next_day:"This is the first free slot of the day, not the current time.", ct_free:"Free slots", ct_own:"Own time (any)", ct_help:"Scroll the hour, minute and AM/PM. Past times work too, for a late client or a forgotten entry.", ct_clash:"{name} already has a booking at this time. You can still save it.", ct_hours:"This time is outside your opening hours.", ct_past:"This time has passed. If the work is done, tap Done after saving.", ct_pickb:"Barber: {name}. Pick another one above to change.",
   sh_add_svc:"Add a service", sh_search:"Search a service", sh_none:"No service matches. Try a shorter word.", sh_add_min:"Or just add time", sh_mins:"+{n} min",
   cf_h:"This runs into {name}'s booking at {time}.", cf_other:"Give {name} to {barber}", cf_other_none:"No other barber is free at that time.",
   cf_shift:"Move {name} to {time}", cf_shift_none:"Can't push it back: the time after is also booked. Use Change time.", cf_keep:"Keep both as they are",
@@ -143,7 +143,7 @@ const T = {
   nav_calendar:"Calendar", cal_h:"Calendar", cal_p:"किसी भी दिन पर tap करें और देखें कौन आया। ऊपर पूरे महीने का हिसाब है।", cal_total:"Bookings", cal_done:"Done", cal_cancel:"Cancel हुईं", cal_earn:"कमाई (done)",
   cal_by_barber:"इस महीने barber के हिसाब से", cal_now:"इस महीने पर जाएं", cal_none:"इस दिन कोई booking नहीं।", cal_pick:"Bookings देखने के लिए किसी दिन पर tap करें।",
   tl_h:"दिन की timeline", tl_p:"ख़ाली जगह पर tap करें तो वहीं booking जुड़ेगी। किसी booking पर tap करके काम जोड़ें या समय बदलें।",
-  sh_extend:"+ काम जोड़ें", sh_move:"समय बदलें", sh_close:"बंद करें", ck_help:"घड़ी अभी के समय पर चल रही है। पहले या बाद का समय चाहिए तो घंटे या मिनट वाले box को ऊपर-नीचे slide करें।", ck_h:"घंटा", ck_m:"मिनट", ck_s:"सेकंड", ck_live:"अभी का समय चल रहा है", ck_now:"अभी के समय पर लाएँ", rp_h:"Doctor-wise रिपोर्ट", rp_p:"हर doctor ने कितने मरीज़ देखे। जब clinic में एक से ज़्यादा doctor या shift हों तब काम की।", rp_today:"आज", rp_yest:"कल", rp_seen:"देखे", rp_wait:"बाकी", rp_first:"पहला", rp_last:"आख़िरी", rp_avg:"प्रति मरीज़ औसत", rp_none:"अभी कोई doctor नहीं।", snd_lbl:"Call की आवाज़ चालू / बंद", tm_now:"अभी का समय", tm_next:"अगला ख़ाली slot", tm_next_note:"ये अभी का समय नहीं है, ये अगला ख़ाली slot है। {name} तब तक busy हैं।", tm_next_day:"ये अभी का समय नहीं है, इस दिन का पहला ख़ाली slot है।", ct_free:"ख़ाली slots", ct_own:"अपना समय (कोई भी)", ct_help:"घंटा, मिनट और AM/PM ऊपर-नीचे scroll करके चुनें। पिछला समय भी चुन सकते हैं, जैसे client देर से आया या entry भूल गए।", ct_clash:"इस समय {name} की दूसरी booking है। फिर भी save कर सकते हैं।", ct_hours:"ये समय दुकान के खुलने के समय से बाहर है।", ct_past:"ये समय निकल चुका है। काम हो गया हो तो save के बाद Done कर दें।", ct_pickb:"Barber: {name}। बदलना हो तो ऊपर से दूसरा barber चुनें।",
+  sh_extend:"+ काम जोड़ें", sh_move:"समय बदलें", sh_close:"बंद करें", ck_help:"घड़ी अभी के समय पर चल रही है। पहले या बाद का समय चाहिए तो घंटे या मिनट वाले box को ऊपर-नीचे slide करें।", ck_h:"घंटा", ck_m:"मिनट", ck_s:"सेकंड", ck_live:"अभी का समय चल रहा है", ck_now:"अभी के समय पर लाएँ", tl_zoom:"दिन का view बड़ा-छोटा करें", tl_step:"हर {n}", hour:"घंटा", rp_h:"Doctor-wise रिपोर्ट", rp_p:"हर doctor ने कितने मरीज़ देखे। जब clinic में एक से ज़्यादा doctor या shift हों तब काम की।", rp_today:"आज", rp_yest:"कल", rp_seen:"देखे", rp_wait:"बाकी", rp_first:"पहला", rp_last:"आख़िरी", rp_avg:"प्रति मरीज़ औसत", rp_none:"अभी कोई doctor नहीं।", snd_lbl:"Call की आवाज़ चालू / बंद", tm_now:"अभी का समय", tm_next:"अगला ख़ाली slot", tm_next_note:"ये अभी का समय नहीं है, ये अगला ख़ाली slot है। {name} तब तक busy हैं।", tm_next_day:"ये अभी का समय नहीं है, इस दिन का पहला ख़ाली slot है।", ct_free:"ख़ाली slots", ct_own:"अपना समय (कोई भी)", ct_help:"घंटा, मिनट और AM/PM ऊपर-नीचे scroll करके चुनें। पिछला समय भी चुन सकते हैं, जैसे client देर से आया या entry भूल गए।", ct_clash:"इस समय {name} की दूसरी booking है। फिर भी save कर सकते हैं।", ct_hours:"ये समय दुकान के खुलने के समय से बाहर है।", ct_past:"ये समय निकल चुका है। काम हो गया हो तो save के बाद Done कर दें।", ct_pickb:"Barber: {name}। बदलना हो तो ऊपर से दूसरा barber चुनें।",
   sh_add_svc:"Service जोड़ें", sh_search:"Service ढूँढें", sh_none:"ऐसी कोई service नहीं मिली। छोटा शब्द लिखकर देखें।", sh_add_min:"या सिर्फ़ समय बढ़ाएं", sh_mins:"+{n} मिनट",
   cf_h:"इससे {name} की {time} वाली booking से टकराव होगा।", cf_other:"{name} को {barber} के पास भेजें", cf_other_none:"उस समय कोई दूसरा barber ख़ाली नहीं है।",
   cf_shift:"{name} को {time} पर करें", cf_shift_none:"आगे नहीं खिसक सकता, उसके बाद भी booking है। \"समय बदलें\" से करें।", cf_keep:"दोनों को ऐसे ही रहने दें",
@@ -763,23 +763,30 @@ function selBox(salon, B, slots){
 }
 
 /* ---- owner: one day as a timeline, a column per barber ---- */
-const PPM = 1.3; // pixels per minute
+// zoom levels: pixels per minute, and the tick step shown in the time column (so zoomed in, minutes are clear)
+const TLZ = [ {ppm:1.3, step:60, snap:15}, {ppm:2.4, step:30, snap:15}, {ppm:4, step:15, snap:15}, {ppm:6.5, step:5, snap:5} ];
+const tlz = () => { let i = Number(UI.tlz); if (!(i>=0 && i<TLZ.length)){ try{ i = Number(localStorage.getItem("ss_tlz")); }catch(e){} } return i>=0 && i<TLZ.length ? i : 0; };
+let PPM = TLZ[0].ppm;
+const tlLbl = m => { const h = Math.floor(m/60), mm = m%60; return mm ? (h%12||12)+":"+pad(mm) : hourLbl(m); };
 function dayTimeline(date){
+  const Z = TLZ[tlz()]; PPM = Z.ppm;
   const s = S.salon, open = toMin(s.open||"10:00"), close = toMin(s.close||"21:00");
   if (!(close > open) || !s.barbers.length) return "";
   const list = S.bookings.filter(k=>k.date===date && k.status!=="cancelled");
-  const hours = []; for (let m=Math.ceil(open/60)*60; m<=close; m+=60) hours.push(m);
+  const hours = []; for (let m=Math.ceil(open/Z.step)*Z.step; m<=close; m+=Z.step) hours.push(m);
   const nowD = new Date(), nowM = date===ymd(nowD) ? nowD.getHours()*60+nowD.getMinutes() : -1;
   const closedDay = !(s.days||[]).includes(new Date(date+"T00:00").getDay());
   const cols = `grid-template-columns:48px repeat(${s.barbers.length}, minmax(112px,1fr))`;
-  return `<div class="tlwrap">${closedDay?`<p class="small muted">${t("closed_day")}</p>`:""}
+  return `<div class="tlzoom" role="group" aria-label="${t("tl_zoom")}"><button class="btn sm" data-a="tlZ" data-v="out" ${tlz()===0?"disabled":""} aria-label="−">−</button><span class="small">🔍 ${t("tl_step",{n:Z.step===60?"1 "+t("hour"):Z.step+" "+t("min")})}</span><button class="btn sm" data-a="tlZ" data-v="in" ${tlz()===TLZ.length-1?"disabled":""} aria-label="+">+</button></div>
+  <div class="tlwrap">${closedDay?`<p class="small muted">${t("closed_day")}</p>`:""}
     <div class="tlhead" style="${cols}"><span></span>${s.barbers.map(b=>`<span class="tlb">${avatar(b,"sm")}<b>${esc(b.name)}</b></span>`).join("")}</div>
     <div class="tlbody" style="${cols};height:${Math.round((close-open)*PPM)}px">
-      <div class="tlhours">${hours.map(m=>`<span style="top:${Math.round((m-open)*PPM)}px">${hourLbl(m)}</span>`).join("")}</div>
+      <div class="tlhours">${hours.map(m=>`<span class="${m%60?"mn":""}" style="top:${Math.round((m-open)*PPM)}px">${tlLbl(m)}</span>`).join("")}</div>
       ${s.barbers.map(b=>`<div class="tlcol ${onLeave(s,b.id,date)?"off":""}" data-a="tlTap" data-v="${b.id}" data-date="${date}" data-open="${open}">${onLeave(s,b.id,date)?`<span class="tloff">${t("on_leave")}</span>`:""}
-        ${hours.map(m=>`<i class="tlline" style="top:${Math.round((m-open)*PPM)}px"></i>`).join("")}
+        ${hours.map(m=>`<i class="tlline ${m%60?"mn":""}" style="top:${Math.round((m-open)*PPM)}px"></i>`).join("")}
         ${list.filter(k=>k.barberId===b.id).map(k=>{ const st = toMin(k.time), d = bkDur(s,k);
-          return `<button class="tlbk ${k.status}" data-a="sheet" data-v="${k.id}" style="top:${Math.round((st-open)*PPM)}px;height:${Math.max(Math.round(d*PPM)-2,22)}px"><b>${esc(k.cust)}</b><small>${niceRange(k.time,d)} · ${esc(bkNames(s,k))}</small></button>`; }).join("")}
+          const hh = Math.max(Math.round(d*PPM)-2,22);
+          return `<button class="tlbk ${k.status} ${hh<46?"sm":""}" data-a="sheet" data-v="${k.id}" style="top:${Math.round((st-open)*PPM)}px;height:${hh}px"><b>${esc(k.cust)}</b><small>${niceRange(k.time,d)} · ${esc(bkNames(s,k))}</small></button>`; }).join("")}
       </div>`).join("")}
       ${nowM>=open && nowM<=close?`<i class="tlnow" style="top:${Math.round((nowM-open)*PPM)}px" aria-hidden="true"></i>`:""}
     </div></div>`;
@@ -1630,6 +1637,7 @@ const A = {
   pickBiz:v=>go(()=>{ try{ localStorage.setItem("ss_biz",v); }catch(e){} setBiz(v); }),
   wsSwitch:v=>{ try{ localStorage.setItem("ss_biz",v); }catch(e){} location.reload(); },
   docMode:()=>go(()=>{ pushNav(); UI.tab="doctor"; window.scrollTo(0,0); }),
+  tlZ:v=>go(()=>{ const i = Math.max(0, Math.min(TLZ.length-1, tlz()+(v==="in"?1:-1))); UI.tlz = i; try{ localStorage.setItem("ss_tlz", i); }catch(e){} }),
   rpDay:v=>go(()=>{ UI.rpDay=v; }),
   docBack:()=>go(()=>{ UI.tab = isClinic(S.salon) ? "queue" : "home"; }),
   docPick:v=>go(()=>{ UI.docId=v; try{ localStorage.setItem("ss_mydoc_"+S.sid, v); }catch(e){} }),
@@ -1823,7 +1831,7 @@ const A = {
     s.leave = {...(s.leave||{}), [bid]: next}; render();
     try{ await updateDoc(doc(db,"salons",S.sid), { ["leave."+bid]: next }); toast(t("leave_saved")); }catch(e){ console.error(e); toast(t("save_fail")); } },
   tlDay: v=>go(()=>{ const cur = new Date((UI.tlDate||ymd(new Date()))+"T00:00"); cur.setDate(cur.getDate()+Number(v)); UI.tlDate = ymd(cur); }),
-  tlTap: (v, e, el)=>{ const open = Number(el.dataset.open), r = el.getBoundingClientRect(); const m = open + Math.max(0, Math.floor((e.clientY - r.top)/PPM/15)*15);
+  tlTap: (v, e, el)=>{ const open = Number(el.dataset.open), r = el.getBoundingClientRect(); const m = open + Math.max(0, Math.floor((e.clientY - r.top)/PPM/TLZ[tlz()].snap)*TLZ[tlz()].snap);
     pushNav(); UI.tab = "book"; UI.bookedData = null; UI.book = { barber: v, date: el.dataset.date, time: toHM(m), prefTime: toHM(m) }; UI.err = ""; render(); window.scrollTo(0,0); },
   calMove: v=>go(()=>{ const n = Number(v); const td = ymd(new Date()); if (!n){ UI.calYM = td.slice(0,7); UI.calDay = null; return; }
     const [y,m] = (UI.calYM||td.slice(0,7)).split("-").map(Number); const d = new Date(y, m-1+n, 1); UI.calYM = d.getFullYear()+"-"+pad(d.getMonth()+1); UI.calDay = null; }),

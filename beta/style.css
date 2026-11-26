@@ -474,3 +474,10 @@ main > .btn.sm{align-self:flex-start}
 .nextbox b{font-size:18px}
 .nxtwrap{border:2px dashed var(--gold);border-radius:16px;padding:4px;margin-bottom:8px}
 .sndbtn{font-size:20px;padding:6px 10px;line-height:1}
+.tlzoom{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin:0 0 8px}
+.tlzoom .btn{min-width:40px;font-size:20px;line-height:1;padding:6px 12px}
+.tlhours span.mn{font-weight:500;font-size:10.5px}
+.tlline.mn{border-top-style:dotted;opacity:.8}
+.tlbk.sm{flex-direction:row;align-items:center;gap:6px;padding:2px 7px}
+.tlbk.sm b{flex:0 1 auto;max-width:48%}
+.tlbk.sm small{flex:1 1 auto;min-width:0}
